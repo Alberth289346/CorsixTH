@@ -335,7 +335,7 @@ public: // Internal (this rendering engine only) API
         m_aColoursARGB[iEntry] = iVal;
     }
 
-protected:
+//protected:
     //! 32bpp palette colours associated with the 8bpp colour index.
     uint32_t m_aColoursARGB[256];
 

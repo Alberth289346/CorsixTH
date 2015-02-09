@@ -1092,6 +1092,9 @@ void THSpriteSheet::wxDrawSprite(unsigned int iSprite, unsigned char* pRGBData, 
     oRenderer.decodeImage(pSprite->pData, m_pPalette);
 }
 
+static unsigned int get32BppPixel(const unsigned char* pImg, int iWidth, int iHeight,
+                                  const THPalette *pPalette, int iPixelNumber);
+
 SDL_Texture* THSpriteSheet::_makeAltBitmap(sprite_t *pSprite)
 {
     if (!pSprite->pAltPaletteMap)
@@ -1112,6 +1115,26 @@ SDL_Texture* THSpriteSheet::_makeAltBitmap(sprite_t *pSprite)
 
         pSprite->pAltTexture = m_pTarget->createPalettizedTexture(pSprite->iWidth, pSprite->iHeight,
                                                                   pSprite->pData, &oPalette);
+
+
+        int count[257];
+        for (int i = 0; i < 257; i++) count[i] = 0;
+        for(int px = 0; px < pSprite->iWidth * pSprite->iHeight; px++) {
+            uint32_t col = get32BppPixel(pSprite->pData, pSprite->iWidth, pSprite->iHeight,
+                                         m_pPalette, px);
+            int i;
+            for (i = 0; i < 256; i++) if (col == pPalette[i]) break;
+            count[i]++;
+        }
+
+
+        const uint32_t *pNew = oPalette.getARGBData();
+        for (int iColour = 0; iColour < 255; iColour++) {
+            if (count[iColour] == 0) continue;
+            printf("%03d: %08X %08X (%d)\n", iColour, pPalette[iColour], pNew[iColour], count[iColour]);
+        }
+        printf("256: (%d)\n", count[256]);
+
     }
 
     return pSprite->pAltTexture;
