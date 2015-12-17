@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+dofile "fsm_engine"
+
 local object = {}
 object.id = "plant"
 object.thob = 45
@@ -81,11 +83,79 @@ local days_between_states = 75
 -- days before we reannouncing our watering status if we were unreachable
 local days_unreachable = 10
 
+
 --! An `Object` which needs watering now and then.
 class "Plant" (Object)
 
 ---@type Plant
 local Plant = _G["Plant"]
+
+
+local --[[persistable:acrtwbryewhrewhy]]function setup_full_health(data)
+  data.days_left = days_between_states
+  data.current_state = 0
+end
+
+local --[[persistable:aegrtwcbhctycnt]] function decay_step(data)
+  -- The plant will need water a little more often if it is hot where it is.
+  local temp = data.world.map.th:getCellTemperature(data.tile_x, data.tile_y)
+  data.days_left = data.days_left - (1 + temp)
+  if data.days_left < 1 then
+    data.days_left = days_between_states
+    if data.current_state < 5 then
+      data.current_state = data.current_state + 1
+    end
+  end
+end
+
+local --[[persistable:wvg5e7h64fj56]]function setup_restore(data)
+  data.ticks = (data.direction == "south" or data.direction == "east") and 35 or 20
+  -- set timer for 'ticks'.
+  data.cycles = (data.current_state > 1) and math.floor(14 / data.current_state) or 1
+end
+
+local --[[persistable:afqegrwxhhjey]]function restore_timeout(data)
+  data.current_state = data.current_state - 1
+  data.ticks = data.cycles
+  -- set timer for 'ticks'.
+end
+
+local plant_decay_fsm = {
+  ["decaying"] = {
+    initial_func = setup_full_health,
+    initial = true,
+    transitions = {
+      ["tick_day"] = { { action = decay_step } },
+      ["watering"] = {
+        { action = setup_restore,
+          next_loc = "restoring"
+        }
+      }
+    }
+  },
+  ["restoring"] = {
+    transitions = {
+      ["tick_day"] = { }, -- Current implementation decays here, but it's not relevant.
+      ["timeout"] = {
+        { condition = --[[persistable:qgc4wgc64whx5]] function(data) return data.current_state > 0 end,
+          action = restore_timeout
+        },
+        { action = setup_full_health,
+          next_loc = "decaying"
+        }
+      }
+    }
+  }
+}
+
+function Plant:sneakDump()
+  local data = self.fsm.data_store
+  print("Dump:")
+  print("    days_left = " .. data.days_left .. " vs real " .. self.days_left)
+  print("    current_state = " .. data.current_state .. " vs real " .. self.current_state)
+  print("")
+end
+
 
 function Plant:Plant(world, object_type, x, y, direction, etc)
   -- It doesn't matter which direction the plant is facing. It will be rotated so that an approaching
@@ -96,6 +166,14 @@ function Plant:Plant(world, object_type, x, y, direction, etc)
   self.days_left = days_between_states
   self.unreachable = false
   self.unreachable_counter = days_unreachable
+
+  self.fsm = FsmEngine({plant_decay_fsm})
+  self.fsm.data_store.world = world
+  self.fsm.data_store.tile_x = x
+  self.fsm.data_store.tile_y = y
+  self.fsm.data_store.direction = direction
+  self.fsm.data_store.cycles = nil -- Length
+  self:sneakDump()
 end
 
 --! Goes one step forward (or backward) in the states of the plant.
@@ -114,6 +192,10 @@ end
 
 local plant_restoring; plant_restoring = permanent"plant_restoring"( function(plant)
   local phase = plant.phase
+  if plant.fsm then
+    plant.fsm:step("timeout", false)
+    plant:sneakDump()
+  end
   plant:setNextState(true)
   if phase > 0 then
     plant.phase = phase - 1
@@ -125,6 +207,9 @@ end)
 
 --! Restores the plant to its initial state. (i.e. healthy)
 function Plant:restoreToFullHealth()
+  if self.fsm then
+    self.fsm:step("watering", true)
+  end
   self.ticks = true
   self.phase = self.current_state
   self.cycles = self.current_state
@@ -282,6 +367,10 @@ function Plant:tickDay()
         self.unreachable = false
       end
     end
+  end
+  if self.fsm then
+    self.fsm:step("tick_day", true)
+    self:sneakDump()
   end
 end
 
