@@ -28,50 +28,75 @@ function FsmEngine:FsmEngine(fsms, data_store)
   self.fsms = fsms -- Just storing count is enough?
   self.data_store = data_store or {}
 
-  -- Compute initial state.
-  self.states = {}
+  -- Check that a fsm deals with the same events in every state.
   for _, fsm in ipairs(self.fsms) do
+    local ref_evtlist = nil -- Reference event list. All states should have the same events.
+    for name, state in pairs(fsm) do
+      local evt_list = state.evt_list
+      assert evt_list -- Every state should have an event list.
+      if not ref_evtlist then
+        ref_evtlist = evt_list
+      else
+        assert #ref_evtlist == #evt_list -- Same number of events everywhere.
+        for evt_name, _ in pairs(ref_evtlist) do
+          assert(evt_list[evt_name], "State " .. name .. " has no event " .. evt_name)
+        end
+      end
+    end
+  end
+
+  -- Compute initial state.
+  self.fsm_datas = {}
+  for num, fsm in ipairs(self.fsms) do
+    local initial = nil
     for name, state in pairs(fsm) do
       if state.initial then
-        if state.initial_func then state.initial_func(self.data_store) end
-        self.states[#self.states + 1] = {fsm=fsm, location=name}
+        initial = state.initial
         break
       end
     end
+
+    assert(initial, "Fsm number " .. num .. " has no initial state")
+    if state.initial_func then state.initial_func(self.data_store) end
+    self.fsm_datas[#self.fsm_datas + 1] = {fsm=fsm, location=name}
   end
-  assert(#self.states == #self.fsms) -- Each fsm should be initialized.
 end
 
-function FsmEngine:step(event, must_happen)
-  print("step " .. event)
-  local selected_trans = {}
-  for number, state in ipairs(self.states) do
-    local transitions = state.fsm[state.location] or {}
-    transitions = transitions.transitions or {}
-    transitions = transitions[event] or {}
-    local found = false
-    for _, tr in ipairs(transitions) do
-      if not tr.condition or tr.condition(self.data_store) then
-        selected_trans[#selected_trans + 1] = {fsm=state.fsm, location=state.location, trans=tr}
-        found = true
-        break
+function FsmEngine:step(event)
+  print("Step " .. event)
+
+  -- First find a transition that will be taken in each fsm. Actions are not
+  -- yet performed, as they may change the stored data, and disturb checks
+  -- of other fsms.
+  for number, fsm_data in ipairs(self.fsm_datas) do
+    local evt_list = fsm_data.fsm[fsm_data.location].evt_list
+    local edges = evt_list[event]
+    local sel_edge = nil
+    if edges then
+      for _, edge in ipairs(edges) do
+        if not edge.condition or edge.condition(self.data_store) then
+          sel_edge = edge
+          break
+        end
       end
-    end
-    if must_happen and not found then
-      print("Error: FSM #" .. number .. " in state " .. state.location .. " cannot do event " .. event)
+      if not sel_edge then
+        print("Error: FSM #" .. number .. " in state " .. fsm_data.location .. " cannot do event " .. event)
+      end
+      fsm_data.sel_edge = sel_edge
+
+    -- else: This fsm does not participate in this event, and stays where it is.
     end
   end
-  if #selected_trans == #self.fsms then
-    -- All fsms are willing to do the step.
-    self.states = {}
-    for _, sel_tr in ipairs(selected_trans) do
-      if sel_tr.trans.action then sel_tr.trans.action(self.data_store) end
-      local next_loc = sel_tr.trans.next_loc or sel_tr.location
-      self.states[#self.states + 1] = {fsm=sel_tr.fsm, location = next_loc}
+
+  -- Perform the action if available, and jump to the next location if available.
+  for _, fsm_data in ipairs(self.fsm_datas) do
+    local sel_edge = fsm_data.sel_edge
+    fsm_data.sel_edge = nil
+
+    if sel_edge then
+      if sel_edge.action then sel_edge,action(self.data_store) end
+      if sel_edge.next_loc then fsm_data.location = sel_edge.next_loc end
     end
-  else
-    -- At least one state machine didn't want to go along
-    assert(not must_happen)
   end
 end
 

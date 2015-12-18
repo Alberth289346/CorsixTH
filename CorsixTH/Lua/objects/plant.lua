@@ -91,61 +91,140 @@ class "Plant" (Object)
 local Plant = _G["Plant"]
 
 
-local --[[persistable:acrtwbryewhrewhy]]function setup_full_health(data)
-  data.days_left = days_between_states
-  data.current_state = 0
+local --[[persistable:acrtwbryewhrewhy]]function setup_full_health(self)
+  self.days_left = days_between_states
+  self.current_state = 0
 end
 
-local --[[persistable:aegrtwcbhctycnt]] function decay_step(data)
+local --[[persistable:aegrtwcbhctycnt]] function decay_step(self)
   -- The plant will need water a little more often if it is hot where it is.
-  local temp = data.world.map.th:getCellTemperature(data.tile_x, data.tile_y)
-  data.days_left = data.days_left - (1 + temp)
-  if data.days_left < 1 then
-    data.days_left = days_between_states
-    if data.current_state < 5 then
-      data.current_state = data.current_state + 1
+  local temp = self.world.map.th:getCellTemperature(self.tile_x, self.tile_y)
+  self.days_left = self.days_left - (1 + temp)
+  if self.days_left < 1 then
+    self.days_left = days_between_states
+    if self.current_state < 5 then
+      self.current_state = self.current_state + 1
     end
   end
 end
 
-local --[[persistable:wvg5e7h64fj56]]function setup_restore(data)
-  data.ticks = (data.direction == "south" or data.direction == "east") and 35 or 20
-  -- set timer for 'ticks'.
-  data.cycles = (data.current_state > 1) and math.floor(14 / data.current_state) or 1
-end
-
-local --[[persistable:afqegrwxhhjey]]function restore_timeout(data)
-  data.current_state = data.current_state - 1
-  data.ticks = data.cycles
-  -- set timer for 'ticks'.
-end
-
+-- Plant decay FSM: 'Eat' some health every day, until near death (which
+-- hopefully is avoided by water-giving handy men).
 local plant_decay_fsm = {
-  ["decaying"] = {
+  decaying = {
     initial_func = setup_full_health,
     initial = true,
-    transitions = {
-      ["tick_day"] = { { action = decay_step } },
-      ["watering"] = {
-        { action = setup_restore,
+    evt_list = {
+      tick_day = { { action = decay_step } }
+    }
+  }
+}
+
+-- Setup timer for increasing health again. Recovery takes longer if plant
+-- closer to death.
+local --[[persistable:wvg5e7h64fj56]]function setup_timer(self)
+  self.ticks = (self.direction == "south" or self.direction == "east") and 35 or 20
+  -- set timer for 'ticks'.
+  self.cycles = (self.current_state > 1) and math.floor(14 / self.current_state) or 1
+end
+
+-- Increase health one 'level'.
+local --[[persistable:afqegrwxhhjey]]function restart_timer(self)
+  self.days_left = days_between_states
+  self.current_state = self.current_state - 1
+  self.ticks = self.cycles
+  -- set timer for 'ticks'.
+end
+
+-- Check whether full health can be reached.
+local can_reach_full_health = --[[persistable:qgc4wgc64whx5]] function(self)
+  return self.current_state <= 1
+end
+
+-- Watering FSM: Block until getting watered, then rapidly increase health
+-- until fully restored, then wait for more water again.
+local plant_watering_fsm = {
+  blocked = {
+    initial = true,
+    evt_list = {
+      watering = { { action = setup_timer, next_loc = "restoring" } },
+      timeout = { {} }
+    }
+  },
+
+  restoring = {
+    evt_list = {
+      watering = { {} },
+      timeout = {
+        -- If the time out can reach full health, do it, and jump back to blocked.
+        { condition = can_reach_full_health,
+          action = setup_full_health,
+          next_loc = "blocked"
+        },
+        -- Else increase health one level.
+        { action = restart_timer,
           next_loc = "restoring"
         }
       }
     }
-  },
-  ["restoring"] = {
-    transitions = {
-      ["tick_day"] = { }, -- Current implementation decays here, but it's not relevant.
-      ["timeout"] = {
-        { condition = --[[persistable:qgc4wgc64whx5]] function(data) return data.current_state > 0 end,
-          action = restore_timeout
-        },
-        { action = setup_full_health,
-          next_loc = "decaying"
-        }
-      }
-    }
   }
+}
+
+local plant_ok_check = --[[persistable:awqcgf4qxcgh64h256]] function(self)
+  return self.current_state == 0 and self.days_left >= 10
+end
+
+local call_handyman = --[[persistable:ag4qyc26yh37ju]] function(self)
+  print("Simu-call handyman")
+end
+
+local call_advisor_needed = --[[persistable:xxrfq35g4whw6yhf53x5]] function(self)
+  return not self.plant_announced and self.current_state > 1
+end
+
+local call_advisor = --[[persistable:2t53qt46y4w]] function(self)
+  if not self.plant_announced then
+    print("Simulate call to advisor")
+    self.plant_announced = true
+  end
+end
+
+-- Try to get attention of a handyman for some water when getting dry.
+local call_handyman_fsm = {
+  plant_ok = {
+  },
+
+  called_handyman = {
+  },
+
+  unreachable = {
+  }
+}
+
+-- Check whether the health of the plant is so bad, it can die.
+local plant_is_dying_check = --[[persistable:q4xty6hu53e7uj574]] function(self)
+  return self.current_state > 1
+end
+
+local warn_player_action = --[[persistable:q3tc4wy3cu3x6yvh37]] function(self)
+  --self.world.ui.adviser:say(_A.warnings.plants_thirsty)
+  print("Simu-warned player")
+end
+
+-- Try to get attention of the player if things seem to go terribly wrong.
+local warn_player = {
+  -- Monitor health, and warn player if it gets close to dangerously low.
+  not_warned = {
+    tick_day = {
+      { condition = plant_is_dying_check,
+        action = warn_player_action,
+        next_loc = "warned_player"
+      },
+      { }
+  },
+
+  -- Once warned the player, plant will never warn again, and stay here forever.
+  warned_player = { tick_day = { {} } }
 }
 
 function Plant:sneakDump()
@@ -172,7 +251,7 @@ function Plant:Plant(world, object_type, x, y, direction, etc)
   self.fsm.data_store.tile_x = x
   self.fsm.data_store.tile_y = y
   self.fsm.data_store.direction = direction
-  self.fsm.data_store.cycles = nil -- Length
+  self.fsm.data_store.cycles = nil -- Time interval of recovery to next level of health in number of ticks.
   self:sneakDump()
 end
 
@@ -255,6 +334,7 @@ function Plant:callForWatering()
   -- If there are no tiles to water from, just die.
   if not self.ticks then
     if not self.unreachable then
+      print("Real call for watering")
       local index = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
       if index == -1 then
         local call = self.world.dispatcher:callForWatering(self)
