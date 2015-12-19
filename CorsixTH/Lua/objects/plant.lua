@@ -123,6 +123,12 @@ local plant_decay_fsm = {
 -- Setup timer for increasing health again. Recovery takes longer if plant
 -- closer to death.
 local --[[persistable:wvg5e7h64fj56]]function setup_timer(self)
+  -- Discard open tasks for watering
+  local taskIndex = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
+  if taskIndex ~= -1 then
+    self.hospital:removeHandymanTask(taskIndex, "watering")
+  end
+
   self.ticks = (self.direction == "south" or self.direction == "east") and 35 or 20
   -- set timer for 'ticks'.
   self.cycles = (self.current_state > 1) and math.floor(14 / self.current_state) or 1
@@ -136,7 +142,7 @@ local --[[persistable:afqegrwxhhjey]]function restart_timer(self)
   -- set timer for 'ticks'.
 end
 
--- Check whether full health can be reached.
+-- Check whether full health can be reached by going up one level.
 local can_reach_full_health = --[[persistable:qgc4wgc64whx5]] function(self)
   return self.current_state <= 1
 end
@@ -174,8 +180,17 @@ local plant_ok_check = --[[persistable:awqcgf4qxcgh64h256]] function(self)
   return self.current_state == 0 and self.days_left >= 10
 end
 
-local call_handyman = --[[persistable:ag4qyc26yh37ju]] function(self)
+local call_handyman_action = --[[persistable:ag4qyc26yh37ju]] function(self)
   print("Simu-call handyman")
+  return
+
+--    local index = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
+--    if index == -1 then
+--      local call = self.world.dispatcher:callForWatering(self)
+--      self.hospital:addHandymanTask(self, "watering", self.current_state + 1, self.tile_x, self.tile_y, call)
+--    else
+--      self.hospital:modifyHandymanTaskPriority(index, self.current_state + 1, "watering")
+--    end
 end
 
 local call_advisor_needed = --[[persistable:xxrfq35g4whw6yhf53x5]] function(self)
@@ -192,10 +207,39 @@ end
 -- Try to get attention of a handyman for some water when getting dry.
 local call_handyman_fsm = {
   plant_ok = {
+    initial = true,
+    events = {
+      tick_day = {
+        { check = plant_ok_check },
+        { action = call_handyman_action,
+          next_loc = "called_handyman"
+        }
+      }
+    }
   },
 
   called_handyman = {
+    events = {
+      handyman_arives = {
+        { check = find_best_usage_tile,
+          action = create_handyman_actions, -- XXX createHandymanActions
+          next_loc = "called_handyman" -- XXX Maybe have some time out to check handy person again?
+        },
+        { action = cancel_handyman, -- In unreachable position, ugh :(
+          next_loc = "unreachable" -- XXX Add timeout thingie to try again.
+        }
+      },
+
+      -- If plant became ok by itself, cancel the call, and wait again.
+      tick_day = {
+        { check = plant_ok_check,
+          action = cancel_handyman,
+          next_loc = "plant_ok"
+        },
+      }
+    }
   },
+
 
   unreachable = {
   }
@@ -226,6 +270,9 @@ local warn_player = {
   -- Once warned the player, plant will never warn again, and stay here forever.
   warned_player = { tick_day = { {} } }
 }
+
+-- XXX Picked up tickDay / onClick !
+
 
 function Plant:sneakDump()
   local data = self.fsm.data_store
@@ -297,7 +344,7 @@ function Plant:restoreToFullHealth()
 
   local taskIndex = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
   if taskIndex ~= -1 then
-  self.hospital:removeHandymanTask(taskIndex, "watering")
+    self.hospital:removeHandymanTask(taskIndex, "watering")
   end
 end
 
