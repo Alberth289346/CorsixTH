@@ -24,7 +24,20 @@ class "FsmEngine" (Object)
 ---@type FsmEngine
 local FsmEngine = _G["FsmEngine"]
 
-function FsmEngine:FsmEngine(fsms, data_store)
+function FsmEngine:FsmEngine(data_store)
+  -- Lis of state machines. A state machine is a mapping of state name to state data.
+  -- State data is a mapping of the following key/value pairs:
+  -- - "initial": If true, this state is the state selected at startup.
+  -- - "initial_func": Function called on startup (if available).
+  -- - "events": Mapping of event name to edges for this event.
+  -- of event-name to a list of edges.
+  self.fsms = {}
+  self.data_store = data_store or {}
+
+  self.fsm_datas = nil
+end
+
+function FsmEngine:finish(fsms)
   self.fsms = fsms -- Just storing count is enough?
   self.data_store = data_store or {}
 
@@ -61,6 +74,7 @@ function FsmEngine:FsmEngine(fsms, data_store)
     self.fsm_datas[#self.fsm_datas + 1] = {fsm=fsm, location=name}
   end
 end
+
 
 function FsmEngine:step(event)
   print("Step " .. event)
