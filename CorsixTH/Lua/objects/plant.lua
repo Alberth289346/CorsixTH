@@ -91,12 +91,13 @@ class "Plant" (Object)
 local Plant = _G["Plant"]
 
 
-local --[[persistable:acrtwbryewhrewhy]]function setup_full_health(self)
+local setup_full_health = --[[persistable:acrtwbryewhrewhy]]function(self)
   self.days_left = days_between_states
   self.current_state = 0
 end
 
-local --[[persistable:aegrtwcbhctycnt]] function decay_step(self)
+--! Decay health of the plant a bit.
+local decay_action = --[[persistable:aegrtwcbhctycnt]] function(self)
   -- The plant will need water a little more often if it is hot where it is.
   local temp = self.world.map.th:getCellTemperature(self.tile_x, self.tile_y)
   self.days_left = self.days_left - (1 + temp)
@@ -108,26 +109,19 @@ local --[[persistable:aegrtwcbhctycnt]] function decay_step(self)
   end
 end
 
--- Plant decay FSM: 'Eat' some health every day, until near death (which
--- hopefully is avoided by water-giving handy men).
-local plant_decay_fsm = {
-  decaying = {
-    initial_func = setup_full_health,
-    initial = true,
-    evt_list = {
-      tick_day = { { action = decay_step } }
-    }
-  }
-}
+local --[[persistable:p5igcjucowh9uo]] function reset_call_handyman(self)
+  -- Discard open tasks for watering
+  -- local taskIndex = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
+  -- if taskIndex ~= -1 then
+  --  self.hospital:removeHandymanTask(taskIndex, "watering")
+  --end
+  print("simu-remove water call")
+end
 
 -- Setup timer for increasing health again. Recovery takes longer if plant
 -- closer to death.
-local --[[persistable:wvg5e7h64fj56]]function setup_timer(self)
-  -- Discard open tasks for watering
-  local taskIndex = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
-  if taskIndex ~= -1 then
-    self.hospital:removeHandymanTask(taskIndex, "watering")
-  end
+local setup_timer = --[[persistable:wvg5e7h64fj56]]function(self)
+  reset_call_handyman(self)
 
   self.ticks = (self.direction == "south" or self.direction == "east") and 35 or 20
   -- set timer for 'ticks'.
@@ -135,7 +129,7 @@ local --[[persistable:wvg5e7h64fj56]]function setup_timer(self)
 end
 
 -- Increase health one 'level'.
-local --[[persistable:afqegrwxhhjey]]function restart_timer(self)
+local restart_timer = --[[persistable:afqegrwxhhjey]]function(self)
   self.days_left = days_between_states
   self.current_state = self.current_state - 1
   self.ticks = self.cycles
@@ -147,42 +141,22 @@ local can_reach_full_health = --[[persistable:qgc4wgc64whx5]] function(self)
   return self.current_state <= 1
 end
 
--- Watering FSM: Block until getting watered, then rapidly increase health
--- until fully restored, then wait for more water again.
-local plant_watering_fsm = {
-  blocked = {
-    initial = true,
-    evt_list = {
-      watering = { { action = setup_timer, next_loc = "restoring" } },
-      timeout = { {} }
-    }
-  },
-
-  restoring = {
-    evt_list = {
-      watering = { {} },
-      timeout = {
-        -- If the time out can reach full health, do it, and jump back to blocked.
-        { condition = can_reach_full_health,
-          action = setup_full_health,
-          next_loc = "blocked"
-        },
-        -- Else increase health one level.
-        { action = restart_timer,
-          next_loc = "restoring"
-        }
-      }
-    }
-  }
-}
-
-local plant_ok_check = --[[persistable:awqcgf4qxcgh64h256]] function(self)
-  return self.current_state == 0 and self.days_left >= 10
+local plant_needs_water_check = --[[persistable:hrpgi94w6mhu69hu]] function(self)
+  if self.current_state == 0 and self.days_left >= 10 then return false end
+  return not self.reserved_for
 end
 
+--! Call the handyman for help (or update the priority of the task).
+--!return (bool) Whether the plant can be reached by the handyman.
 local call_handyman_action = --[[persistable:ag4qyc26yh37ju]] function(self)
-  print("Simu-call handyman")
-  return
+  -- Test reachability
+  if false then
+    self.unreachable_counter = days_unreachable
+    return false -- Jump to unreachable location.
+  end
+
+  print("Simu-call watering handyman")
+  -- XXX  Check the handyman state machine versus its code.
 
 --    local index = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
 --    if index == -1 then
@@ -191,94 +165,40 @@ local call_handyman_action = --[[persistable:ag4qyc26yh37ju]] function(self)
 --    else
 --      self.hospital:modifyHandymanTaskPriority(index, self.current_state + 1, "watering")
 --    end
+  return true -- Jump to called_handyman.
 end
 
-local call_advisor_needed = --[[persistable:xxrfq35g4whw6yhf53x5]] function(self)
-  return not self.plant_announced and self.current_state > 1
+--! Callback function to decrement the unreachable counter.
+--!return (int) Number of days left before plant should try reachability again.
+local decrement_unreachable = --[[persistable:atg0ipwhuio5whjo5wvn]] function(self)
+  self.unreachable_counter = math.max(self.unreachable_counter - 1, 0)
+  return self.unreachable_counter
 end
 
-local call_advisor = --[[persistable:2t53qt46y4w]] function(self)
-  if not self.plant_announced then
-    print("Simulate call to advisor")
-    self.plant_announced = true
-  end
-end
-
--- Try to get attention of a handyman for some water when getting dry.
-local call_handyman_fsm = {
-  plant_ok = {
-    initial = true,
-    events = {
-      tick_day = {
-        { check = plant_ok_check },
-        { action = call_handyman_action,
-          next_loc = "called_handyman"
-        }
-      }
-    }
-  },
-
-  called_handyman = {
-    events = {
-      handyman_arives = {
-        { check = find_best_usage_tile,
-          action = create_handyman_actions, -- XXX createHandymanActions
-          next_loc = "called_handyman" -- XXX Maybe have some time out to check handy person again?
-        },
-        { action = cancel_handyman, -- In unreachable position, ugh :(
-          next_loc = "unreachable" -- XXX Add timeout thingie to try again.
-        }
-      },
-
-      -- If plant became ok by itself, cancel the call, and wait again.
-      tick_day = {
-        { check = plant_ok_check,
-          action = cancel_handyman,
-          next_loc = "plant_ok"
-        },
-      }
-    }
-  },
-
-
-  unreachable = {
-  }
-}
-
--- Check whether the health of the plant is so bad, it can die.
+--! Check whether the health of the plant is so bad, it can die.
+--!return (bool) Plant is in a really bad state.
 local plant_is_dying_check = --[[persistable:q4xty6hu53e7uj574]] function(self)
   return self.current_state > 1
 end
 
+--! Warn the player that the plant is dying.
 local warn_player_action = --[[persistable:q3tc4wy3cu3x6yvh37]] function(self)
   --self.world.ui.adviser:say(_A.warnings.plants_thirsty)
   print("Simu-warned player")
 end
 
--- Try to get attention of the player if things seem to go terribly wrong.
-local warn_player = {
-  -- Monitor health, and warn player if it gets close to dangerously low.
-  not_warned = {
-    tick_day = {
-      { condition = plant_is_dying_check,
-        action = warn_player_action,
-        next_loc = "warned_player"
-      },
-      { }
-  },
-
-  -- Once warned the player, plant will never warn again, and stay here forever.
-  warned_player = { tick_day = { {} } }
-}
-
 -- XXX Picked up tickDay / onClick !
 
 
 function Plant:sneakDump()
-  local data = self.fsm.data_store
-  print("Dump:")
-  print("    days_left = " .. data.days_left .. " vs real " .. self.days_left)
-  print("    current_state = " .. data.current_state .. " vs real " .. self.current_state)
+  local data = self.store
+  for k, v in pairs(self.store) do
+    if self[k] then
+      print("\t", k, v, self[k])
+    else
+      print("\t", k, v, nil)
+    end
+  end
   print("")
 end
 
@@ -293,12 +213,74 @@ function Plant:Plant(world, object_type, x, y, direction, etc)
   self.unreachable = false
   self.unreachable_counter = days_unreachable
 
-  self.fsm = FsmEngine({plant_decay_fsm})
-  self.fsm.data_store.world = world
-  self.fsm.data_store.tile_x = x
-  self.fsm.data_store.tile_y = y
-  self.fsm.data_store.direction = direction
-  self.fsm.data_store.cycles = nil -- Time interval of recovery to next level of health in number of ticks.
+  self.store = {}  -- FSM data storage container, should eventually be 'self'
+  self.store.tile_x = self.tile_x
+  self.store.tile_y = self.tile_y
+  self.store.world = self.world
+  --self.store.hospital = self.hospital
+
+  self.store.direction = direction
+  self.store.cycles = nil -- Time interval of recovery to next level of health in number of ticks.
+  self.store.current_state = nil -- State of the plant; 0=healthy, 4=dead
+  self.store.days_left = nil -- Number of days water left for the current state.
+  self.store.unreachable_counter = 0 -- Number of days to wait before testing reachability again.
+
+
+  self.fsm = FsmEngine(self.store)
+  local fsm, loc
+
+  -- FSM:
+  -- Decay health daily.
+  fsm = self.fsm:addFsm()
+  loc = self.fsm:addLocation(fsm, "decaying", true, setup_full_health)
+  self.fsm:addEdge(loc, "tick_day", nil, decay_action)
+
+
+  -- FSM:
+  -- Try to get attention of a handyman for some water when getting dry.
+  fsm = self.fsm:addFsm()
+  -- Wait until a handyman is required.
+  loc = self.fsm:addLocation(fsm, "plant_ok", true)
+  self.fsm:addBranchingEdge(loc, "tick_day", plant_needs_water_check, call_handyman_action,
+                            {true = "called_handyman", false = "unreachable"})
+  self:fsm:addEdge(loc, "tick_day") -- Plant ok, do nothing
+
+  -- Called handyman, wait until he arrives.
+  loc = self.fsm:addLocation(fsm, "called_handyman")
+  self.fsm:addBranchingEdge(loc, "tick_day", plant_needs_water_check, call_handyman_action,
+                            {true = "called_handyman", false = "unreachable"})
+  self.fsm:addEdge(loc, "tick_day", nil, reset_call_handyman, "plant_ok")
+
+  -- Plant is not reachable, wait a while before trying again.
+  loc = self.fsm:addLocation(fsm, "unreachable")
+  self.fsm:addBranchingEdge(loc, "tick_day", nil, decrement_unreachable, {0: "plant_ok"})
+
+
+  -- FSM:
+  -- Restore health after watering.
+  fsm = self.fsm:addFsm()
+  -- Waiting for watering.
+  loc = self.fsm:addLocation(fsm, "blocked", true)
+  self.fsm:addEdge(loc, "watering", nil, setup_timer, "restoring") -- Got water, jump to restoring health.
+
+  -- Got water, restore to health (quickly).
+  loc = self.fsm:addLocation(fsm, "restoring")
+  self.fsm:addEdge(loc, "watering", nil, nil, nil) -- Ignore further water attempts, already restoring.
+  self.fsm:addEdge(loc, "timeout", can_reach_full_health, setup_full_health, "blocked") -- Restore is done.
+  self.fsm:addEdge(loc, "timeout", nil, restart_timer) -- Increase current state, and restore again
+
+
+  -- FSM:
+  -- Try to get attention of the player if things seem to go terribly wrong.
+  fsm = self.fsm:addFsm()
+  loc = self.fsm:addLocation(fsm, "not_warned", true)
+  self.fsm:addEdge(loc, "tick_day", plant_is_dying_check, warn_player_action, "warned_player")
+  self.fsm:addEdge(loc, "tick_day") -- Plant still ok, do nothing,
+
+  loc = self.fsm:addLocation(fsm, "warned_player")
+  self.fsm:addEdge(loc, "tick_day") -- Warned the player once for this plant, stay here.
+
+  self.fsm:startup() -- Initialize the FSMs.
   self:sneakDump()
 end
 
@@ -334,7 +316,8 @@ end)
 --! Restores the plant to its initial state. (i.e. healthy)
 function Plant:restoreToFullHealth()
   if self.fsm then
-    self.fsm:step("watering", true)
+    self.fsm:step("watering")
+    self:sneakDump()
   end
   self.ticks = true
   self.phase = self.current_state
@@ -342,6 +325,7 @@ function Plant:restoreToFullHealth()
   self:setTimer((self.direction == "south" or self.direction == "east") and 35 or 20, plant_restoring)
   self.days_left = days_between_states
 
+  print("real remove watering call")
   local taskIndex = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
   if taskIndex ~= -1 then
     self.hospital:removeHandymanTask(taskIndex, "watering")
@@ -381,7 +365,7 @@ function Plant:callForWatering()
   -- If there are no tiles to water from, just die.
   if not self.ticks then
     if not self.unreachable then
-      print("Real call for watering")
+      print("Real call for watering (or update of priority)")
       local index = self.hospital:getIndexOfTask(self.tile_x, self.tile_y, "watering")
       if index == -1 then
         local call = self.world.dispatcher:callForWatering(self)
@@ -496,7 +480,7 @@ function Plant:tickDay()
     end
   end
   if self.fsm then
-    self.fsm:step("tick_day", true)
+    self.fsm:step("tick_day")
     self:sneakDump()
   end
 end
