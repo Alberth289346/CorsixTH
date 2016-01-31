@@ -30,6 +30,18 @@ local col_bg = {red = 154, green = 146, blue = 198}
 -- High byte sprite constants.
 local FLIP_H = DrawFlags.FlipHorizontal * 256
 
+-- Standard walls around a hospital. Compass locations are from within the
+-- hospital, 'sprite' is the sprite number to use, 'sprite_dx' and 'sprite_dy'
+-- are relative offsets pointing to the tile containing the wall sprite, 'type'
+-- is type of the sprite (north wall or west wall), 'out_dx' and 'out_dy' are
+-- relative offsets pointing to the neighbour 'outside' tile.
+local external_walls = {
+  north={sprite=122, sprite_dx=0, sprite_dy=0, type="north", out_dx= 0, out_dy=-1},
+  south={sprite=114, sprite_dx=0, sprite_dy=1, type="north", out_dx= 0, out_dy= 1},
+  west ={sprite=123, sprite_dx=0, sprite_dy=0, type="west",  out_dx=-1, out_dy= 0},
+  east ={sprite=115, sprite_dx=1, sprite_dy=0, type="west",  out_dx= 1, out_dy= 0},
+}
+
 -- Each variable below is an array of multi-tile sprites, which is translated
 -- to a list of buttons at a page.
 -- The generic form of a multi-tile sprite (see the helipad for an example) is
@@ -1557,3 +1569,122 @@ function UIMapEditor:onMouseUp(button, x, y)
   return repaint
 end
 
+--! Subroutine to expand in all directions from a given tile in a hospital,
+--! to find the area covered by it.
+--!param xy (int) Position of the starting tile (x + 256 * y)
+--!param hospital_tiles (table position -> true) Map with already explored tiles.
+--! Updated during the search.
+--!return (table) Map with positions (x + 256 * y) of the area.
+function UIMapEditor:exploreHospitalArea(xy, hospital_tiles)
+  local map = self.ui.app.map
+  local th = map.th
+
+  local area = {}
+  local notdone = {}
+  table.insert(notdone, xy)
+
+  while #notdone > 0 do
+    local xy = table.remove(notdone)
+    if not hospital_tiles[xy] then
+      -- Also adds tiles around a hospital area, but that is not a problem.
+      hospital_tiles[xy] = true
+
+      local x, y = xy % 256, math.floor(xy / 256)
+      if th:getCellFlags(x, y).hospital then
+        area[xy] = true
+
+        if x > 1 then table.insert(notdone, xy - 1) end
+        if x < map.width then table.insert(notdone, xy + 1) end
+        if y > 1 then table.insert(notdone, xy - 256) end
+        if y < map.height then table.insert(notdone, xy + 256) end
+      end
+    end
+  end
+  return area
+end
+
+--! Find all hospital areas in the map.
+--!return (array) Found areas (a map with tile positions (x + 256 * y) for each area)
+function UIMapEditor:findHospitalAreas()
+  local map = self.ui.app.map
+  local th = map.th
+
+  local areas = {}
+  local hospital_tiles = {} -- Skip already found hospital tiles.
+  for x = 1, map.width do
+    for y = 1, map.height do
+      local xy = x + y * 256
+      if not hospital_tiles[xy] then
+        if th:getCellFlags(x, y).hospital then
+          -- Unexplored hospital tile, expand from here to find the complete area.
+          local area = self:exploreHospitalArea(xy, hospital_tiles)
+          areas[#areas + 1] = area
+        end
+      end
+    end
+  end
+  return areas
+end
+
+--! Check that a hospital area is not at the edge of the map.
+--!param area (table) Map with positions (x + 256 * y) of the area.
+--!return Whether the area is correctly positioned (at least 1 tile from the edge).
+function UIMapEditor:checkAreaPosition(area)
+  local map = self.ui.app.map
+
+  for xy, _ in pairs(area) do
+    local x, y = xy % 256, math.floor(xy / 256)
+    if x == 1 or x == map.width or y == 1 or y == map.height then
+      return false
+    end
+  end
+  return true
+end
+
+--! Subroutine to check and possibly add a wall at an edge of a tile.
+--!param x (int) X position of the tile in the hospital.
+--!param y (int) Y position of the tile in the hospital
+--!param area (table) Collection of hospital area tiles (x + 256 * y).
+--!param wall_data (table) Data to check and possibly add a wall. See external_walls for a description.
+function UIMapEditor:checkAddWall(x, y, area, wall_data)
+  local map = self.ui.app.map
+  local th = map.th
+
+  local outx, outy = x + wall_data.out_dx, y + wall_data.out_dy
+  -- Off-world?
+  if outx < 1 or outx > map.width or outy < 1 or outy > map.height then
+    return
+  end
+  -- Not an edge of the area?
+  if area[outx + outy * 256] then return end
+
+  -- Edge found, check and optionally fix the wall.
+  x = x + wall_data.sprite_dx
+  y = y + wall_data.sprite_dy
+  if th:getCellFlags(x, y).thob == 0 then -- Skip objects.
+    local f, nw, ww, ui = th:getCell(x, y) -- floor, north-wall, west-wall, ui
+    if wall_data.type == "north" then
+      if not nw or nw == 0 then th:setCell(x, y, f, wall_data.sprite, ww, ui) end
+      return
+    elseif wall_data.type == "west" then
+      if not ww or ww == 0 then th:setCell(x, y, f, nw, wall_data.sprite, ui) end
+      return
+    end
+  end
+end
+
+--! Check the walls of an area, and add them if missing.
+--!param area (table) Collection of hospital area tiles (x + 256 * y).
+function UIMapEditor:addMissingWalls(area)
+  for xy, _ in pairs(area) do
+    local x, y = xy % 256, math.floor(xy / 256)
+    self:checkAddWall(x, y, area, external_walls.north)
+    self:checkAddWall(x, y, area, external_walls.south)
+    self:checkAddWall(x, y, area, external_walls.west)
+    self:checkAddWall(x, y, area, external_walls.east)
+  end
+end
+
+-- XXX Doors for each parcel
+-- XXX Entire area must have a non-zero parcel (or more parcels)
+-- XXX Parcels must touch edge (else no door)!
