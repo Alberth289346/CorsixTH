@@ -18,23 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-if ( MSVC AND USE_VCPKG_DEPS)
-    set ( VCPKG_COMMIT_SHA "1993a5eae610b877c7ed865040eaa3fb92e731c4")
+if (MSVC AND USE_VCPKG_DEPS)
+    set (VCPKG_COMMIT_SHA "1993a5eae610b877c7ed865040eaa3fb92e731c4")
 
     # Setup the various paths we are using
-    set ( _VCPKG_SCRIPT_NAME "build_vcpkg_deps.ps1")
-    set ( _SCRIPT_DIR ${PROJECT_SOURCE_DIR}/scripts)
+    set (_VCPKG_SCRIPT_NAME "build_vcpkg_deps.ps1")
+    set (_SCRIPT_DIR ${PROJECT_SOURCE_DIR}/scripts)
     # By default place VCPKG into root folder
-    set ( VCPKG_PARENT_DIR ${PROJECT_SOURCE_DIR} CACHE PATH "Destination for vcpkg dependencies")
+    set (VCPKG_PARENT_DIR ${PROJECT_SOURCE_DIR} CACHE PATH "Destination for vcpkg dependencies")
 
     # Determine the args to use
-    if ( CMAKE_CL_64 )
-        set ( _VCPKG_ARGS "-IsX64Build $True ")
+    if (CMAKE_CL_64)
+        set (_VCPKG_ARGS "-IsX64Build $True ")
     else()
-        set ( _VCPKG_ARGS "-IsX64Build $False ")
+        set (_VCPKG_ARGS "-IsX64Build $False ")
     endif()
 
-    if ( BUILD_ANIMVIEWER )
+    if (BUILD_ANIMVIEWER)
         string(CONCAT _VCPKG_ARGS ${_VCPKG_ARGS} "-BuildAnimView $True ")
     else ()
         string(CONCAT _VCPKG_ARGS ${_VCPKG_ARGS} "-BuildAnimView $False ")
@@ -43,7 +43,7 @@ if ( MSVC AND USE_VCPKG_DEPS)
     string(CONCAT _VCPKG_ARGS ${_VCPKG_ARGS} "-VcpkgCommitSha " ${VCPKG_COMMIT_SHA} " ")
 
     # Run the build script
-    set ( _SCRIPT_COMMAND  powershell ${_SCRIPT_DIR}/${_VCPKG_SCRIPT_NAME})
+    set (_SCRIPT_COMMAND  powershell ${_SCRIPT_DIR}/${_VCPKG_SCRIPT_NAME})
     execute_process(WORKING_DIRECTORY ${VCPKG_PARENT_DIR}
                     COMMAND ${_SCRIPT_COMMAND} ${_VCPKG_ARGS}
                     RESULT_VARIABLE err_val)
@@ -63,7 +63,7 @@ if ( MSVC AND USE_VCPKG_DEPS)
 
     # For both of these reasons we will use CMAKE_PREFIX_PATH
 
-    set ( VCPKG_INSTALLED_PATH ${VCPKG_PARENT_DIR}/vcpkg/installed/)
+    set (VCPKG_INSTALLED_PATH ${VCPKG_PARENT_DIR}/vcpkg/installed/)
     if (CMAKE_CL_64)
         string(CONCAT VCPKG_INSTALLED_PATH ${VCPKG_INSTALLED_PATH} "x64-windows")
     else()

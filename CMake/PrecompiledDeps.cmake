@@ -22,15 +22,15 @@
 include(ExternalProject)
 
 # Inform CMake about the external project
-set ( _DEPS_PROJECT_NAME PrecompiledDependencies)
+set (_DEPS_PROJECT_NAME PrecompiledDependencies)
 
 # Place files into ./precompiled_deps folder
-set( PRECOMPILED_DEPS_BASE_DIR ${PROJECT_SOURCE_DIR}/PrecompiledDeps CACHE PATH "Destination for pre-built dependencies")
-set( _DEPS_GIT_URL "https://github.com/CorsixTH/deps.git")
+set(PRECOMPILED_DEPS_BASE_DIR ${PROJECT_SOURCE_DIR}/PrecompiledDeps CACHE PATH "Destination for pre-built dependencies")
+set(_DEPS_GIT_URL "https://github.com/CorsixTH/deps.git")
 # Select the optimal dependencies commit regardless where master is.
-set( _DEPS_GIT_SHA "a23eb28bb8998b93215eccf805ee5462d75a57f2" )
+set(_DEPS_GIT_SHA "a23eb28bb8998b93215eccf805ee5462d75a57f2")
 
-ExternalProject_Add( ${_DEPS_PROJECT_NAME}
+ExternalProject_Add(${_DEPS_PROJECT_NAME}
     PREFIX ${PRECOMPILED_DEPS_BASE_DIR}
     GIT_REPOSITORY ${_DEPS_GIT_URL}
     GIT_TAG ${_DEPS_GIT_SHA}
@@ -41,42 +41,42 @@ ExternalProject_Add( ${_DEPS_PROJECT_NAME}
     TEST_COMMAND ""
 )
 
-unset( _DEPS_GIT_URL)
-unset( _DEPS_GIT_SHA)
+unset(_DEPS_GIT_URL)
+unset(_DEPS_GIT_SHA)
 
 # Make sure the final make file / solution does not attempt to build
 # the dependencies target
-set_target_properties( ${_DEPS_PROJECT_NAME} PROPERTIES
-                       EXCLUDE_FROM_ALL 1
-                       EXCLUDE_FROM_DEFAULT_BUILD 1)
+set_target_properties(${_DEPS_PROJECT_NAME} PROPERTIES
+                      EXCLUDE_FROM_ALL 1
+                      EXCLUDE_FROM_DEFAULT_BUILD 1)
 
-set ( _DEPS_TMP_PATH ${PRECOMPILED_DEPS_BASE_DIR}/tmp)
-set ( _DEPS_MODULES_TEMPLATE_NAME ${_DEPS_TMP_PATH}/${_DEPS_PROJECT_NAME})
+set (_DEPS_TMP_PATH ${PRECOMPILED_DEPS_BASE_DIR}/tmp)
+set (_DEPS_MODULES_TEMPLATE_NAME ${_DEPS_TMP_PATH}/${_DEPS_PROJECT_NAME})
 
 # Clone if we don't have the deps
-if ( NOT EXISTS ${PRECOMPILED_DEPS_BASE_DIR}/src/${_DEPS_PROJECT_NAME}/.git )
-    message( STATUS "Getting Precompiled Dependencies...")
-    execute_process( COMMAND ${CMAKE_COMMAND} ARGS -P
-                     ${_DEPS_MODULES_TEMPLATE_NAME}-gitclone.cmake
-                     RESULT_VARIABLE return_value)
+if (NOT EXISTS ${PRECOMPILED_DEPS_BASE_DIR}/src/${_DEPS_PROJECT_NAME}/.git)
+    message(STATUS "Getting Precompiled Dependencies...")
+    execute_process(COMMAND ${CMAKE_COMMAND} ARGS -P
+                    ${_DEPS_MODULES_TEMPLATE_NAME}-gitclone.cmake
+                    RESULT_VARIABLE return_value)
     if (return_value)
         message(FATAL_ERROR "Failed to clone precompiled dependencies.")
     endif()
 
 # Deps exist, check for updates and checkout the correct tag
 else()
-    message( STATUS "Checking for Precompiled Dependency Updates...")
-    execute_process( COMMAND ${CMAKE_COMMAND} ARGS -P
-                     ${_DEPS_MODULES_TEMPLATE_NAME}-gitupdate.cmake
-                     RESULT_VARIABLE return_value)
-    if(return_value)
+    message(STATUS "Checking for Precompiled Dependency Updates...")
+    execute_process(COMMAND ${CMAKE_COMMAND} ARGS -P
+                    ${_DEPS_MODULES_TEMPLATE_NAME}-gitupdate.cmake
+                    RESULT_VARIABLE return_value)
+    if (return_value)
         message(FATAL_ERROR "Failed to update precompiled dependencies.")
     endif()
 endif()
 
 # We can dispose of tmp and modules template name afterwards
-unset( _DEPS_TMP_PATH )
-unset( _DEPS_MODULES_TEMPLATE_NAME )
+unset(_DEPS_TMP_PATH)
+unset(_DEPS_MODULES_TEMPLATE_NAME)
 
 # Determine the appropriate libs to use for this compiler
 if (UNIX AND CMAKE_COMPILER_IS_GNU)
