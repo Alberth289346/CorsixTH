@@ -777,36 +777,17 @@ function Hospital:checkFacilities()
       self:noToilet_msg()
     end
 
-    if not self.bench_msg then
-      -- How are we for seating, if there are plenty then praise is due, if not the player is warned
-      -- check the seating : standing ratio of waiting patients
-      -- find all the patients who are currently waiting around
-      local numberSitting, numberStanding = self:countSittingStanding()
-
-      -- If there are patients standing then maybe the seating is in the wrong place!
-      -- set to 5% (standing:seated) if there are more than 50 patients or 20% if there are less than 50.
-      -- If this happens for 10 days in any month you are warned about seating unless you have already been warned that month
-      -- So there are now two checks about having enough seating, if either are called then you won't receive praise. (may need balancing)
-      local number_standing_threshold = numberSitting / (self.patientcount < 50 and 5 or 20)
-      if numberStanding > number_standing_threshold then
-        self.seating_warning = self.seating_warning + 1
-        if self.seating_warning >= 10 then
+    if day == 12 then
+      -- How are we for seating, if there are plenty then praise is due, if not
+      -- the player is warned.
+      local num_sitting, num_standing = self:countSittingStanding()
+      if num_sitting + num_standing > 7 then -- Have a sufficient number of patients waiting.
+        local sitting_ratio = num_sitting / (num_sitting + num_standing)
+        if num_standing > 5 and sitting_ratio < 0.8 then -- 20% is standing.
           self:warningBench()
-        end
-      end
-
-      if day == 12 then
-        -- If there are less patients standing than sitting (1:20) and there are more benches than patients in the hospital
-        -- you have plenty of seating.  If you have not been warned of standing patients in the last month, you could be praised.
-
-        -- We don't want to see praise messages about seating every month, so randomise the chances of it being shown
-        local show_praise = math.random(1, 4) == 4
-        local num_benches = self:countBenches()
-        if num_benches > self.patientcount and show_praise then
+        elseif sitting_ratio > 0.95 and math.random(1, 12) == 1 then
+          -- If practically everybody has a seat, give praise about once a year.
           self:praiseBench()
-        -- Are there enough benches for the volume of patients in your hospital?
-        elseif num_benches < self.patientcount then
-          self:warningBench()
         end
       end
     end
