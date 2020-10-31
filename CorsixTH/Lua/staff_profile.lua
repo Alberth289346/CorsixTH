@@ -142,18 +142,27 @@ function StaffProfile:randomise(month)
   self:randomiseOrganical()
 end
 
+-- Cached initials for sharing between StaffProfile instances.
+strict_declare_global "staff_initials_cache"
+staff_initials_cache = {}
+
+--! Give the staff member some personal properties.
 function StaffProfile:randomiseOrganical()
-  local parts = tostring(our_concat(_S.humanoid_name_starts) .. our_concat(_S.humanoid_name_ends)):sub(33)
-  if not (self.world.app.cached_parts == parts and self.world.app.cached_letters) then
-    self.world.app.cached_parts = parts
-    local initials = {}
+  local parts = tostring(our_concat(_S.humanoid_name_starts)
+      .. our_concat(_S.humanoid_name_ends)):sub(33)
+
+  local initials
+  if staff_initials_cache.parts == parts and staff_initials_cache.initials then
+    initials = staff_initials_cache.initials
+  else
+    initials = {}
     for uchar in parts:gmatch("([%z\1-\127\194-\244][\128-\191]*)") do
       initials[#initials + 1] = uchar
     end
-    self.world.app.cached_letters = initials
+    staff_initials_cache.parts = parts
+    staff_initials_cache.initials = initials
   end
-
-  self.name = self.world.app.cached_letters[math.random(1, #self.world.app.cached_letters)] .. ". "
+  self.name = initials[math.random(1, #initials)] .. ". "
 
   for _, part_table in ipairs(name_parts) do
     self.name = self.name .. part_table.__random
