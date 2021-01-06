@@ -44,17 +44,23 @@ local multigesture_pinch_amplification_factor = 100
 --! Game UI constructor.
 --!param app (Application) Application object.
 --!param local_hospital Hospital to display
---!param map_editor (bool) Whether the map is editable.
-function GameUI:GameUI(app, local_hospital, map_editor)
+--!param mode (string) The UI mode to create. Allowed values: "game" (default),
+--    "map-editor"
+function GameUI:GameUI(app, local_hospital, mode)
   self:UI(app)
   self.app = app
 
   self.hospital = local_hospital
   self.tutorial = { chapter = 0, phase = 0 }
-  if map_editor then
+
+  mode = mode or "game"
+  if mode == "map-editor" then
     self.map_editor = UIMapEditor(self)
     self:addWindow(self.map_editor)
   else
+    -- Mode must be "game"
+    assert(mode == "game", "Unexpected 'mode' argument '" .. tostring(mode) .. "'")
+
     self.adviser = UIAdviser(self)
     self.bottom_panel = UIBottomPanel(self)
     self.bottom_panel:addWindow(self.adviser)
