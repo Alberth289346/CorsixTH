@@ -620,15 +620,16 @@ end
 --!param level_file (string) The path to the map file as supplied by the config file.
 --!param level_intro (string) If loading a custom level this message will be shown
 --    as soon as the level has been loaded.
---!param map_editor (boolean) Whether the file is loaded for the map editor.
-function App:loadLevel(level, difficulty, level_name, level_file, level_intro, map_editor)
+--!param mode (string) The UI mode to create. Allowed values: "game" (default),
+--    "map-editor"
+function App:loadLevel(level, difficulty, level_name, level_file, level_intro, mode)
   if self.world then
     self:worldExited()
   end
 
   -- Check that we can load the data before unloading current map
   local new_map = Map(self)
-  local map_objects, errors = new_map:load(level, difficulty, level_name, level_file, level_intro, map_editor)
+  local map_objects, errors = new_map:load(level, difficulty, level_name, level_file, level_intro, mode)
   if not map_objects then
     self.world.ui:addWindow(UIInformation(self.ui, {errors}))
     return
@@ -672,7 +673,7 @@ function App:loadLevel(level, difficulty, level_name, level_file, level_intro, m
   self.audio:playSoundEffects(self.config.play_sounds)
 
   -- Load UI
-  self.ui = GameUI(self, self.world:getLocalPlayerHospital(), map_editor)
+  self.ui = GameUI(self, self.world:getLocalPlayerHospital(), mode)
   self.world:setUI(self.ui) -- Function call allows world to set up its keyHandlers
 
   -- Now restore progress from previous levels.
@@ -1568,7 +1569,7 @@ end
 
 --! Begin the map editor
 function App:mapEdit()
-  self:loadLevel("", nil, nil, nil, nil, true)
+  self:loadLevel("", nil, nil, nil, nil, "map-editor")
 end
 
 --! Exits the game completely (no confirmation window)
