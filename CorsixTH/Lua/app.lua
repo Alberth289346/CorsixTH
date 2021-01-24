@@ -1567,9 +1567,14 @@ function App:restart()
   end))
 end
 
---! Begin the map editor
+--! Start the map editor
 function App:mapEdit()
   self:loadLevel("", nil, nil, nil, nil, "map-editor")
+end
+
+--! Start the level editor
+function App:levelEdit()
+  self:loadLevel("", nil, nil, nil, nil, "level-editor")
 end
 
 --! Exits the game completely (no confirmation window)

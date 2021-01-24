@@ -44,6 +44,7 @@ function UIMainMenu:UIMainMenu(ui)
     {_S.main_menu.load_game,       self.buttonLoadGame,       _S.tooltip.main_menu.load_game},
     {_S.main_menu.options,         self.buttonOptions,        _S.tooltip.main_menu.options},
     {_S.main_menu.map_edit,        self.buttonMapEdit,        _S.tooltip.main_menu.map_edit},
+    {_S.main_menu.level_edit,      self.buttonLevelEdit,      _S.tooltip.main_menu.level_edit},
     {_S.main_menu.exit,            self.buttonExit,           _S.tooltip.main_menu.exit}
   }
   self.no_menu_entries = #menu_items
@@ -151,6 +152,10 @@ end
 
 function UIMainMenu:buttonMapEdit()
   self.ui.app:mapEdit()
+end
+
+function UIMainMenu:buttonLevelEdit()
+  self.ui.app:levelEdit()
 end
 
 function UIMainMenu:buttonExit()
