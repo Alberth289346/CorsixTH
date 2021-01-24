@@ -57,6 +57,10 @@ function GameUI:GameUI(app, local_hospital, mode)
   if mode == "map-editor" then
     self.map_editor = UIMapEditor(self)
     self:addWindow(self.map_editor)
+  elseif mode == "level-editor" then
+    self.level_editor = UILevelEditor(self)
+    self:addWindow(self.level_editor)
+    -- XXX Background seems useless, we may need some other background???
   else
     -- Mode must be "game"
     assert(mode == "game", "Unexpected 'mode' argument '" .. tostring(mode) .. "'")
