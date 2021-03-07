@@ -1,0 +1,21 @@
+== Global overview
+
+The following picture shows the application at birds-eye view.
+
+.Global overview of the application
+image::images/overview.png[]
+
+The main blocks here are the *Simulator* that simulates the hospital of the
+user, and the *Remote simulators* convert data from the network to simulate the hospitals
+of the competitors. All simulations are displayed by the *User interface* (UI)
+at the right. Input from the user is sent back.
+The *Common* block deals with the shared resources with the competitors. All
+these blocks need to perform processing to do their job (marked with a star).
+
+The other blocks contain just data. The *Config* contains the user
+configuration, *Graphics* contain all images to display a hospital, while *Game
+objects* contain the various properties of the objects and entities, from foot
+print to cost to available types of patients and doctor specializations.
+
+Lines with arrows show the connections between the block and the (main) direction
+of information stream.
