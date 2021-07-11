@@ -80,6 +80,15 @@ function Patient:onClick(ui, button)
   Humanoid.onClick(self, ui, button)
 end
 
+function Patient:getRootSkill()
+  local visit_hospital = {
+    Edge("initial", "parent-visit", nil, "add_visit_skill"),
+    Edge("parent-visit", "done"),
+    Edge("done", "ghost", nil, "despawn"),
+  }
+  return Skill.makeSkill("visit-hospital", visit_hospital)
+end
+
 function Patient:setDisease(disease)
   self.disease = disease
   disease.initPatient(self)

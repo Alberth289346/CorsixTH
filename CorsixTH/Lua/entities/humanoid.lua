@@ -286,7 +286,15 @@ end
 --!param ... Arguments for base class constructor.
 function Humanoid:Humanoid(...)
   self:Entity(...)
-  self.action_queue = {}
+
+  local root_skill = self:getRootSkill()
+  if root_skill then
+    root_skill.current_state = root_skill.initial_state
+    self.skill_stack = {root_skill}
+  else
+    self.action_queue = {}
+  end
+
   self.last_move_direction = "east"
   self.attributes = {}
   self.attributes["warmth"] = 0.29
@@ -301,6 +309,30 @@ function Humanoid:Humanoid(...)
   self.build_callbacks  = {--[[set]]}
   self.remove_callbacks = {--[[set]]}
   self.staff_change_callbacks = {--[[set]]}
+end
+
+--! Get the skill covering the live-span of the humanoid.
+--!return Skill covering the life-span of the humanoid, or nil if skills are not supported.
+function Humanoid:getRootSkill()
+  return nil
+end
+
+function Humanoid:setNextAnim()
+  error("Implement me") -- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+end
+
+--! Evaluate the guard with the provided name.
+--!param guard_name Name of the guard to evaluate.
+--!return (bool) Whether the guard holds.
+function Humanoid:evalGuard(guard_name)
+  error("Implement 'evalGuard' in " .. type(self))
+end
+
+--! Perform the indicated action.
+--!param action_name Name of the action to perform.
+--!return (bool) Whether an animation was started with a delay.
+function Humanoid:evalAction(action_name)
+  error("Implement 'evalAction' in " .. type(self))
 end
 
 -- Save game compatibility
@@ -657,7 +689,7 @@ function Humanoid:setType(humanoid_class)
   self.check_watch_anim = check_watch_animations[humanoid_class]
   self.pee_anim = pee_animations[humanoid_class]
   self.humanoid_class = humanoid_class
-  if #self.action_queue == 0 then
+  if self.action_queue and #self.action_queue == 0 then
     self:setNextAction(IdleAction())
   end
 

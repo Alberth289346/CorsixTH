@@ -534,11 +534,16 @@ function World:spawnPatient(hospital)
     disease = usable_diseases[math.random(1, #usable_diseases)]
   end
 
+  print("New patient!")
   -- Construct patient.
   local spawn_point = self.spawn_points[math.random(1, #self.spawn_points)]
   local patient = self:newEntity("Patient", 2)
   patient:setDisease(disease)
-  patient:setNextAction(SpawnAction("spawn", spawn_point))
+  if patient.action_queue then
+    patient:setNextAction(SpawnAction("spawn", spawn_point))
+  else
+    patient:setNextAnim()
+  end
   patient:setHospital(hospital)
   return patient
 end
