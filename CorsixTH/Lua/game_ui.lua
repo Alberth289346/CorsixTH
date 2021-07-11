@@ -79,7 +79,7 @@ function GameUI:GameUI(app, local_hospital, map_editor)
     app.map.th:getCameraTile(local_hospital:getPlayerIndex()))
   self.zoom_factor = 1
   self:scrollMap(-scr_w / 2, 16 - scr_h / 2)
-  self.limit_to_visible_diamond = not self.map_editor
+  self.limit_to_visible_diamond = false and not self.map_editor
   self.transparent_walls = false
   self.do_world_hit_test = true
 
