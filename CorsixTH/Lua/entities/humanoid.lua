@@ -288,6 +288,7 @@ function Humanoid:Humanoid(...)
   self:Entity(...)
 
   local root_skill = self:getRootSkill()
+  print("Got root skill " .. tostring(root_skill))
   if root_skill then
     root_skill.current_state = root_skill.initial_state
     self.skill_stack = {root_skill}
@@ -318,21 +319,86 @@ function Humanoid:getRootSkill()
 end
 
 function Humanoid:setNextAnim()
-  error("Implement me") -- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  local function takeEdge(self)
+    local skill = self.skill_stack[#self.skill_stack]
+    print("Take edge from " .. skill.skill_name .. ", state " .. tostring(skill.current_state))
+    for _, edge in ipairs(skill.edges_by_state[skill.current_state]) do
+      -- Can the edge be performed?
+      if not edge.guard or self:evalGuard(edge.guard) then
+
+        -- First change state so the action can use it.
+        local new_state = edge.dest_state
+        skill.current_state = new_state
+        local anim_started
+        if edge.action then
+          anim_started = self:evalAction(edge.action)
+        else
+          anim_started = false
+        end
+
+        -- While skill exits, change parent skill(s).
+        while skill.exit_states[new_state] do --then return anim_started end
+          table.remove(self.skill_stack) -- Drop bottom skill.
+
+          if #self.skill_stack <= 0 then break end
+          local skill = self.skill_stack[#self.skill_stack]
+          skill.current_state = new_state
+        end
+        return anim_started
+      end
+    end
+    -- No edges or all guards fail to hold.
+    error("No viable edge found in skill " .. skill.skill_name .. ", state "
+        .. tostring(skill.current_state))
+  end
+
+  local count = 0
+  while count < 5 do
+    if takeEdge(self) then return end
+    count = count + 1
+  end
+  error("Too many edges taken!")
+end
+
+function Humanoid:addSubSkill(sub_skill)
+  local skill = self.skill_stack[#self.skill_stack]
+  -- Find states in the parent skill needed by the child skill.
+  local found_exits = {} -- set
+  for _, edge in ipairs(skill.edges_by_state[skill.current_state]) do
+    if sub_skill.exit_states[edge.dest_state] and not edge.guard
+        and not edge.action then
+      found_exits[edge.dest_state] = true
+    end
+  end
+  if #sub_skill.exit_states > #found_exits then
+    missing = ""
+    for exit_state in pairs(sub_skill) do
+      if not found_exits[exit_state] then
+        missing = missing .. " " .. exit_state
+      end
+    end
+    error("Sub skill " .. sub_skill.skill_name .. " needs exit states"
+        .. missing .. " in parent skill " .. skill.skill_name .. ", state "
+        .. skill.current_state)
+  end
+  
+  -- All ok, append new skill.
+  self.skill_stack[#self.skill_stack + 1] = sub_skill
+  sub_skill.current_state = sub_skill.initial_state
 end
 
 --! Evaluate the guard with the provided name.
---!param guard_name Name of the guard to evaluate.
+--!param guard Guard to evaluate.
 --!return (bool) Whether the guard holds.
-function Humanoid:evalGuard(guard_name)
-  error("Implement 'evalGuard' in " .. type(self))
+function Humanoid:evalGuard(guard)
+  error("Implement 'evalGuard' in " .. class.type(self))
 end
 
---! Perform the indicated action.
---!param action_name Name of the action to perform.
+--! Perform the indicated action (often just an animation).
+--!param action Action to perform.
 --!return (bool) Whether an animation was started with a delay.
-function Humanoid:evalAction(action_name)
-  error("Implement 'evalAction' in " .. type(self))
+function Humanoid:evalAction(action)
+  error("Implement 'evalAction' in " .. class.type(self))
 end
 
 -- Save game compatibility

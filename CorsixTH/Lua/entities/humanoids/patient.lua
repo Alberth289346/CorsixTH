@@ -81,12 +81,34 @@ function Patient:onClick(ui, button)
 end
 
 function Patient:getRootSkill()
-  local visit_hospital = {
-    Edge("initial", "parent-visit", nil, "add_visit_skill"),
+  local get_cured = {
+    -- XXX Feed spawn point to the NPC.
+    -- XXX Compensate for initial position ofsset during spawning.
+    Edge("initial", "parent-visit", nil, {name="add_visit_skill"}),
     Edge("parent-visit", "done"),
-    Edge("done", "ghost", nil, "despawn"),
+    -- XXX Walk to despawn point.
+    Edge("done", "ghost", nil, {name="despawn"}),
   }
-  return Skill.makeSkill("visit-hospital", visit_hospital)
+  return Skill.makeSkill("get-cured", get_cured)
+end
+
+function Patient:evalGuard(guard)
+  error("Implement evaluating guard " .. serialize(guard))
+  return false
+end
+
+function Patient:evalAction(action)
+  if action.name == "add_visit_skill" then
+    self:addSubSkill(self.hospital:getVisitSkill())
+    return false
+  elseif action.name == "despawn" then
+    if self.hospital then self:despawn() end
+    self.world:destroyEntity(self)
+    return true -- Fake we're waiting for a callback from the animation to continue.
+  end
+
+  error("Implement evaluating action " .. serialize(action))
+  return false
 end
 
 function Patient:setDisease(disease)
@@ -215,7 +237,11 @@ function Patient:setHospital(hospital)
   end
   Humanoid.setHospital(self, hospital)
   if hospital.is_in_world and not self.is_debug and not self.is_emergency then
-    self:setNextAction(SeekReceptionAction())
+    if self.action_queue then
+      self:setNextAction(SeekReceptionAction())
+    else
+      -- XXX Hospital changed event?!
+    end
   end
   hospital:addPatient(self)
 end

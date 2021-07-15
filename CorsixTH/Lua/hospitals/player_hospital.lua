@@ -47,6 +47,20 @@ function PlayerHospital:PlayerHospital(world, avail_rooms, name)
   self.win_declined = false -- Has not yet declined the level win fax
 end
 
+function PlayerHospital:getVisitSkill(room)
+  if room == nil then
+    local visit_hospital = {
+      -- XXX no_path, path_blocked
+      Edge("initial", "to_reception", nil, {name="add-walk-skill", dest="at_reception"}),
+      Edge("to_reception", "at_reception"),
+      -- XXX Do a little more than this.
+    }
+    return Skill.makeSkill("visit_hospital", visit_hospital)
+  end
+
+  error("Unknown room to visit: " .. tostring(room))
+end
+
 --! Give advice to the player at the end of a day.
 function PlayerHospital:dailyAdviceChecks()
   local current_date = self.world:date()

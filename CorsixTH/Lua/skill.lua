@@ -65,18 +65,18 @@ end
 --  selected to start the animation.
 --
 --  A state is just a name, it has no content. A guard and an action are both
---  code, but for simplicity the name of the code is just listed here. The
---  Entity:evalGuard() and Entity:evalAction() functions are used to resolve
---  these names to a result value.
+--  code, but for simplicity they are both tables with a 'name' field, and
+--  possibly parameters. The Entity:evalGuard() and Entity:evalAction()
+--  functions are used to resolve them to a result value.
 
 class "Edge"
 
 ---@type Edge
 local Edge = _G["Edge"]
 
-function Edge:Edge(src_state, dest_state, guard_name, action_name)
+function Edge:Edge(src_state, dest_state, guard, action)
     self.src_state = src_state
     self.dest_state = dest_state
-    self.guard_name = guard_name
-    self.action_name = action_name
+    self.guard = guard
+    self.action = action
 end

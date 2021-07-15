@@ -541,10 +541,11 @@ function World:spawnPatient(hospital)
   patient:setDisease(disease)
   if patient.action_queue then
     patient:setNextAction(SpawnAction("spawn", spawn_point))
+    patient:setHospital(hospital)
   else
+    patient:setHospital(hospital)
     patient:setNextAnim()
   end
-  patient:setHospital(hospital)
   return patient
 end
 
