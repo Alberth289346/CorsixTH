@@ -286,7 +286,16 @@ end
 --!param ... Arguments for base class constructor.
 function Humanoid:Humanoid(...)
   self:Entity(...)
-  self.action_queue = {}
+  local root_activity = self:getRootActivity()
+  if root_activity then
+    root_activity.current_state = root_activity.initial_state
+    self.activities = {root_activity}
+    self.activity_bb = { -- Blackboard for activities scratch data.
+    }
+  else
+    self.action_queue = {}
+  end
+
   self.last_move_direction = "east"
   self.attributes = {}
   self.attributes["warmth"] = 0.29
@@ -301,6 +310,93 @@ function Humanoid:Humanoid(...)
   self.build_callbacks  = {--[[set]]}
   self.remove_callbacks = {--[[set]]}
   self.staff_change_callbacks = {--[[set]]}
+end
+
+--! Get the life-time activity of the humanoid.
+--!return (Activity) Root activity of the humanoid.
+function Humanoid:getRootActivity()
+  return nil
+end
+
+local debug_states = true
+
+--! Start a new animation for the humanoid.
+--!event Event to take in ther activity.
+function Humanoid:setNextAnim(event)
+  local function takeEdge(self, event)
+    local activity = self.activities[#self.activities]
+    if debug_states then
+      print("Take edge from " .. tostring(activity.activity_name) .. ", state "
+          .. tostring(activity.current_state))
+      print("event: " .. tostring(event))
+    end
+    for _, edge in ipairs(activity.edges_by_state[activity.current_state]) do
+      -- Can the edge be performed?
+      local can_perform
+      if event then
+        can_perform = edge.event == event
+      else
+        can_perform = not edge.event
+      end
+
+      if can_perform and (not edge.guard or edge.guard(self)) then
+        -- First change state so the action can use it.
+        local new_state = edge.dest_state
+        if debug_states then print("... ending in state " .. new_state) end
+        activity.current_state = new_state
+        local anim_started
+        if edge.action then
+          anim_started = Activity.performAction(self, edge.action[1], table.unpack(edge.action, 2))
+        else
+          anim_started = false
+        end
+
+        -- While activity exits, change parent activity(s).
+        while activity.exit_states[new_state] do
+          if debug_states then
+            print("exit-state " .. new_state .. " reached, dropping activity "
+                .. activity.activity_name)
+          end
+          table.remove(self.activities) -- Drop bottom skill.
+
+          if #self.activities <= 0 then break end
+          local activity = self.activities[#self.activities]
+          skill.current_state = new_state
+        end
+        return anim_started
+      end
+    end
+    -- No edges or all guards fail to hold.
+    if event then
+      error("No viable event edge found for event " .. event
+          .. " in activity " .. activity.activity_name .. ", state "
+          .. tostring(activity.current_state))
+    else
+      error("No viable edge found in activity " .. activity.activity_name
+          .. ", state " .. tostring(activity.current_state))
+    end
+  end
+
+  if debug_states then
+    print("-------------- setNextAnim(" .. (event and tostring(event) or "") .. ") ------------")
+  end
+  local count = 0
+  while count < 5 do
+    if takeEdge(self, event) then
+      if (debug_states) then
+        local activity = self.activities[#self.activities]
+        print("Found next anim, done in state " .. activity.current_state or "nil")
+        return
+      end
+    end
+    event = nil -- Event has been performed in the edge.
+    count = count + 1
+  end
+  error("Too many edges taken!")
+end
+
+function Humanoid:activityEvent(event_name)
+  self:setNextAnim(event_name)
 end
 
 -- Save game compatibility
@@ -618,6 +714,11 @@ end
 
 
 function Humanoid:finishAction(action)
+  if self.activities then
+    self:setnextAnim()
+    return
+  end
+
   if action ~= nil then
     assert(action == self.action_queue[1], "Can only finish current action")
   end
@@ -657,7 +758,9 @@ function Humanoid:setType(humanoid_class)
   self.check_watch_anim = check_watch_animations[humanoid_class]
   self.pee_anim = pee_animations[humanoid_class]
   self.humanoid_class = humanoid_class
-  if #self.action_queue == 0 then
+  if self.activities then
+    self:setNextAnim()
+  elseif #self.action_queue == 0 then
     self:setNextAction(IdleAction())
   end
 

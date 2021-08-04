@@ -453,7 +453,11 @@ function Staff:onPlaceInCorridor()
   -- staff member to primarily return to his/her old room.
   self.last_room = nil
   self:updateSpeed()
-  self:setNextAction(MeanderAction())
+  if self.action_queue then
+    self:setNextAction(MeanderAction())
+  else
+    self:activityEvent("onPlaceInCorridor") -- XXX There is also Receptionist.onPlaceInCorridor!!
+  end
 end
 
 -- Sets the Hospital for a member of staff

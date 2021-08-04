@@ -34,6 +34,10 @@ function Receptionist:Receptionist(...)
   self:Staff(...)
 end
 
+function Receptionist:getRootActivity()
+  return Activity.rootReceptionistActivity()
+end
+
 function Receptionist:tickDay()
   if not Staff.tickDay(self) then
     return false
