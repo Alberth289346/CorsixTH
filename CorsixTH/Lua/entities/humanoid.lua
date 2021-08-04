@@ -291,6 +291,16 @@ function Humanoid:Humanoid(...)
     root_activity.current_state = root_activity.initial_state
     self.activities = {root_activity}
     self.activity_bb = { -- Blackboard for activities scratch data.
+      object_data = { -- Data about found objects.
+        object = nil, -- the found object.
+        x = nil, -- Usage tile of the object for the humanoid.
+        y = nil, -- Usage tile of the object for the humanoid.
+      },
+      path_data = { -- Data about computed paths.
+        path_x = nil,
+        path_y = nil,
+        path_index = nil, -- Index into path_x and path_y pointing the current tile of the humanoid.
+      },
     }
   else
     self.action_queue = {}
@@ -339,31 +349,42 @@ function Humanoid:setNextAnim(event)
         can_perform = not edge.event
       end
 
-      if can_perform and (not edge.guard or edge.guard(self)) then
-        -- First change state so the action can use it.
-        local new_state = edge.dest_state
-        if debug_states then print("... ending in state " .. new_state) end
-        activity.current_state = new_state
-        local anim_started
-        if edge.action then
-          anim_started = Activity.performAction(self, edge.action[1], table.unpack(edge.action, 2))
-        else
-          anim_started = false
+      if can_perform then
+        if debug_states then
+          print("guard: " .. tostring(edge.guard))
+          if edge.action then print("action: " .. edge.action[1]) end
         end
 
-        -- While activity exits, change parent activity(s).
-        while activity.exit_states[new_state] do
-          if debug_states then
-            print("exit-state " .. new_state .. " reached, dropping activity "
-                .. activity.activity_name)
+        if not edge.guard or Activity.checkGuard(self, edge.guard) then
+          -- First change state so the action can use it.
+          local new_state = edge.dest_state
+          if debug_states then print("... ending in state " .. new_state) end
+          activity.current_state = new_state
+          local anim_started
+          if edge.action then
+            anim_started = Activity.performAction(self, edge.action[1], table.unpack(edge.action, 2))
+          else
+            anim_started = false
           end
-          table.remove(self.activities) -- Drop bottom skill.
 
-          if #self.activities <= 0 then break end
-          local activity = self.activities[#self.activities]
-          skill.current_state = new_state
+          -- While activity exits, change parent activity(s).
+          while activity.exit_states[new_state] do
+            if debug_states then
+              print("exit-state " .. new_state .. " reached, dropping activity "
+                  .. activity.activity_name)
+            end
+            table.remove(self.activities) -- Drop bottom skill.
+
+            if #self.activities <= 0 then break end
+            local activity = self.activities[#self.activities]
+            skill.current_state = new_state
+          end
+          return anim_started
+        else
+          if debug_states then
+            print("... guard '" .. edge.guard .. "' failed")
+          end
         end
-        return anim_started
       end
     end
     -- No edges or all guards fail to hold.
@@ -381,7 +402,7 @@ function Humanoid:setNextAnim(event)
     print("-------------- setNextAnim(" .. (event and tostring(event) or "") .. ") ------------")
   end
   local count = 0
-  while count < 5 do
+  while count < 10 do
     if takeEdge(self, event) then
       if (debug_states) then
         local activity = self.activities[#self.activities]
@@ -715,7 +736,7 @@ end
 
 function Humanoid:finishAction(action)
   if self.activities then
-    self:setnextAnim()
+    self:setNextAnim()
     return
   end
 
@@ -1083,4 +1104,4 @@ function Humanoid:unexpectFromRoom(dest_room)
       dest_room.door:updateDynamicInfo()
     end
   end
- end
+end

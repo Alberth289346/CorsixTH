@@ -39,9 +39,9 @@ function Receptionist:getRootActivity()
 end
 
 function Receptionist:tickDay()
-  if not Staff.tickDay(self) then
-    return false
-  end
+  --if not Staff.tickDay(self) then  -- only handles happiness and fatique
+  --  return false                   -- and receptionists don't have that.
+  --end
   self:needsWorkStation()
 end
 
