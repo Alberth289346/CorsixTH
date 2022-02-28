@@ -1,0 +1,109 @@
+= Event handling
+Event handling of activities
+:icons: font
+:toc:
+
+== Introduction
+
+Activities span the entire life of the NPC. To keep things manageable, they
+exist as a stack. At the bottom is the activity that described the entire life
+of the humanoid. Child activities can be created that handle some part of the
+life span in more detail, until at the top of the stack animations are generated
+to show each step of the NPC to the user.
+
+To get some structure in this hierarchy, activities do not talk to each other
+directly, they only respond to events sent to them.
+
+The following table lists the available events that may be sent to an activity.
+
+.Events received by an activity and their meaning
+[cols="2,5", options="header"]
+|===
+| Event | Description
+
+| `{name="start"}` | Initialize the activity and start running.
+| `{name="anim_done"}` | Animation reports being finished, construct a new animation.
+| `{name="child_finished", activity=<actvity>}` | Child activity has finished,
+construct a new animation. The old activity is passed in for data exchange with
+the parent.
+| `{name="hurry"}` | Try to end the activity as soon as possible.
+| `{name="abort"}` | End the activity now.
+| `{name="<another event>"}` | An event from the environment arrived.
+|===
+
+The first five events are standard, all activities are expected to understand
+them. The sixth event named 'another event' refers to all events in the game
+that are relevant to the activity of the NPC. Generally, only a few activities in
+the stack will understand them.
+
+An activity should process the event, and do what is necessary in the context.
+In particular, it should ensure there is always an animation shown for the NPC.
+
+In addition it may create a child activity, delegating handling of details to the child.
+Events are then first offered to the child activity until it responds with
+`child_finished`. The outermost activity may not give that response, it should
+delete the NPC from the game instead.
+
+The complete list of responses to an event is shown below.
+
+.Responses for an event
+[cols="2,5", options="header"]
+|===
+| Response | Description
+
+| `{response="ok"}` | Message understood, processing is done.
+| `{response="finished"}` | Activity has finished. Parent activity will be informed.
+| `{response="child_created", new_activity=<Activity>}` | A new (child) activity
+has been created, please start it.
+| `{response="hurry_child"}` | Tell the child activity to finish as fast as possible.
+| `{response="abort_child"}` | Tell the child activity to end *now*.
+| `{response="unknown"}` | Event is not recognized.
+|===
+
+The `hurry_child` response is meant for special occasions, such as evacuation of
+the hospital. The idea is to have the child activity skip as many activities as possible, without
+breaking the visuals. If the NPC is sitting, it should get up first. If it is
+not dressed, it should dress first.
+
+The `abort_child` response is even stronger. It means 'stop now'. Animations may
+be aborted. The only processing that the child activity should take care of is
+administrative corrections needed for correct functioning afterwards.
+Unsubscribe the NPC from subscriptions, let other NPCs know this NPC is aborting
+the activity, and so on. Just enough such that the game can continue.
+
+The `unknown` response is only valid for the 'another event' case. Lower level
+activities typically do not know how to handle more global notifications.
+Returning this response will cause the event to be offered to higher level
+activities until one responds differently.
+It is however an error if all activities claim not to understand the event.
+
+
+== Event processing in the activity stack
+
+Activities are reactive, they don't get any processing time until an event
+arrives.
+
+There are two events that can arrive at the NPC. They are `anim_done` and
+'another event'.
+They are always offered first to the top-most activity.
+The latter may lead to a `{response="unknown"}` response. In that case the event is
+offered at parent activities, until one responds differently. It is an error if
+none of them responds differently.
+
+Further processing is then decided by the response:
+
+* The `{response="ok"}` response terminates processing of the event. The system
+may check that an animation is running afterwards.
+
+* The `{response="finished"}` response may only be given by the top-most
+activity. This activity is removed and the parent activity is then informed
+with a `child_finished` event.
+
+* The `{response="child_created", new_activity=<Activity>}` response may only be
+given by the top-most activity. The new activity is added to the stack, and
+told to start with the `start` event.
+
+* The `{response="hurry_child"}` or `{response="abort_child"}` response may only
+be returned by non-topmost activities. The child activity is then informed with a
+`hurry` respectively `abort` event.
+
