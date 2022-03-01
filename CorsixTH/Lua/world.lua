@@ -22,6 +22,11 @@ local TH = require"TH"
 local ipairs, _G, table_remove
     = ipairs, _G, table.remove
 
+corsixth.require("activities.activity")
+corsixth.require("activities.act_stack")
+corsixth.require("activities.walk_activity")
+corsixth.require("activities.patient_activity")
+
 corsixth.require("entities.humanoids.patient")
 corsixth.require("entities.humanoids.staff.doctor")
 corsixth.require("entities.humanoids.staff.nurse")
@@ -543,8 +548,10 @@ function World:spawnPatient(hospital)
   local spawn_point = self.spawn_points[math.random(1, #self.spawn_points)]
   local patient = self:newEntity("Patient", 2)
   patient:setDisease(disease)
-  patient:setNextAction(SpawnAction("spawn", spawn_point))
+  --patient:setNextAction(SpawnAction("spawn", spawn_point))
   patient:setHospital(hospital)
+  spawn_point = {x=spawn_point.x, y=spawn_point.y, dir=spawn_point.dir, offset=-2}
+  patient:handleEvent({name="to-hospital", source=spawn_point})
   return patient
 end
 

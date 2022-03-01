@@ -1024,16 +1024,41 @@ end
 --! Collect the reception desks in the hospital.
 --!return (list) The reception desks in the hospital.
 function Hospital:findReceptionDesks()
-  -- TODO Breaks in multiplayer mode.
   local reception_desks = {}
   for _, obj_list in pairs(self.world.objects) do
     for _, obj in ipairs(obj_list) do
-      if obj.object_type.id == "reception_desk" then
+      if obj.hospital == self and obj.object_type.id == "reception_desk" then
         reception_desks[#reception_desks + 1] = obj
       end
     end
   end
   return reception_desks
+end
+
+--! Find a most appropriate receptionDesk to visit for a new patient.
+--!param src_x (int) X coordinate of the new patient.
+--!param src_y (int) Y coordinate of the new patient.
+--!return If not nil, a table with fields use_x, use_y, dir.
+function Hospital:findBestReceptionDesk(src_x, src_y)
+  local best_desk
+  for _, desk in ipairs(self:findReceptionDesks()) do
+    if desk.receptionist or desk.reserved_for then
+      local orientation = desk.object_type.orientations[desk.direction]
+      local use_x = desk.tile_x + orientation.use_position[1]
+      local use_y = desk.tile_y + orientation.use_position[2]
+      local score = self.world:getPathDistance(src_x, src_y, use_x, use_y)
+      if not best_desk or best_desk.score > score then
+        best_desk = {
+          desk=desk,
+          use_x=use_x,
+          use_y=use_y,
+          dir=orientation,
+          score=score
+        }
+      end
+    end
+  end
+  return best_desk
 end
 
 --! Called at the end of each year

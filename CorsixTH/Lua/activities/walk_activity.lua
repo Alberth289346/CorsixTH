@@ -6,14 +6,24 @@ local WalkActivity = _G["WalkActivity"]
 function WalkActivity:WalkActivity(humanoid, stack)
   Activity.Activity(self, humanoid, stack)
 
-  -- Table {x, y, dir} with the destination position and optional compass direction.
+  -- Tables {x, y, dir} with the destination position and optional compass direction.
   -- Position may be outside the level.
+  self.source_loc = nil
   self.dest_loc = nil
+
   self.path = nil -- {path_x, path_y arrays}.
   self.path_index = nil -- Index in path.
 end
 
---! Specify the destination position, and direction.
+--! Specify the source position and direction.
+--!param x Source x coordinate, may be outside the level.
+--!param y Source y coordinate, may be outside the level.
+--!param dir Optional compass direction to face at the start of the walk.
+function WalkActivity:setSource(x, y, dir)
+  self.source_loc = {x=x, y=y, dir=dir}
+end
+
+--! Specify the destination position and direction.
 --!param x Destination x coordinate, may be outside the level.
 --!param y Destination y coordinate, may be outside the level.
 --!param dir Optional compass direction to face at the end of the walk.
@@ -21,27 +31,31 @@ function WalkActivity:setDestination(x, y, dir)
   self.dest_loc = {x=x, y=y, dir=dir}
 end
 
+function WalkActivity:report()
+  return self.reason
+end
+
 function WalkActivity:handleEvent(event)
+  print("WalkActivity:handleEvent " .. serialize(event))
+
   if event == "start" then
-    local start_x, start_y = self.humanoid.tile_x, self.humanoid.tile_y
+    local start_x, start_y = self.source_loc.x, self.source_loc.y
     local dest_x, dest_y = self.dest_loc.x, self.dest_loc.y
     self.path = humanoid.world:getPath(start_x, start_y, dest_x, dest_y)
     self.path_index = 1
 
-    -- XXX Document 'reason' in the description
-    -- XXX Implement passing that data to the parent
-
-    -- XXX Return the activity to the parent for inspection???
     if not self.path.path_x then
-      return {response="finished", reason="no-path"}
+      self.reason = "no-path"
+      return Activity.finished_response
     elseif #self.path.path_x == 1 then
-      return {response="finished", reason="arrived"}
+      self.reason = "arrived"
+      return Activity.finished_response
     end
 
-    local reason = self:_walkTile()
-    if reason then
+    self.reason = self:_walkTile()
+    if self.reason then
       self._stopHumanoidSafely()
-      return {response="finished", reason=reason}
+      return Activity.finished_response
     end
     return Activity.ok_response
 
@@ -49,7 +63,7 @@ function WalkActivity:handleEvent(event)
     local reason = self:_walkTile()
     if reason then
       self._stopHumanoidSafely()
-      return {response="finished", reason=reason}
+      return Activity.finished_response
     end
     return Activity.ok_response
 
@@ -148,4 +162,6 @@ function WalkActivity:_stopHumanoidSafely(x1, y1)
   x1 = math.max(1, math.min(map.width, x1))
   y1 = math.max(1, math.min(map.height, y1))
   self.humanoid:setTilePositionSpeed(x1, y1)
+end
 
+print(" - WalkActivity loaded.")

@@ -49,14 +49,16 @@ Activity.unknown_response = {response="unknown"}
 
 --[[
 function WalkActivity:handleEvent(event)
-  if event == "start" then
-  elseif event == "anim_done" then
-  elseif event == "child_finished" then
-  elseif event == "hurry" then
-  elseif event == "abort" then
+  if event.name == "start" then
+  elseif event.name == "anim_done" then
+  elseif event.name == "child_finished" then
+  elseif event.name == "hurry" then
+  elseif event.name == "abort" then
   else -- Other event
     return Activity.unknown_response
   end
 end
 ]]--
 
+
+print(" - Activity loaded.")

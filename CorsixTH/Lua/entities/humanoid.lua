@@ -660,9 +660,9 @@ function Humanoid:setType(humanoid_class)
   self.check_watch_anim = check_watch_animations[humanoid_class]
   self.pee_anim = pee_animations[humanoid_class]
   self.humanoid_class = humanoid_class
-  if #self.action_queue == 0 then
-    self:setNextAction(IdleAction())
-  end
+--  if #self.action_queue == 0 then
+--    self:setNextAction(IdleAction())
+--  end
 
   self.th:setPartialFlag(self.permanent_flags or 0, false)
   if humanoid_class == "Invisible Patient" then

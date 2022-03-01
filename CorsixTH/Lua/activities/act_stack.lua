@@ -1,39 +1,39 @@
-class "AcitivityStack"
+class "ActivityStack"
 
--- @rtpe AcitivityStack
-local AcitivityStack = _G["AcitivityStack"]
+-- @rtpe ActivityStack
+local ActivityStack = _G["ActivityStack"]
 
 --! Hierarchical state machine describing the life of an NPC.
 -- The stat machines are reactive, they receive event and as a result may perform
 -- actions and/or trigger other events.
-function AcitivityStack:AcitivityStack(humanoid)
+function ActivityStack:ActivityStack(humanoid)
   self._humanoid = humanoid
   self._stack = {} -- Array of Activity
 end
 
-function AcitivityStack:startMainActivity(activity)
+function ActivityStack:startMainActivity(activity)
   assert(#self._stack == 0)
   self._stack[1] = activity
-  self:processEvent("start")
+  self:processEvent(ActivityStack.event_start)
 end
 
 local well_known_events = {
-  ok = true, finished = true, child_created = true, hurry_child = true,
-  abort_child = true, anim_done = true,
+  start = true, anim_done=true, hurry=true, abort=true, child_finished=true,
 }
 
-AcitivityStack.event_anim_done = {name="anim_done"}
-AcitivityStack.event_start = {name="start"}
-AcitivityStack.event_hurry = {name="hurry"}
-AcitivityStack.event_abort = {name="abort"}
+ActivityStack.event_anim_done = {name="anim_done"}
+ActivityStack.event_start = {name="start"}
+ActivityStack.event_hurry = {name="hurry"}
+ActivityStack.event_abort = {name="abort"}
 
-function AcitivityStack:processEvent(event)
-  assert(event.name == "anim_done" or not well_known_events[event.name])
-
+function ActivityStack:processEvent(event)
   local activity_index = #self._stack
   assert(activity_index > 0)
   while true do
+    print("STACK " .. activity_index .. " : " .. serialize(event, {max_depth=1}))
     local response = self._stack[activity_index]:handleEvent(event)
+    print("       -> " .. serialize(response, {max_depth=1}))
+
     if response.response == "ok" then
       return
 
@@ -50,27 +50,29 @@ function AcitivityStack:processEvent(event)
       assert(response.new_activity)
       self._stack[#self._stack + 1] = response.new_activity
       activity_index = activity_index + 1
-      event = AcitivityStack.event_start
+      event = ActivityStack.event_start
 
     elseif response.response == "hurry_child" then
       assert(activity_index < #self._stack)
       activity_index = activity_index + 1
       if not self._stack[activity_index]:setActivityMode("hurry") then return end
-      event = AcitivityStack.event_hurry
+      event = ActivityStack.event_hurry
 
     elseif response.response == "abort_child" then
       assert(activity_index < #self._stack)
       activity_index = activity_index + 1
       if not self._stack[activity_index]:setActivityMode("abort") then return end
-      event = AcitivityStack.event_abort
+      event = ActivityStack.event_abort
 
     elseif response.response == "unknown" then
-      assert(not well_known_events[event]) -- Should not be an known event.
+      assert(not well_known_events[event.name]) -- Should not be an known event.
       assert(activity_index > 1)
       activity_index = activity_index - 1
       -- And try the same event again.
     else
-      error("Unknown response " .. tostring(response))
+      error("Unknown response " .. serialize(response))
     end
   end
 end
+
+print(" - ActivityStack loaded.")

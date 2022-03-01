@@ -107,3 +107,32 @@ told to start with the `start` event.
 be returned by non-topmost activities. The child activity is then informed with a
 `hurry` respectively `abort` event.
 
+
+== Other events
+
+=== Patient events
+
+[cols="2,5", options="header"]
+|===
+| Event | Description
+
+| `{name="to-hospital", source=spawn_point}`
+| _Set initial position of the patient for walking to the hospital._
+The `spawn_point` is a table with `x`, `y`, `dir`, and optionally an `offset`.
+If `offset` is available, it defines the number of tiles relative to the
+(`x`, `y`) position in direction `dir` as the actual starting point. This
+position may be off-map.
+|===
+
+
+== Child activity communication
+
+A parent activity may decide to start a child activity.
+It should create a new activity instance, and set the goals it should achieve.
+Once configured, the new activity can be handed over to the stack using the
+`{response="child_created", activity=<child-activity>}` response.
+The stack handles communication with the new activity until it responds with a
+`{responds="finished"}` response. The stack then removes the child activity and
+hands it back to the parent activity with a `{name="child_finished",
+activity=<child-activity>}` event. The `activity` field can be used to query
+the child activity about its success of reaching the set goal.
