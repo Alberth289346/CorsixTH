@@ -1035,11 +1035,11 @@ function Hospital:findReceptionDesks()
   return reception_desks
 end
 
---! Find a most appropriate receptionDesk to visit for a new patient.
+--! Find a most appropriate reception desk to visit for a new patient.
 --!param src_x (int) X coordinate of the new patient.
 --!param src_y (int) Y coordinate of the new patient.
 --!return If not nil, a table with fields use_x, use_y, dir.
-function Hospital:findBestReceptionDesk(src_x, src_y)
+function Hospital:findBestPatientReceptionDesk(src_x, src_y)
   local best_desk
   for _, desk in ipairs(self:findReceptionDesks()) do
     if desk.receptionist or desk.reserved_for then
@@ -1047,6 +1047,8 @@ function Hospital:findBestReceptionDesk(src_x, src_y)
       local use_x = desk.tile_x + orientation.use_position[1]
       local use_y = desk.tile_y + orientation.use_position[2]
       local score = self.world:getPathDistance(src_x, src_y, use_x, use_y)
+      score = score + desk:getUsageScore()
+
       if not best_desk or best_desk.score > score then
         best_desk = {
           desk=desk,

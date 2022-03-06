@@ -33,6 +33,7 @@ function ActivityStack:processEvent(event)
     print("STACK " .. activity_index .. " : " .. serialize(event, {max_depth=1}))
     local response = self._stack[activity_index]:handleEvent(event)
     print("       -> " .. serialize(response, {max_depth=1}))
+    print("##--")
 
     if response.response == "ok" then
       return
@@ -70,7 +71,7 @@ function ActivityStack:processEvent(event)
       activity_index = activity_index - 1
       -- And try the same event again.
     else
-      error("Unknown response " .. serialize(response))
+      error("Unknown response " .. serialize(response, {max_depth=1}))
     end
   end
 end

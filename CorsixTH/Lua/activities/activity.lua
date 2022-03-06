@@ -26,7 +26,7 @@ end
 --!return Whether the mode was in fact changed.
 function Activity:_setActivityMode(new_mode)
   local current_mode = _activity_modes[self._mode]
-  local new_mode = _activity_modes[new_mode]
+  new_mode = _activity_modes[new_mode]
   if current_mode < new_mode then
     self._mode = new_mode
     return true
