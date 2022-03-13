@@ -41,8 +41,8 @@ In particular, it should ensure there is always an animation shown for the NPC.
 
 In addition it may create a child activity, delegating handling of details to the child.
 Events are then first offered to the child activity until it responds with
-`child_finished`. The outermost activity may not give that response, it should
-delete the NPC from the game instead.
+`child_finished`. The outermost activity may give that response after deleting
+the NPC from the game.
 
 The complete list of responses to an event is shown below.
 

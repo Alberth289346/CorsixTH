@@ -40,11 +40,19 @@ function ActivityStack:processEvent(event)
 
     elseif response.response == "finished" then
       assert(activity_index == #self._stack)
-      assert(activity_index > 1)
-      local activity = self._stack[activity_index]
-      self._stack[activity_index] = nil
-      activity_index = activity_index - 1
-      event = {name = "child_finished", activity = activity}
+      if activity_index == 1 then
+        -- Root activity finished, check that cleaned up.
+        for _, e in ipairs(self.humanoid.world.entities) do
+          assert(e ~= self.humanoid)
+        end
+        return -- Truly done now.
+      else
+        -- Child activity finished, let the parent know.
+        local activity = self._stack[activity_index]
+        self._stack[activity_index] = nil
+        activity_index = activity_index - 1
+        event = {name = "child_finished", activity = activity}
+      end
 
     elseif response.response == "child_created" then
       assert(activity_index == #self._stack)
