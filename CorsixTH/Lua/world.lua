@@ -25,6 +25,7 @@ local ipairs, _G, table_remove
 corsixth.require("activities.activity")
 corsixth.require("activities.act_stack")
 corsixth.require("activities.walk_activity")
+corsixth.require("activities.wait_activity")
 corsixth.require("activities.patient_activity")
 
 corsixth.require("entities.humanoids.patient")
@@ -550,7 +551,7 @@ function World:spawnPatient(hospital)
   patient:setDisease(disease)
   --patient:setNextAction(SpawnAction("spawn", spawn_point))
   patient:setHospital(hospital)
-  spawn_point = {x=spawn_point.x, y=spawn_point.y, dir=spawn_point.dir, offset=-2}
+  spawn_point = {x=spawn_point.x, y=spawn_point.y, dir=spawn_point.direction, offset=-2}
   patient:handleEvent({name="to-hospital", source=spawn_point})
   return patient
 end

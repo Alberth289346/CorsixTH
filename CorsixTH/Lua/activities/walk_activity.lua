@@ -3,6 +3,12 @@ class "WalkActivity" (Activity)
 --@type WalkActivity
 local WalkActivity = _G["WalkActivity"]
 
+--! Walk from the source location to the destination location.
+--! Doors are ignored.
+--! Reports
+--!  - "no-path" if path finding fails,
+--!  - "blocked" if tile on the path is found blocked, or
+--!  - "arrived" if the NPC arrives at the destination.
 function WalkActivity:WalkActivity(humanoid, stack)
   Activity.Activity(self, humanoid, stack)
 
@@ -42,7 +48,10 @@ function WalkActivity:setSource(source_loc)
   assert(type(source_loc.x) == "number")
   assert(type(source_loc.y) == "number")
   assert(checkOrientation(source_loc.dir), "direction '" .. tostring(source_loc.dir) .. "' is incorrect.")
-  assert(checkOffset(source_loc.dir, source_loc.offset))
+  for k, v in pairs(source_loc) do print(k, v) end
+  assert(checkOffset(source_loc.dir, source_loc.offset),
+      "offset '" .. tostring(source_loc.offset) .. "' with direction '"
+      .. tostring(source_loc.dir) .. "' is incorrect.")
   self.source_loc = source_loc
 end
 
@@ -57,6 +66,7 @@ function WalkActivity:setDestination(dest_loc)
 end
 
 function WalkActivity:report()
+  assert(self.reason ~= nil)
   return self.reason
 end
 
@@ -86,20 +96,26 @@ function WalkActivity:handleInitialEvent(event)
 
   if not self.path.path_x then
     self.reason = "no-path"
+    self:setState("done")
     print("WalkActivity: no path found.")
     return Activity.finished_response
   end
 
   if #self.path.path_x == 1 then
     self.reason = "arrived"
+    self:setState("done")
     print("WalkActivity: arrived.")
     return Activity.finished_response
   end
+
+  -- XXX Perform offset walking at source location.
+  -- XXX Perform offset walking at destination location.
 
   -- First tile works, switch to regular walk state.
   self.reason = self:_walkTile()
   if self.reason then
     self:_stopHumanoidSafely()
+    self:setState("done")
     return Activity.finished_response
   end
 
@@ -109,9 +125,10 @@ end
 
 function WalkActivity:handleWalkingEvent(event)
   if event.name == "anim_done" then
-    local reason = self:_walkTile()
-    if reason then
+    self.reason = self:_walkTile()
+    if self.reason then
       self:_stopHumanoidSafely()
+      self:setState("done")
       return Activity.finished_response
     end
     return Activity.ok_response
@@ -128,11 +145,15 @@ function WalkActivity:handleWalkingEvent(event)
   end
 end
 
+function WalkActivity:handleDoneEvent(event)
+  error("Unexpected event " .. serialize(event, {max_depth=2}))
+end
+
 handle_functions = {
   initial = WalkActivity.handleInitialEvent,
   walking = WalkActivity.handleWalkingEvent,
+  done = WalkActivity.handleDoneEvent,
 }
-
 
 -- Callback function for finished animation
 -- TODO Eliminate.
