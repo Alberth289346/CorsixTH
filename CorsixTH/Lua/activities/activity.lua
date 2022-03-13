@@ -47,6 +47,14 @@ Activity.hurry_child_response = {response="hurry_child"}
 Activity.abort_child_response = {response="abort_child"}
 Activity.unknown_response = {response="unknown"}
 
+--! Is the event a standard event?
+function Activity.isStandardEvent(event)
+  return event.name == "start" or event.name == "anim_done"
+      or event.name == "child_finished" or event.name == "hurry"
+      or event.name == "abort"
+end
+
+
 --[[
 function WalkActivity:handleEvent(event)
   if event.name == "start" then

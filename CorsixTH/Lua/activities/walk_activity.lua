@@ -6,63 +6,109 @@ local WalkActivity = _G["WalkActivity"]
 function WalkActivity:WalkActivity(humanoid, stack)
   Activity.Activity(self, humanoid, stack)
 
-  -- Tables {x, y, dir} with the destination position and optional compass direction.
+  -- Tables {x, y, optional dir and offset}
+  -- (x, y) Position in the levels, optional orientation for starting/ending the walk.
+  -- Offset to the given position and direction in number of tiles.
   -- Position may be outside the level.
   self.source_loc = nil
   self.dest_loc = nil
 
   self.path = nil -- {path_x, path_y arrays}.
   self.path_index = nil -- Index in path.
+
+  self._state = nil -- Don't set directoy, use self:setState()
+  self:setState("initial")
 end
 
---! Specify the source position and direction.
---!param x Source x coordinate, may be outside the level.
---!param y Source y coordinate, may be outside the level.
---!param dir Optional compass direction to face at the start of the walk.
-function WalkActivity:setSource(x, y, dir)
-  self.source_loc = {x=x, y=y, dir=dir}
+local function isCompassDirection(dir)
+  return dir == "east" or dir == "west" or dir == "north" or dir == "south"
 end
 
---! Specify the destination position and direction.
---!param x Destination x coordinate, may be outside the level.
---!param y Destination y coordinate, may be outside the level.
---!param dir Optional compass direction to face at the end of the walk.
-function WalkActivity:setDestination(x, y, dir)
-  self.dest_loc = {x=x, y=y, dir=dir}
+local function checkOrientation(dir)
+  if dir == nil then return true end
+  return isCompassDirection(dir)
+end
+
+local function checkOffset(dir, offset)
+  if offset == nil then return true end
+  assert(type(offset) == "number")
+  return isCompassDirection(dir)
+end
+
+--! Specify the source location (x, y, optional direction and offset)
+function WalkActivity:setSource(source_loc)
+  print("setSource " .. serialize(source_loc, {max_depth=2}))
+  assert(source_loc)
+  assert(type(source_loc.x) == "number")
+  assert(type(source_loc.y) == "number")
+  assert(checkOrientation(source_loc.dir), "direction '" .. tostring(source_loc.dir) .. "' is incorrect.")
+  assert(checkOffset(source_loc.dir, source_loc.offset))
+  self.source_loc = source_loc
+end
+
+--! Specify the destination location (x, y, optional direction and offset)
+function WalkActivity:setDestination(dest_loc)
+  print("setDestination " .. serialize(dest_loc, {max_depth=2}))
+  assert(type(dest_loc.x) == "number")
+  assert(type(dest_loc.y) == "number")
+  assert(checkOrientation(dest_loc.dir), "direction '" .. tostring(dest_loc.dir) .. "' is incorrect.")
+  assert(checkOffset(dest_loc.dir, dest_loc.offset))
+  self.dest_loc = dest_loc
 end
 
 function WalkActivity:report()
   return self.reason
 end
 
+local handle_functions
+
+function WalkActivity:setState(new_state)
+  assert(handle_functions[new_state], "Missing event function for state " .. tostring(new_state))
+  self._state = new_state
+end
+
 function WalkActivity:handleEvent(event)
   print("WalkActivity:handleEvent " .. serialize(event, {max_depth=1}))
 
-  if event.name == "start" then
-    local start_x, start_y = self.source_loc.x, self.source_loc.y
-    local dest_x, dest_y = self.dest_loc.x, self.dest_loc.y
-    local px, py = self.humanoid.world:getPath(start_x, start_y, dest_x, dest_y)
-    self.path = {path_x = px, path_y = py}
-    self.path_index = 1
+  local handler = handle_functions[self._state]
+  return handler(self, event)
+end
 
-    if not self.path.path_x then
-      self.reason = "no-path"
-      print("WalkActivity: no path found.")
-      return Activity.finished_response
-    elseif #self.path.path_x == 1 then
-      self.reason = "arrived"
-      print("WalkActivity: arrived.")
-      return Activity.finished_response
-    end
+function WalkActivity:handleInitialEvent(event)
+  assert(event.name == "start")
 
-    self.reason = self:_walkTile()
-    if self.reason then
-      self:_stopHumanoidSafely()
-      return Activity.finished_response
-    end
-    return Activity.ok_response
+  -- Compute a path.
+  local start_x, start_y = self.source_loc.x, self.source_loc.y
+  local dest_x, dest_y = self.dest_loc.x, self.dest_loc.y
+  local px, py = self.humanoid.world:getPath(start_x, start_y, dest_x, dest_y)
+  self.path = {path_x = px, path_y = py}
+  self.path_index = 1
 
-  elseif event.name == "anim_done" then
+  if not self.path.path_x then
+    self.reason = "no-path"
+    print("WalkActivity: no path found.")
+    return Activity.finished_response
+  end
+
+  if #self.path.path_x == 1 then
+    self.reason = "arrived"
+    print("WalkActivity: arrived.")
+    return Activity.finished_response
+  end
+
+  -- First tile works, switch to regular walk state.
+  self.reason = self:_walkTile()
+  if self.reason then
+    self:_stopHumanoidSafely()
+    return Activity.finished_response
+  end
+
+  self:setState("walking")
+  return Activity.ok_response
+end
+
+function WalkActivity:handleWalkingEvent(event)
+  if event.name == "anim_done" then
     local reason = self:_walkTile()
     if reason then
       self:_stopHumanoidSafely()
@@ -82,10 +128,15 @@ function WalkActivity:handleEvent(event)
   end
 end
 
+handle_functions = {
+  initial = WalkActivity.handleInitialEvent,
+  walking = WalkActivity.handleWalkingEvent,
+}
+
+
 -- Callback function for finished animation
 -- TODO Eliminate.
 local timer_fn = permanent"walk_activity_timer_fn"( function(humanoid)
-  print("CB walk_tile fired.")
   humanoid.activity_stack:processEvent(ActivityStack.event_anim_done)
 end)
 

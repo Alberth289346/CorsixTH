@@ -1052,9 +1052,9 @@ function Hospital:findBestPatientReceptionDesk(src_x, src_y)
       if not best_desk or best_desk.score > score then
         best_desk = {
           desk=desk,
-          use_x=use_x,
-          use_y=use_y,
-          dir=orientation,
+          x=use_x,
+          y=use_y,
+          dir=desk.direction,
           score=score
         }
       end
