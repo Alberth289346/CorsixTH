@@ -1,0 +1,143 @@
+sprite 1486 {
+    base = "VSPR/SC_1486.png";
+    top = 0;
+    left = 0;
+    width = 37;
+    height = 76;
+}
+
+sprite 2475 {
+    base = "VSPR/OB_2475.png";
+    top = 0;
+    left = 0;
+    width = 54;
+    height = 56;
+}
+
+sprite 1481 {
+    base = "VSPR/SC_1481.png";
+    top = 0;
+    left = 0;
+    width = 37;
+    height = 76;
+}
+
+sprite 2474 {
+    base = "VSPR/OB_2474.png";
+    top = 0;
+    left = 0;
+    width = 39;
+    height = 80;
+}
+
+sprite 2310 {
+    base = "VSPR/OB_2310.png";
+    top = 0;
+    left = 0;
+    width = 31;
+    height = 30;
+}
+
+sprite 664 {
+    base = "VSPR/OB_0664.png";
+    top = 0;
+    left = 0;
+    width = 32;
+    height = 44;
+}
+
+sprite 2376 {
+    base = "VSPR/OB_2376.png";
+    top = 0;
+    left = 0;
+    width = 86;
+    height = 62;
+}
+
+sprite 545 {
+    base = "VSPR/OB_0545.png";
+    top = 0;
+    left = 0;
+    width = 50;
+    height = 55;
+}
+
+sprite 2309 {
+    base = "VSPR/OB_2309.png";
+    top = 0;
+    left = 0;
+    width = 30;
+    height = 36;
+}
+
+sprite 546 {
+    base = "VSPR/OB_0546.png";
+    top = 0;
+    left = 0;
+    width = 50;
+    height = 47;
+}
+
+sprite 1484 {
+    base = "VSPR/SC_1484.png";
+    top = 0;
+    left = 0;
+    width = 35;
+    height = 73;
+}
+
+sprite 2375 {
+    base = "VSPR/OB_2375.png";
+    top = 0;
+    left = 0;
+    width = 86;
+    height = 72;
+}
+
+sprite 2306 {
+    base = "VSPR/OB_2306.png";
+    top = 0;
+    left = 0;
+    width = 38;
+    height = 55;
+}
+
+sprite 778 {
+    base = "VSPR/OB_0778.png";
+    top = 0;
+    left = 0;
+    width = 85;
+    height = 72;
+}
+
+sprite 1485 {
+    base = "VSPR/SC_1485.png";
+    top = 0;
+    left = 0;
+    width = 37;
+    height = 76;
+}
+
+sprite 2308 {
+    base = "VSPR/OB_2308.png";
+    top = 0;
+    left = 0;
+    width = 33;
+    height = 42;
+}
+
+sprite 2307 {
+    base = "VSPR/OB_2307.png";
+    top = 0;
+    left = 0;
+    width = 36;
+    height = 49;
+}
+
+sprite 1482 {
+    base = "VSPR/SC_1482.png";
+    top = 0;
+    left = 0;
+    width = 37;
+    height = 76;
+}
