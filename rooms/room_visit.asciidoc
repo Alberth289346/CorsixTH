@@ -1,0 +1,187 @@
+= Rooms
+
+By seeing a room as a logical unit rather than just a physical unit (that is, dropping the requirement
+that it has walls), the entire life of patients and staff can be described as a
+sequence of room visits.
+
+== Room properties
+
+A room has several (but not always all) properties for book-keeping
+
+- A _state_, see <<Room states>> below.
+
+- An _entry point_ (a single tile).
+
+- It may have an owning _hospital_. A counter example is the 'going home' room, that can be
+used by humanoids from all hospitals.
+
+- It may have a _physical room_. The latter acts as a source of its contents and layout information for
+path finding purposes. The physical room may also play a role in disasters such as room explosions
+or understanding where staff is dropped.
+
+- A _(multi)-set of humanoid types_ needed for its operation. Some are required for functioning,
+such as a patient and a doctor or nurse.
+Others can be optional, like a visiting handyman for watering or repairing.
+
+- It may have a _in-queue_ for humanoids wanting to enter the room. The queue decides the
+order of allowing humanoids in within the bounds of what types of person the room allows.
+
+- It may have a _out-queue_ for humanoids wanting to leave the room. The queue decides the order
+of leaving. Humanoids in the out queue do not count as being 'in the room', hopefully avoiding `is_leaving`
+flag variables and getting a new patient before the previous patient has (physically) left the room.
+
+- It may have a _door_. Having a door implies having an _in-queue_ as well as an _out-queue_.
+
+- One or more _room processes_, sequences of activities that should happen with (some of) the
+humanoids in the room. Examples are a handyman watering a plant or a medical examination procedure.
+
+- A _entry distance_ from the entry point. An npc within that distance is considered near the room. For rooms with
+a door this is always `0`, rooms with a in-queue but without a door may use a larger distance,
+for example the reception desk.
+
+== Room states
+
+The room state expresses what a room is doing or aiming for.
+As a somewhat arbitrary list of room states, the following room states are proposed.
+
+[cols="1,4"]
+|===
+| State name | Description
+
+| `exist`
+| Room exists but no final floor area yet.
+
+| `sized`
+| Room position and size has been established, but no door or windows yet.
+
+| `door_decided`
+| Room door has been decided as well, but no windows yet.
+
+| `outside_done`
+| Room with position and size, as well as placed door, windows, and walls.
+Furniture is not complete yet.
+
+| `closed`
+| Room is built completely, but not used.
+
+| `opened`
+| Room is open for use, but not staffed yet.
+
+| `staffed`
+| Room can be used, all required staff has been assigned to the room
+although not all staff is present in the room.
+
+| `operational`
+| All required staff is present to receive patients.
+
+| `busy`
+| Room is used to diagnose or treat one or more patients.
+
+| `closing`
+| Room is not being used any more but staff or patients are still in
+the process of leaving.
+
+| `exploded`
+| Room was hit by a disaster and is not usable any more.
+
+| `cleaning`
+| Room is being cleaned to undo the damage of the disaster.
+|===
+
+Some room states nay not be needed, while others may be missing. The list should
+be adapted as needed.
+Also some states are needed for a subset of rooms.
+
+
+== Patients visiting a room
+
+The following interactions happen while visiting a room.
+
+* The humanoid may _pre-register_ with a room. This never leads to any change in the data of the room.
+The room decides whether the humanoid would be welcome, and replies the decision in its answer.
++
+The primary use of pre-registering is to query the room for being allowed to enter at all, for
+example for dropping staff in a room.
+
+* The humanoid must _register_ with the room. The room checks whether the humanoid is welcome
+and returns the decision in its answer.
+If it is welcome, the humanoid is added as 'expected' by the room.
+
+* When the humanoid is close enough to the room (inside the hospital at or within entry distance), it must tell the room it
+is _near_ the room. Note that depending on the entry distance of the room, this may be at the entry tile.
++
+The room replies with activities to perform by the humanoid. Activities that may be requested
+are 'knock at door', perform queuing in the in-queue, or a requesting to enter the room.
+
+** For queueing in the in-queue, the humanoid is free to do whatever it wants close to the room. Walking around, idling,
+getting a drink, sitting down or finding a better seat. This excludes going to the toilet, as the room may invite
+the humanoid at any moment after reporting being near the room.
++
+The queue may send updates to the humanoid about the queue and the humanoid may react on them,
+for example by standing near the
+humanoid in front of it in the queue, or getting closer to the entry point of the room when
+few other humanoids at ahead of it in the queue.
+
+** A humanoid in the in-queue may _request leaving_ the queue. This is typically used for rerouting
+the patients or having them go home for some reason. The room either accepts the request or denies it.
+In the former case the humanoid should then proceed to _unregister_ (see below) and
+is free to move to the next room.
++
+In the edge case that a patient requests leaving because of being (very) near death and the request
+is denied, the lifetime of the patient may be extended to make the room visit possible.
++
+In general, eventually the humanoid is invited into the room.
+
+* When the humanoid is invited into the room, it must walk to the entry point if not already there.
+When it arrives there, it must ask the room for its _room activities_, a sequence of actions to perform in the room.
+The humanoid may provide a reason for entering the room in its request.
+Querying the activities registers the humanoid as being in the room.
+When a door is present, the first activity will be entering the room by using the door.
++
+The activities handle coordination between humanoids in the room, as well as the animations to
+perform and disappearance for some time if the humanoid is also displayed in an animation of a
+different humanoid in the room.
+
+* Room activities end with requesting the room to _unregister_ the humanoid. The room deletes all
+registration information of the humanoid, except for the out-queue if present, since that is managed by the coordinator.
+See <<Room door enter/leave protocol>> for details.
+
+== Room door enter/leave protocol
+
+For rooms with a door, humanoids wanting to use the door to enter or leave register in the in-queue or out-queue of the room.
+A separate door coordinator manages usage of the door. It repeatedly runs the following sequence.
+
+* Find a humanoid to use the door.
+
+** Calls are performed to the coordinator when a humanoid is added to a queue, so in case
+no humanoid is found, it can cease its search until a next such call.
+
+** Humanoids in the out-queue have priority to humanoids in the in-queue, to avoid over-crowded rooms.
+
+* Acceptance of a humanoid from a queue must remove that humanoid from its queue. The coordinator may
+keep a reference to the humanoid until it has finished using the door.
+
+* The humanoid must must query the tile to walk to for using the door, and move to it.
+
+* Upon arriving at the tile, the humanoid must proceed with using the door. When it has gone
+through the door, the humanoid must inform the coordinator of this event, allowing it to get
+correct timing for the next humanoid.
+
+== Patients waiting for a room to be build
+
+As an npc is always connected to a room, waiting for a non-existing room needs a special case.
+
+One solution is to have a fake room in the hospital for every room type.
+The fake room accepts all patients but never asks for staff and never makes any progress.
+
+Patients that want to visit a non-available type of room can queue for the fake room instead.
+Having a fake room also makes it trivial to reroute such patients when a real room of that
+type becomes available. (Note that a room in `closed` state is considered to be available.)
+
+== Open points in visiting
+
+- Staff visits
+- More patients entering the room before the previous room process has ended (or there are conflicts between activities)
+- Staff resting in the staff room while still being registered by the room.
+- Patient inviting to the room implies it is unclear whether there is space outside for outgoing humanoids to use the door first.
+
