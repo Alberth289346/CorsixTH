@@ -286,7 +286,9 @@ end
 --!param ... Arguments for base class constructor.
 function Humanoid:Humanoid(...)
   self:Entity(...)
-  self.action_queue = {}
+  --self.action_queue = {} -- Added in derived classes.
+  self._activity_stack = {} -- Array of activities.
+
   self.last_move_direction = "east"
   self.attributes = {}
   self.attributes["warmth"] = 0.29
@@ -301,6 +303,43 @@ function Humanoid:Humanoid(...)
   self.build_callbacks  = {--[[set]]}
   self.remove_callbacks = {--[[set]]}
   self.staff_change_callbacks = {--[[set]]}
+end
+
+--! Function for derived classes to make a new activity active as child of the current activity.
+--!param activity New activity to add.
+--!param run_activity If true, also give the new activity some time.
+function Humanoid:_pushActivity(activity, run_activity)
+  print("Push activity " .. class.type(activity))
+  self._activity_stack[#self._activity_stack + 1] = activity
+  if run_activity then self:onTick() end
+end
+
+--! Function for derived classes to return control to the parent activity.
+function Humanoid:_popActivity(next_parent_state)
+  print("Pop activity")
+  local activity = self._activity_stack[#self._activity_stack]
+  assert(activity)
+
+  self._activity_stack[#self._activity_stack] = nil
+  assert(#self._activity_stack > 0)
+
+  self._activity_stack[#self._activity_stack]._cur_state = next_parent_state
+end
+
+--! Timer ended.
+function Humanoid:onTick()
+  print("onTick()")
+  for i, a in ipairs(self._activity_stack) do
+    print("Activity-Stack " .. i .. ": " .. class.type(a))
+  end
+  print("Picking " .. class.type(self._activity_stack[#self._activity_stack]))
+  self._activity_stack[#self._activity_stack]:step()
+end
+
+--! An event arrived.
+--!param msg (table) The event, where an 'event' field holds the name of the event.
+function Humanoid:onEvent(msg)
+  self._activity_stack[#self._activity_stack]:step(msg)
 end
 
 -- Save game compatibility
@@ -660,7 +699,7 @@ function Humanoid:setType(humanoid_class)
   self.check_watch_anim = check_watch_animations[humanoid_class]
   self.pee_anim = pee_animations[humanoid_class]
   self.humanoid_class = humanoid_class
-  if #self.action_queue == 0 then
+  if self.action_queue and #self.action_queue == 0 then
     self:setNextAction(IdleAction())
   end
 
@@ -796,16 +835,6 @@ function Humanoid:tickDay()
     end
   end
   return true
-end
-
--- Helper function that finds out if there is an action queued to use the specified object
-function Humanoid:goingToUseObject(object_type)
-  for _, action in ipairs(self.action_queue) do
-    if action.object and action.object.object_type.id == object_type then
-      return true
-    end
-  end
-  return false
 end
 
 -- Registers a new build callback for this humanoid.

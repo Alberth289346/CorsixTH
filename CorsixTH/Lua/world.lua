@@ -512,8 +512,15 @@ function World:spawnPatient(hospital)
   local spawn_point = self.spawn_points[math.random(1, #self.spawn_points)]
   local patient = self:newEntity("Patient", 2)
   patient:setDisease(disease)
-  patient:setNextAction(SpawnAction("spawn", spawn_point))
-  patient:setHospital(hospital)
+
+  patient:postConstruction()
+  patient:onEvent({
+    event="spawn",
+    position=Position(spawn_point.x, spawn_point.y),
+    direction = spawn_point.direction,
+  })
+  patient:onEvent({event="new-hospital", hospital=hospital})
+  patient:onTick() -- Trigger first animation.
   return patient
 end
 

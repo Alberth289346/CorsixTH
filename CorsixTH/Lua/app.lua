@@ -275,6 +275,8 @@ function App:init()
     self.anims = self.gfx:loadAnimations("Data", "V")
     self.animation_manager = AnimationManager(self.anims)
     self.walls = self:loadLuaFolder("walls")
+    corsixth.require("position")
+
     corsixth.require("entity")
     corsixth.require("entities.humanoid")
     corsixth.require("entities.object")
@@ -298,6 +300,11 @@ function App:init()
 
     corsixth.require("humanoid_action")
     self.humanoid_actions = self:loadLuaFolder("humanoid_actions")
+
+    corsixth.require("anims")
+    corsixth.require("position")
+    corsixth.require("activity")
+    self.activities = self:loadLuaFolder("activities")
 
     local diseases = self:loadLuaFolder("diseases")
     self.diseases = self:loadLuaFolder("diagnosis", nil, diseases)

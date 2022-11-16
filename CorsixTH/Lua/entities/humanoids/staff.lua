@@ -31,6 +31,7 @@ local Staff = _G["Staff"]
 --!param ... Arguments to base class constructor.
 function Staff:Staff(...)
   self:Humanoid(...)
+  self.action_queue = {}
   self.hover_cursor = TheApp.gfx:loadMainCursor("staff")
   self.parcelNr = 0
   self.leave_sounds = {}
