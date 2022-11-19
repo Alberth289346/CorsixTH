@@ -14,6 +14,8 @@ function WalkActivity:_getPath(start_pos, dest_pos)
   if px then
     for i = 1, #px do path[#path + 1] = Position(px[i], py[i]) end
   end
+  print("world requested path: (" .. start_pos.x .. ", " ..  start_pos.y
+      .. ") -- (" .. dest_pos.x .. ", " .. dest_pos.y .. ")")
   return path
 end
 
@@ -70,7 +72,7 @@ function WalkActivity:WalkActivity(parent, humanoid, exit_names, setup)
     self._cur_state = "decide-move"
   end
 
-  print("WalkActivity:WalkActivity(): _cur_state = " .. self._cur_state)
+  --print("WalkActivity:WalkActivity(): _cur_state = " .. self._cur_state)
 end
 
 
@@ -79,8 +81,11 @@ function WalkActivity:_noPathFound()
 end
 
 function WalkActivity:_decideMove()
-  print("WalkActivity:_decideMove: step " .. self.index .. " of " .. #self.path)
+  --print("WalkActivity:_decideMove: step " .. self.index .. " of " .. #self.path)
   if #self.path == self.index then
+    local dest_pos = self.path[#self.path]
+    print("Arrived at (" .. dest_pos.x .. ", " .. dest_pos.y .. ")")
+    Animations.stopHumanoid(self.humanoid, dest_pos)
     return Activity.returnExit("arrived")
   end
 
@@ -91,7 +96,8 @@ function WalkActivity:_decideMove()
     return Activity.returnExit("blocked")
   end
 
-  print("walk-tile (" .. next_pos.x .. ", " .. next_pos.y .. ")")
+  --print("walk-tile (" .. next_pos.x .. ", " .. next_pos.y .. ")")
+  -- TODO: Update entity map for the humanoid.
   local dir = cur_pos:getDir(next_pos)
   Animations.walkTile(dir, self.humanoid, cb_func, cur_pos)
   self.index = self.index + 1
@@ -100,45 +106,21 @@ function WalkActivity:_decideMove()
 end
 
 
-local states = {
+local _states = {
   ["no-path-found"] = WalkActivity._noPathFound,
   ["decide-move"] = WalkActivity._decideMove,
 }
 
 function WalkActivity:step(msg)
-  print()
-  print("***** WalkActivity:step()")
+  --print()
+  --print("***** WalkActivity:step()")
   -- WalkActivity doesn't handle any message itself, always ask the parent activity.
   if msg then
     local answer = self.parent:childMessage(msg)
     if answer then return answer end
   end
 
-  -- Perform states until done, possibly with an exit code if the activity has ended.
-  local n = 0
-  while true do
-    assert(n < 20) -- Avoid looping too much.
-    n = n + 1
-
-    local to_execute_state = self._cur_state
-    local func = states[self._cur_state]
-    assert(func, "Unknown current state " .. tostring(self._cur_state))
-    local value = func(self, msg)
-    assert(type(value) == "table", "Unexpected activity value found:" .. serialize(value, {detect_cycles=true, depth=2}))
-    assert(not value.start_activity) -- Walk doesn't start anything.
-    if value.exit_activity then
-      local next_parent_state = self:getParentState(value.exit_activity)
-      self.humanoid:_popActivity(next_parent_state)
-      return
-
-    elseif value.done ~= nil then
-      if value.done then break end
-      -- Else not done yet, loop back.
-
-    else
-      error("Unexpected activity value found:" .. serialize(value, {detect_cycles=true, depth=2}))
-    end
-  end
+  self:computeAnimation("walk", _states)
 end
 
 -- Activity:childMessage is never used as a walk does not spawn a child activity.

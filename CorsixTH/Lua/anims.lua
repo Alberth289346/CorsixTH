@@ -7,8 +7,33 @@ local DIR_WEST = "west"
 local DIR_NORTH = "north"
 local DIR_SOUTH = "south"
 
-function Animations.stopHumanoid(humanoid)
-  humanoid:setTilePositionSpeed(humanoid.tile_x, humanoid.tile_y)
+--! Stop movement of the humanoid.
+--!param (Humanoid) humanoid Humanoid to stop.
+--!param (optional Position) If given the position to set for the humanoid,
+--  else its current position is used.
+--!param (optional string) If set, compass direction of facing.
+function Animations.stopHumanoid(humanoid, position, direction)
+  -- Set idle animation in the right direction
+  direction = direction or humanoid.last_move_direction
+  local anims = humanoid.walk_anims
+  if direction == "north" then
+    humanoid:setAnimation(anims.idle_north, 0)
+  elseif direction == "east" then
+    humanoid:setAnimation(anims.idle_east, 0)
+  elseif direction == "south" then
+    humanoid:setAnimation(anims.idle_east, 1)
+  elseif direction == "west" then
+    humanoid:setAnimation(anims.idle_north, 1)
+  end
+
+  -- at the indicated position, fully stopped.
+  humanoid:setSpeed(0, 0)
+  humanoid:setTimer(nil)
+  if position then
+    humanoid:setTilePositionSpeed(position.x, position.y)
+  else
+    humanoid:setTilePositionSpeed(humanoid.tile_x, humanoid.tile_y)
+  end
 end
 
 function Animations.walkTile(dir, humanoid, cb_func, start_pos)

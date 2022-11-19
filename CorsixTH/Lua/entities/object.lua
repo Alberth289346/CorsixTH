@@ -113,6 +113,25 @@ function Object:initOrientation(direction)
   self:setAnimation(anim, flags)
 end
 
+--! Get the animations and animation flags to use for usage animations.
+--!return usage animations
+function Object:getUsageAnimationsInfo()
+  local flags = 0
+  local usage_anims = self.object_type.usage_animations[self.direction]
+  if not usage_anims then
+    usage_anims = self.object_type.usage_animations[orient_mirror[self.direction]]
+    flags = flags + DrawFlags.FlipHorizontal
+  end
+
+  local spec = self.object_type.orientations[self.direction]
+  -- The early_list_while_in_use (if defined) takes precedence over early_list.
+  if spec.early_list_while_in_use
+      or (spec.early_list_while_in_use == nil and spec.early_list) then
+    flags = flags + DrawFlags.EarlyList
+  end
+  return usage_anims, flags
+end
+
 --! Add methods to a class for creating and controlling a slave object
 function Object.slaveMixinClass(class_method_table)
   local name = class.name(class_method_table)
@@ -754,6 +773,7 @@ end
 local all_pathfind_dirs = {[0] = true, [1] = true, [2] = true, [3] = true}
 
 function Object.processTypeDefinition(object_type)
+  -- Decide object category.
   if object_type.id == "extinguisher" or object_type.id == "radiator" or
       object_type.id == "plant" or object_type.id == "reception_desk" or
       object_type.id == "bench" then
@@ -762,113 +782,121 @@ function Object.processTypeDefinition(object_type)
       not object_type.id:find("door") then
     object_type.count_category = "general"
   end
-  if object_type.orientations then
-    for _, details in pairs(object_type.orientations) do
-      -- Set default values
-      if not details.animation_offset then
-        details.animation_offset = {0, 0}
-      end
-      if not details.render_attach_position then
-        details.render_attach_position = {0, 0}
-      end
-      -- Set the usage position
-      if details.use_position == "passable" then
-        -- "passable" => the *first* passable tile in the footprint list
-        for _, point in pairs(details.footprint) do
-          if point.only_passable then
-            details.use_position = {point[1], point[2]}
-            break
-          end
-        end
-      elseif not details.use_position then
-        details.use_position = {0, 0}
-      end
-      -- Set handyman repair tile
-      if object_type.default_strength and not details.handyman_position then
-        details.handyman_position = details.use_position
-      end
-      -- Find the nearest solid tile in the footprint to the usage position
-      local use_position = details.use_position
-      local solid_near_use_position
-      local solid_near_use_position_d = 10000
-      for _, point in pairs(details.footprint) do repeat
+
+  if not object_type.orientations then return end
+
+  for _, details in pairs(object_type.orientations) do
+    -- Set default values
+    if not details.animation_offset then
+      details.animation_offset = {0, 0}
+    end
+    if not details.render_attach_position then
+      details.render_attach_position = {0, 0}
+    end
+
+    -- Set the usage position
+    if details.use_position == "passable" then
+      -- "passable" => the *first* passable tile in the footprint list
+      for _, point in pairs(details.footprint) do
         if point.only_passable then
-          break -- continue
-        end
-        local d = (point[1] - use_position[1])^2 + (point[2] - use_position[2])^2
-        if d >= solid_near_use_position_d then
-          break -- continue
-        end
-        solid_near_use_position = point
-        solid_near_use_position_d = d
-      until true end
-      if solid_near_use_position_d ~= 1 then
-        details.pathfind_allowed_dirs = all_pathfind_dirs
-      else
-        if use_position[1] < solid_near_use_position[1] then
-          details.pathfind_allowed_dirs = {[1] = true}
-        elseif use_position[1] > solid_near_use_position[1] then
-          details.pathfind_allowed_dirs = {[3] = true}
-        elseif use_position[2] < solid_near_use_position[2] then
-          details.pathfind_allowed_dirs = {[2] = true}
-        else
-          details.pathfind_allowed_dirs = {[0] = true}
+          details.use_position = {point[1], point[2]}
+          break
         end
       end
-      -- Adjust the footprint to make this tile the origin
-      local solid_points = {}
-      if solid_near_use_position then
-        local x, y = unpack(solid_near_use_position)
-        for _, point in pairs(details.footprint) do
+    elseif not details.use_position then
+      details.use_position = {0, 0}
+    end
+
+    -- Set handyman repair tile
+    if object_type.default_strength and not details.handyman_position then
+      details.handyman_position = details.use_position
+    end
+
+    -- Find the nearest solid tile in the footprint to the usage position
+    local use_position = details.use_position
+    local solid_near_use_position
+    local solid_near_use_position_d = 10000
+    for _, point in pairs(details.footprint) do repeat
+      if point.only_passable then
+        break -- continue
+      end
+      local d = (point[1] - use_position[1])^2 + (point[2] - use_position[2])^2
+      if d >= solid_near_use_position_d then
+        break -- continue
+      end
+      solid_near_use_position = point
+      solid_near_use_position_d = d
+    until true end
+
+    -- Hint path finding to the right direction for single tile distance.
+    if solid_near_use_position_d ~= 1 then
+      details.pathfind_allowed_dirs = all_pathfind_dirs
+    else
+      if use_position[1] < solid_near_use_position[1] then
+        details.pathfind_allowed_dirs = {[1] = true}
+      elseif use_position[1] > solid_near_use_position[1] then
+        details.pathfind_allowed_dirs = {[3] = true}
+      elseif use_position[2] < solid_near_use_position[2] then
+        details.pathfind_allowed_dirs = {[2] = true}
+      else
+        details.pathfind_allowed_dirs = {[0] = true}
+      end
+    end
+
+    -- Adjust the footprint to make this tile the origin
+    local solid_points = {}
+    if solid_near_use_position then
+      local x, y = unpack(solid_near_use_position)
+      for _, point in pairs(details.footprint) do
+        point[1] = point[1] - x
+        point[2] = point[2] - y
+        if not point.only_passable then
+          solid_points[point[1] * 100 + point[2]] = point
+        end
+      end
+      for _, key in ipairs({"use_position_secondary",
+                            "finish_use_position",
+                            "finish_use_position_secondary"}) do
+        if details[key] then
+          details[key][1] = details[key][1] - x
+          details[key][2] = details[key][2] - y
+        end
+      end
+      use_position[1] = use_position[1] - x
+      use_position[2] = use_position[2] - y
+      if details.slave_position then
+        details.slave_position[1] = details.slave_position[1] - x
+        details.slave_position[2] = details.slave_position[2] - y
+      end
+      local rx, ry = unpack(details.render_attach_position)
+      if type(rx) == "table" then
+        rx, ry = unpack(details.render_attach_position[1])
+        for _, point in ipairs(details.render_attach_position) do
+          point.column = point[1] - point[2]
           point[1] = point[1] - x
           point[2] = point[2] - y
-          if not point.only_passable then
-            solid_points[point[1] * 100 + point[2]] = point
-          end
         end
-        for _, key in ipairs({"use_position_secondary",
-                              "finish_use_position",
-                              "finish_use_position_secondary"}) do
-          if details[key] then
-            details[key][1] = details[key][1] - x
-            details[key][2] = details[key][2] - y
-          end
-        end
-        use_position[1] = use_position[1] - x
-        use_position[2] = use_position[2] - y
-        if details.slave_position then
-          details.slave_position[1] = details.slave_position[1] - x
-          details.slave_position[2] = details.slave_position[2] - y
-        end
-        local rx, ry = unpack(details.render_attach_position)
-        if type(rx) == "table" then
-          rx, ry = unpack(details.render_attach_position[1])
-          for _, point in ipairs(details.render_attach_position) do
-            point.column = point[1] - point[2]
-            point[1] = point[1] - x
-            point[2] = point[2] - y
-          end
-        else
-          details.render_attach_position[1] = rx - x
-          details.render_attach_position[2] = ry - y
-        end
-        x, y = Map:WorldToScreen(rx + 1, ry + 1)
-        details.animation_offset[1] = details.animation_offset[1] - x
-        details.animation_offset[2] = details.animation_offset[2] - y
+      else
+        details.render_attach_position[1] = rx - x
+        details.render_attach_position[2] = ry - y
       end
-      -- Find the region around the solid part of the footprint
-      local adjacent_set = {}
-      local adjacent_list = {}
-      details.adjacent_to_solid_footprint = adjacent_list
-      for _, point in pairs(solid_points) do
-        for _, delta in ipairs({{-1, 0}, {0, -1}, {0, 1}, {1, 0}}) do
-          local x = point[1] + delta[1]
-          local y = point[2] + delta[2]
-          local k2 = x * 100 + y
-          if not solid_points[k2] and not adjacent_set[k2] then
-            adjacent_set[k2] = {x, y}
-            adjacent_list[#adjacent_list + 1] = adjacent_set[k2]
-          end
+      x, y = Map:WorldToScreen(rx + 1, ry + 1)
+      details.animation_offset[1] = details.animation_offset[1] - x
+      details.animation_offset[2] = details.animation_offset[2] - y
+    end
+
+    -- Find the region around the solid part of the footprint
+    local adjacent_set = {}
+    local adjacent_list = {}
+    details.adjacent_to_solid_footprint = adjacent_list
+    for _, point in pairs(solid_points) do
+      for _, delta in ipairs({{-1, 0}, {0, -1}, {0, 1}, {1, 0}}) do
+        local x = point[1] + delta[1]
+        local y = point[2] + delta[2]
+        local k2 = x * 100 + y
+        if not solid_points[k2] and not adjacent_set[k2] then
+          adjacent_set[k2] = {x, y}
+          adjacent_list[#adjacent_list + 1] = adjacent_set[k2]
         end
       end
     end

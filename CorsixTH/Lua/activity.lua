@@ -16,19 +16,26 @@ function Activity:Activity(parent, humanoid, exit_names)
 end
 
 local done_value = {done = true}
+local notdone_value = {done = false}
+
+--! Construct a return value to denote "done".
 function Activity.returnDone()
   return done_value
 end
 
-local notdone_value = {done = false}
+--! Construct a return value to denote "not done yet".
 function Activity.returnNotDone()
   return notdone_value
 end
 
+--! Construct a return value to denote "activity exited".
+--!param exit_reason Reason of exiting.
 function Activity.returnExit(exit_reason)
   return {exit_activity = exit_reason}
 end
 
+--! Construct a return value to denote "child activity started".
+--!param activity Activity to start as child activity.
 function Activity.returnStart(activity)
   return {start_activity = activity}
 end
@@ -53,6 +60,38 @@ end
 --!return (nil or string) Exit name if the activity is done, else nil.
 function Activity:step(msg)
   error("Implement me in a derived class.")
+end
+
+function Activity:computeAnimation(activity_name, state_funcs)
+  local n = 0
+  while true do
+    assert(n < 20)
+    n = n + 1
+
+    local to_execute_state = self._cur_state
+    local func = state_funcs[self._cur_state]
+    assert(func, "Unknown current state " .. tostring(self._cur_state))
+    local value = func(self, nil) -- msg assumed to be nil.
+    assert(type(value) == "table", "Unexpected activity value found:"
+        .. serialize(value, {detect_cycles=true, max_depth=1}))
+
+    if value.start_activity then
+      self.humanoid:_pushActivity(value.start_activity, true)
+      return -- Child runs after push.
+
+    elseif value.exit_activity then
+      local next_parent_state = self:getParentState(value.exit_activity)
+      self.humanoid:_popActivity(next_parent_state)
+      return -- Parent runs after pop.
+
+    elseif value.done ~= nil then
+      if value.done then break end
+      -- Else not done yet, loop back.
+
+    else
+      error("Unexpected activity value found:" .. serialize(value, {detect_cycles=true, max_depth=1}))
+    end
+  end
 end
 
 --! Query from a child activity what to do with the given message.

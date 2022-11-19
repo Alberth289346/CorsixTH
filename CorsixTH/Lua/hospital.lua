@@ -711,14 +711,14 @@ end
 function Hospital:countSittingStanding()
   local numberSitting = 0
   local numberStanding = 0
-  for _, patient in ipairs(self.patients) do
-    local pat_action = patient:getCurrentAction()
-    if pat_action.name == "idle" and not patient:getRoom() then
-      numberStanding = numberStanding + 1
-    elseif pat_action.name == "use_object" and pat_action.object.object_type.id == "bench" then
-      numberSitting = numberSitting + 1
-    end
-  end
+--  for _, patient in ipairs(self.patients) do
+--    local pat_action = patient:getCurrentAction()
+--    if pat_action.name == "idle" and not patient:getRoom() then
+--      numberStanding = numberStanding + 1
+--    elseif pat_action.name == "use_object" and pat_action.object.object_type.id == "bench" then
+--      numberSitting = numberSitting + 1
+--    end
+--  end
   return numberSitting, numberStanding
 end
 

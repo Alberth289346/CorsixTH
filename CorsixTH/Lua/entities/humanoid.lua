@@ -311,7 +311,13 @@ end
 function Humanoid:_pushActivity(activity, run_activity)
   print("Push activity " .. class.type(activity))
   self._activity_stack[#self._activity_stack + 1] = activity
-  if run_activity then self:onTick() end
+  if run_activity then
+    -- Run the new activity.
+    assert(self._max_push_pops > 0)
+    self._max_push_pops = self._max_push_pops - 1
+
+    self._activity_stack[#self._activity_stack]:step()
+  end
 end
 
 --! Function for derived classes to return control to the parent activity.
@@ -324,15 +330,17 @@ function Humanoid:_popActivity(next_parent_state)
   assert(#self._activity_stack > 0)
 
   self._activity_stack[#self._activity_stack]._cur_state = next_parent_state
+
+  -- Run the parent to get new animation.
+  assert(self._max_push_pops > 0)
+  self._max_push_pops = self._max_push_pops - 1
+
+  self._activity_stack[#self._activity_stack]:step()
 end
 
---! Timer ended.
+--! Timer ended, external entry point only!
 function Humanoid:onTick()
-  print("onTick()")
-  for i, a in ipairs(self._activity_stack) do
-    print("Activity-Stack " .. i .. ": " .. class.type(a))
-  end
-  print("Picking " .. class.type(self._activity_stack[#self._activity_stack]))
+  self._max_push_pops = 10
   self._activity_stack[#self._activity_stack]:step()
 end
 

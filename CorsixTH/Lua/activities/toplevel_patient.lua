@@ -17,7 +17,7 @@ function PatientActivity:_startWalkToDrinkMachine()
 
   local walk_exit_names = {
     ["no-path-found"] = "delete-self",
-    ["arrived"] = "pickup-soda",
+    ["arrived"] = "pickup-drinks",
     ["blocked"] = "delete-self",
   }
   local setup = {
@@ -29,25 +29,53 @@ function PatientActivity:_startWalkToDrinkMachine()
 end
 
 function PatientActivity:_waitForWalk()
-  print("***** Not expecting to get in WaitForWalk.")
+  -- TODO: Monitor drinks-machine so it doesn't disappear!
+  print("***** Not expecting to get in _waitForWalk.")
   return Activity.returnDone()
 end
 
-function PatientActivity:deleteSelf()
+function PatientActivity:_deleteSelf()
   print("***** Goodbye cruel world")
-  self.humanoid:destroyEntity()
+  if self.humanoid.hospital then
+    self.humanoid.hospital:removePatient(self.humanoid)
+  end
+  self.world:destroyEntity(self.humanoid)
+  return Activity.returnDone() -- Forever!
 end
 
-function PatientActivity:pickupSoda()
-  print("***** OOps!")
-  assert(false)
+function PatientActivity:_pickupDrinks()
+  print("***** pickup drinks")
+  --print("Object: " .. serialize(self.humanoid, {max_depth=1}))
+  local machine, lx, ly = self.world:findObjectNear(self.humanoid, "drinks_machine")
+  if not machine or not lx or not ly then
+    self._cur_state = "delete-self"
+    return Activity.returnNotDone()
+  end
+
+  local use_exit_names = {
+    ["done"] = "delete-self"
+  }
+  local setup = {
+    object = machine,
+    position = Position(lx, ly)
+  }
+  local use_object = UseObjectActivity(self, self.humanoid, use_exit_names, setup)
+  self._cur_state = "wait-for-use-drinks-machine"
+  return Activity.returnStart(use_object)
+end
+
+function PatientActivity:_waitForDrinksMachineUse()
+  -- TODO: Monitor drinks-machine so it doesn't disappear!
+  print("***** Not expecting to get in _waitForDrinksMachineUse.")
+  return Activity.returnDone()
 end
 
 local _states = {
   ["start-walk-to-drink-machine"] = PatientActivity._startWalkToDrinkMachine,
   ["delete-self"] = PatientActivity._deleteSelf,
-  ["pickup-soda"] = PatientActivity._pickupSoda,
+  ["pickup-drinks"] = PatientActivity._pickupDrinks,
   ["wait-for-walk"] = PatientActivity._waitForWalk,
+  ["wait-for-use-drinks-machine"] = PatientActivity._waitForDrinksMachineUse,
 }
 
 function PatientActivity:step(msg)
@@ -67,34 +95,7 @@ function PatientActivity:step(msg)
     assert(false, "Unexpected event " .. msg.event)
   end
 
-  local n = 0
-  while true do
-    assert(n < 20)
-    n = n +1
-
-    local to_execute_state = self._cur_state
-    local func = _states[self._cur_state]
-    assert(func, "Unknown current state " .. tostring(self._cur_state))
-    local value = func(self, msg)
-    assert(type(value) == "table", "Unexpected activity value found:" .. serialize(value, {detect_cycles=true, max_depth=1}))
-
-    if value.start_activity then
-      self.humanoid:_pushActivity(value.start_activity, true)
-      return -- This activity is blocked now.
-
-    elseif value.exit_activity then
-      local next_parent_state = self:getParentState(value.exit_activity)
-      self.humanoid:_popActivity(next_parent_state)
-      return
-
-    elseif value.done ~= nil then
-      if value.done then break end
-      -- Else not done yet, loop back.
-
-    else
-      error("Unexpected activity value found:" .. serialize(value, {detect_cycles=true, max_depth=1}))
-    end
-  end
+  self:computeAnimation("toplevel-pat", _states)
 end
 
 function PatientActivity:childMessage()
