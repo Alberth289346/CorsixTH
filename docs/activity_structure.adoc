@@ -1,0 +1,218 @@
+= Structure of activities
+
+Global view of activities of an NPC.
+
+== Concepts
+
+* **Hierarchical activities**
++
+Describing the life of an NPC is done with a state machine. Such a state
+machine is named an _activity_.
+Rather than having one very large activity, the activities are split into a
+hierarchy. At the top an activity describes large parts of the life
+of an NPC, further down it describes a smaller part of the life span but at a
+more detailed level.
+At the bottom the activities run the animations shown to the user.
++
+Lower level activities are created as needed by their parent activity.
+While the child activity is running the parent activity is (usually) blocked
+waiting until the child finishes.
+
+* **Exit names**
++
+A child activity can end execution for several reasons, for example it is done,
+or became blocked. Each reason has a name,
+an _exit name_. When the child activity is started, the parent attaches state
+names of itself to the exit names. When the child activity ends, its exit name
+then defines how the parent activity continues.
++
+In addition, a parent activity can add more exit names to the child activity.
+That allows the parent to instruct the child to sent it in a wanted direction.
+
+* **Messages to activities**
++
+While much of the NPC behavior is completely deterministic, some events may
+happen at
+any time. The NPC may die due to an exploding machine, or an evacuation may be
+triggered in an epidemic. Such events must be handled but they are not in the
+normal flow of the NPC behavior.
++
+To handle such exceptions, an event may be sent to an NPC. An event has a name,
+and possibly other relevant information. The event is handed to the bottom
+child activity since that is in the best position to decide what to do.
++
+If it knows what to do by itself, it should do so. If it does not know, it
+should ask its parent activity what to do. This may go up the hierarchy until
+answer is decided. Then the queries of the child activities are answered by
+their parents how to proceed.
+
+
+== Activity base class
+
+A common `Acivity` base class exists that provides the common code and data.
+It also provides hooks for the derived classes.
+
+* `Acivity:Acivity(parent, humanoid, exit_names)`
++
+The `parent` is the parent activity if it exists (top-most activity gets `nil`).
+The `humanoid` is the humanoid that is being simulated in the activity.
+The `exit_names` are a table of child exit names to parent state names.
+
+* `Acivity:getParentState(exit_reason)`
++
+Utility function that returns the parent state name for the supplied exit name.
+
+* Interface `Acivity:step(msg)` to be implemented by a real activity.
++
+Call from the surrounding code that a relevant event has happened. The supplied
+`msg` contains details of the event.
++
+The most common event is that the last started animation has finished, the activity
+should provide a new animation in response.
+As this is a very common event and there is not much information that needs to
+be exchanged in this case, `msg` is `nil` in this case. In all other cases it
+is a table with an `event` field giving the name of the event. Additional
+information may be supplied. Such additions should be documented.
+
+
+* Interface `Acivity:childMessage(msg)` to be implemented by a real activity.
+
+Query from a direct child activity what to do with the provided message. The
+parent should return `nil` if the child activity can continue, it should return
+an exit name known to the child when the parent wants the child to finish.
+
+
+== Activity classes
+
+A class derived from `Activity` should implement an NPC activity by starting
+animations and moving the humanoid around in the map.
+
+A constructor can be like
+
+[source, lua]
+----
+function XyzActivity:XyzActivity(parent, humanoid, exit_names, setup)
+  self:Activity(parent, humanoid, exit_names)
+
+  -- Initialize the variables from data in setup.
+----
+
+The first three parameters get copied to the base class (which makes them
+available in the instance along with `self.world`).
+The `setup` can be a table with the input data. You may want to check as much
+as you can here, as a crash on a bug here gives a good chance to find where
+the problem is coming from by reading the stack-dump.
+
+An activity is a state machine implementing `Activity:step(msg)`.
+A good way to represent a state is with a method in the derived class, for
+example
+
+[source, lua]
+----
+function XyzActivity:_someState(msg)
+  if not msg then
+    ....  -- Animation ended, start a new animation.
+  end
+  ...
+  self._cur_state = "another-state" -- Change state of the state machine.
+  return false
+end
+----
+
+It conveniently takes the `msg` parameter thus allowing to handle events here
+as well. Note that messages can arrive at any time, thus
+handling a message should likely avoid computing a new state or starting the
+next animation.
+
+As you can see, a state also has a name. That enables setting the current
+state, and also print the current state for easy debugging.
+To dispatch to the state methods, create a state dispatch table like
+
+[source, lua]
+----
+local xyz_states = {
+  ["some-state"] = XyzActivity._someState,
+  ...
+}
+----
+
+The main `step(msg)` entry point can become something like
+
+[source, lua]
+----
+function XyzActivity:step(msg)
+  -- Possibly deal with non-nil 'msg' here.
+
+  local exit_name
+  local done = false
+  local n = 0
+  while not done do
+    assert(n < 20) -- Avoid infinite looping.
+    n = n + 1
+
+    local func = xyz_states[self._cur_state]
+    assert(func, "Unknown current state " .. tostring(self._cur_state))
+    done, exit_name = func(self, msg)
+
+    if exit_name then return exit_name end
+  end
+end
+----
+The first returned value decides if the loop at the entry point loops to the
+next state, the second returned value terminates the activity with an exit
+name, and returns control to the parent state.
+
+
+== Activity stack and humanoid entry point
+
+Inside the humanoid a stack of activities is kept. The top activity covers the
+entire life span at high level, the bottom activity is handling the animations
+that show what the humanoid is doing at the current time.
+
+The stack itself is an array of activities, where you can push and pop an
+activity to or from the stack. It's an error if you pop the top activity.
+
+
+There are two entry points related to activities in a humanoid, `onTick()` and
+`onEvent(msg)`. The former is a call that happens every animation frame. The
+latter is for delivering events to the humanoid, it may be called at any time.
+
+:WARNING: _any time_ is quite literally any time.
+Calls may or may not happen, or several calls may happen within one frame of an
+animation. For this reason it is important to cleanly distinguish between the
+calls and not make assumptions that some call will happen at an expected
+time.
+
+Both calls are examined in more detail below.
+
+=== The onTick call
+
+The main purpose of `onTick()` is to measure progress of the animation,
+allowing the NPC to start a next animation immediately after the previous
+animation ended.
+
+:WARNING: Without animation, no graphics are displayed thus the NPC cannot be
+seen by the user. Avoiding this situation is extremely important.
+
+In some situations, it may be useful to get calls in the current activity while
+an animation is running. For this purpose the NPC has a
+`self.tick_passthrough` boolean. If set to `true`, a tick event will be
+sent to the activity each frame. Obviously this degrades performance, and
+should be avoided if possible.
+
+=== The onEvent call
+
+The `onEvent(event)` call simply passes the provided event down to the activity. Within its
+current state, the NPC should decide what to do with it.
+
+An activity should only handle the events that it recognizes. All other events
+should be forwarded to the parent activity for a decision.
+In this way, handling an event can be done at the appropriate abstraction
+level and needs to be implemented only once.
+For example, an _exploding room_ event could be implemented by forwarding the
+event to the top-level activity, that activity can change its state to a
+_destroy_entity_ state, and then pass an exit code _end now_ down back to the
+bottom activity that originally received the event.
+In the next tick, all activities will end  and the NPC disappears from the
+scene.
+
