@@ -18,6 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+require("level_edit_data")
+
+
 class "UILevelEditor" (UIResizable)
 
 ---@type UILevelEditor
@@ -35,6 +38,10 @@ function UILevelEditor:UILevelEditor(ui)
 
   self.ui = ui
   self.panel_sprites = TheApp.map.blocks -- XXX Looks not needed.
+
+  self.root_page = LevelEditorValues.getRootPage()
+  -- XXX Compute size and positions of root_page!
+  self.root_page:layout(self, Pos(10, 10), Size(EDITOR_WINDOW_XSIZE - 20, EDITOR_WINDOW_YSIZE - 20))
 
   self:setPosition(0.1, 0.1)
 end

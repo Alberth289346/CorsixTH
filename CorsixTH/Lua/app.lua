@@ -1705,6 +1705,12 @@ function App:abandon()
   self.running = false
 end
 
+function App:getLanguageString(name)
+  -- XXX Actually pull the string from _S
+  return "XYZ"
+end
+
+
 --! This function is automatically called after loading a game and serves for compatibility.
 function App:afterLoad()
   self.ui:addOrRemoveDebugModeKeyHandlers()
