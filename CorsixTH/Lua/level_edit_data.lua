@@ -19,28 +19,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 require("pos_size")
+require("tree_access")
 
 local lang_prefix = "level_editor"
 
 -- Temporary language strings of the level editor values.
-local texts = {
+local default_translations = {
+  -- Pages
+  ["level_editor.pages.staffpage"] = "Staff properties",
   -- Min salaries
-  ["level_editor.nurse.min_salary.name"] = "Minimum salary of a nurse",
-  ["level_editor.doctor.min_salary.name"] = "Minimum salary of a doctor",
-  ["level_editor.handyman.min_salary.name"] = "Minimum salary of a handyman",
-  ["level_editor.receptionist.min_salary.name"] = "Minimum salary of a receptionist",
+  ["level_editor.titles.min_salaries_title"] = "Minimum salaries",
+  ["level_editor.nurse.min_salary.name"] = "Nurse minimum",
+  ["level_editor.doctor.min_salary.name"] = "Doctor minimum",
+  ["level_editor.handyman.min_salary.name"] = "Handyman minimum",
+  ["level_editor.receptionist.min_salary.name"] = "Receptionist minimum",
+  ["level_editor.nurse.min_salary.tooltip"] = "Minimum salary of a Nurse",
+  ["level_editor.doctor.min_salary.tooltip"] = "Minimum salary of a Doctor",
+  ["level_editor.handyman.min_salary.tooltip"] = "Minimum salary of a Handyman",
+  ["level_editor.receptionist.min_salary.tooltip"] = "Minimum salary of a Receptionist",
   -- Doctors salaries
-  ["level_editor.junior.salary.name"] = "Salary for Junior staff",
+  ["level_editor.junior.salary.name"] = "Junior addition",
   ["level_editor.junior.salary.tooltip"] = "Relative to minimum doctor salary, make negative",
-  ["level_editor.doctor.salary.name"] = "Salary for Doctor staff",
+  ["level_editor.doctor.salary.name"] = "Doctor addition",
   ["level_editor.doctor.salary.tooltip"] = "Relative to minimum doctor salary",
-  ["level_editor.surgeon.salary.name"] = "Salary for Surgeon staff",
+  ["level_editor.surgeon.salary.name"] = "Surgeon addition",
   ["level_editor.surgeon.salary.tooltip"] = "Relative to minimum doctor salary",
-  ["level_editor.shrink.salary.name"] = "Salary for Psychiatrist staff",
+  ["level_editor.shrink.salary.name"] = "Psychiatrist addition",
   ["level_editor.shrink.salary.tooltip"] = "Relative to minimum doctor salary",
-  ["level_editor.consultant.salary.name"] = "Salary for Consultant staff",
+  ["level_editor.consultant.salary.name"] = "Consultant addition",
   ["level_editor.consultant.salary.tooltip"] = "Relative to minimum doctor salary",
-  ["level_editor.research.salary.name"] = "Salary for Research staff",
+  ["level_editor.research.salary.name"] = "Research addition",
   ["level_editor.research.salary.tooltip"] = "Relative to minimum doctor salary",
   -- Staff resting amounts
   ["level_editor.staff_rest.standing"] = "Amount of rest while standing in the staff room",
@@ -48,6 +56,8 @@ local texts = {
   ["level_editor.staff_rest.game"] = "Amount of rest while playing a game in the staff room",
   ["level_editor.staff_rest.snooker"] = "Amount of rest while playing snooker in the staff room",
   ["level_editor.staff_tiring.work"] = "Amount of tiring while working",
+  -- Unit names
+  ["level_editor.unit_names.money"] = "$",
 }
 
 local function substBrackets(text, insert_value)
@@ -61,7 +71,7 @@ local function makeNumericValue(level_cfg_path, path_identifier, min_value, max_
     level_cfg_path = substBrackets(level_cfg_path, key_value),
     name_path = substBrackets(base_path .. path_identifier ..".name", key_value),
     tooltip_path = substBrackets(base_path .. path_identifier ..".tooltip", key_value),
-    unit_name_path = unit_name_path and lang_prefix .. ".unit_names." .. unit_name_path,
+    unit_path = unit_name_path and lang_prefix .. ".unit_names." .. unit_name_path,
     min_value = min_value,
     max_value = max_value
   }
@@ -72,8 +82,6 @@ local min_salary_values = {
   makeNumericValue("#staff[].MinSalary", "doctor.min_salary", 0, nil, "money", 1),
   makeNumericValue("#staff[].MinSalary", "handyman.min_salary", 0, nil, "money", 2),
   makeNumericValue("#staff[].MinSalary", "receptionist.min_salary", 0, nil, "money", 3),
-}
-local doctor_salaries = {
   makeNumericValue("#gbv.SalaryAdd[]", "junior.salary", nil, 0, "money", 3),
   makeNumericValue("#gbv.SalaryAdd[]", "doctor.salary", 0, nil, "money", 4),
   makeNumericValue("#gbv.SalaryAdd[]", "surgeon.salary", 0, nil, "money", 5),
@@ -95,13 +103,22 @@ local PANEL_FG = {red = 200, green = 200, blue = 200}
 local TEXT_BG = {red = 0, green = 0, blue = 0}
 local TEXT_FG = {red = 250, green = 250, blue = 250}
 
+local function getTranslatedText(name)
+  local text = TreeAccess.readTree(_S, name)
+  if type(text) == "string" then return text end
+  text = default_translations[name]
+  if text then return text end
+
+  print("Warning: Translated text named " .. name .. " does not exist.")
+  return name
+end
 
 local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
   if name_path then
-    panel:setLabel(TheApp:getLanguageString(name_path))
+    panel:setLabel(getTranslatedText(name_path), nil, "left")
     if tooltip_path then
-      panel:setTooltip(TheApp:getLanguageString(tooltip_path))
+      panel:setTooltip(getTranslatedText(tooltip_path))
     end
   end
   widgets[#widgets + 1] = panel
@@ -118,8 +135,10 @@ local function makeTextBox(window, text_boxes, x, y, size, min_val, max_val)
 end
 
 local function makeUnit(window, widgets, x, y, size, unit_path)
+  if not unit_path then return end
+
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
-  panel:setLabel(TheApp:getLanguageString(unit_path))
+  panel:setLabel(getTranslatedText(unit_path))
   widgets[#widgets + 1] = panel
 end
 
@@ -142,8 +161,9 @@ end
 --!param sz (Size) Size after layout.
 function Section:verifySize(sz)
   local exp_sz = self:computeSize()
-  assert(sz.w == exp_sz.w)
-  assert(sz.h == exp_sz.h)
+  assert(sz.w == exp_sz.w and sz.h == exp_sz.h, ("Wrong size: expected "
+      .. "(" .. exp_sz.w .. ", " .. exp_sz.h .. "), got "
+      .. "(" .. sz.w .. ", " .. sz.h .. ")"))
 end
 
 --! Compute size of the needed area to display the section.
@@ -168,24 +188,27 @@ function ValueSection:ValueSection(title_path, values)
   self.values = values -- Array.
   self.text_boxes = {} -- Textbox widget for each value.
 
-  self.label_size = Size(80, 15)
-  self.value_size = Size(30, 15)
-  self.unit_size = Size(20, 15)
+  self.label_size = Size(100, 20)
+  self.value_size = Size(30, 20)
+  self.unit_size = Size(20, 20)
   self.title_sep = 5
-  self.value_sep = 2
+  self.value_sep = 3
 end
 
 function ValueSection:setLabelSize(sz)
+  assert(class.type(sz) == "Size")
   self.label_size = sz
   return self
 end
 
 function ValueSection:setValueSize(sz)
+  assert(class.type(sz) == "Size")
   self.value_size = sz
   return self
 end
 
 function ValueSection:setUnitSize(sz)
+  assert(class.type(sz) == "Size")
   self.unit_size = sz
   return self
 end
@@ -196,33 +219,41 @@ function ValueSection:setVertSep(title_sep, value_sep)
   return  self
 end
 
---! Compute key positions for 
+--! Construct widgets in the window, with the top-left corner of the section at pos.
+--!param window Window to store the new widgets.
+--!param pos Top-left position of the area.
 function ValueSection:layout(window, pos)
   -- Clear widgets and text boxes.
   self.widgets = {}
   self.boxes = {}
 
   local x, y = pos.x, pos.y
+  local max_x = x
   -- Title.
   if self.title_path then
     makeLabel(window, self.widgets, x, y, self.title_size, self.title_path)
     y = y + self.title_size.h + self.title_sep
+    max_x = math.max(max_x, x + self.title_size.w)
   end
   -- Editable values below the title.
   local label_x = x
   local val_x = label_x + self.label_size.w
   local unit_x = val_x + self.value_size.w
   local right_x = unit_x + self.unit_size.w
+  max_x = math.max(max_x, right_x)
   for idx, val in ipairs(self.values) do
     if idx > 1 then y = y + self.value_sep end
     makeLabel(window, self.widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path)
     makeTextBox(window, self.text_boxes, val_x, y, self.value_size)
-    makeUnit(window, self.widgets, unit_x, y, self.unit_size)
+    makeUnit(window, self.widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
   end
-  self:verifySize(Size(right_x - pos.x, y - pos.y))
+  self:verifySize(Size(max_x - pos.x, y - pos.y))
 end
 
+--! Function to compute the size of the area for this section.
+--  It is highly recommended to verify the computed size against the real use
+--  after layout by means of self.verifySize().
 function ValueSection:computeSize()
   local w = 0
   if self.title_path then w = math.max(w, self.title_size.w) end
@@ -235,58 +266,45 @@ function ValueSection:computeSize()
 
   return Size(w, h)
 end
-
---function ValueSection:setup(window, page, left, top)
---  self.widgets = {}
---
---  -- Add title.
---  if self.title_path then
---    local title_panel = window:addBevelPanel(left, top, _vs.width,
---        _vs.title_height, _ps.bg, _ps.fg)
---    title_panel:setLabel(window:getText(self.title_path))
---    page.widgets[#page.widgets + 1] = title_panel
---    top = top + _ps.top + _vs.title_height
---  end
---  -- Add values.
---  local hor_textbox_offset = _vs.width - _vs.text_width
---  local name_width = hor_textbox_offset - _vs.value_distance
---  for _, value in ipairs(self.values) do
---    -- Name label
---    local name_panel = window:addBevelPanel(left, top, name_width,
---        _vs.value_height, _vs.label_bg, _vs.label_fg)
---    name_panel:setLabel(window:getText(value.name_path))
---    -- tooltip
---    page.widgets[#page.widgets + 1] = name_panel
---    -- Textbox for the value.
---    local panel = window:addBevelPanel(left + hor_textbox_offset, top,
---        _vs.text_width, _vs.value_height, _vs.text_bg, _vs.text_fg)
---    if value.tooltip_path then
---      panel:setTooltip(window:getText(value.tooltip_path))
---    end
---    local textbox = panel:makeTextbox(nil, nil) -- confirm_cb, abort_cb)
---    textbox:allowedInput("numbers")
---    local length = math.max(#tostring(value.min_value), #tostring(value.max_value))
---    textbox:characterLimit(length)
---    textbox:setText(tostring(value.cur_value))
---    self.text_boxes[#self.text_boxes + 1] = textbox
---    page.widgets[#page.widgets + 1] = textbox
---    top = top + _vs.value_height + _vs.value_distance
---  end
---  return max_val
---
---  return top
---end
 -- }}}
 -- {{{ TableSection
 class "TableSection" (Section)
 
---! Section that associates one or more values for each index in the  domain.
+---@type TableSection
+local TableSection = _G["TableSection"]
+
+--! Section that associates one or more values for each index in the domain.
 --!param title_path (str) Language path to the title name string.
 --!param values (array of ConfigValue), ConfigValue descriptions.
 function TableSection:TableSection(title_path, values)
   Section.Section(self, title_path)
-  self.values = values -- Array of rows.
+  self.values = values -- Array of row arrays.
+
+
+  self.title_sep = 5
 end
+
+function TableSection:setTitleSep(sep)
+  self.title_sep = sep
+  return self
+end
+
+function TableSection:layout(window, pos)
+  local x, y = pos.x, pos.y
+  local max_x = x
+  -- Title.
+  if self.title_path then
+    makeLabel(window, self.widgets, x, y, self.title_size, self.title_path)
+    y = y + self.title_size.h + self.title_sep
+    max_x = math.max(max_x, x + self.title_size.w)
+  end
+
+  self.col_headers = {}
+  self.row_headers = {}
+  XXX
+
+end
+
 -- }}}
 -- {{{ EditPage (some screen area to display and modify level-config values).
 class "EditPage"
@@ -310,6 +328,7 @@ function EditPage:EditPage(name_path, sections)
 end
 
 function EditPage:setNameSize(sz)
+  assert(class.type(sz) == "Size")
   self.name_size = sz
   return self
 end
@@ -335,7 +354,6 @@ function EditPage:computeSize()
   end
   return Size(w, h)
 end
-
 
 --! Compute layout of the elements at the page.
 --!param x Left edge of the area available for layout.
@@ -392,8 +410,14 @@ end
 
 function LevelEditorValues.getRootPage()
   local min_salary_section = ValueSection(lang_prefix .. ".titles.min_salaries_title", min_salary_values)
-  local doctor_salaries_section = ValueSection(lang_prefix ..".titles.doctor_salaries_title", doctor_salaries)
+  min_salary_section:setTitleSize(Size(220, 20))
+  min_salary_section:setLabelSize(Size(140, 20))
+  min_salary_section:setValueSize(Size(50, 20))
+
   local towns_section = TableSection(lang_prefix .. ".titles.towns_title", towns)
-  return EditPage(nil, {min_salary_section})
+
+  local salariesPage = EditPage("level_editor.pages.staffpage", {min_salary_section, towns_section})
+  salariesPage:setNameSize(Size(250, 30))
+  return salariesPage
 --  return EditPage(nil, {min_salary_section, doctor_salaries_section, towns_section})
 end
