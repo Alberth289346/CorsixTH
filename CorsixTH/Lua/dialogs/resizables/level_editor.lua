@@ -37,12 +37,15 @@ function UILevelEditor:UILevelEditor(ui)
   self.resizable = false
 
   self.ui = ui
-  self.panel_sprites = TheApp.map.blocks -- XXX Looks not needed.
+  self.panel_sprites = TheApp.map.blocks -- XXX Looks not needed, but is it?
+  self.level_config = TheApp.map.level_config
 
   self.root_page = LevelEditorValues.getRootPage()
-  -- XXX Compute size and positions of root_page!
-  self.root_page:layout(self, Pos(10, 10), Size(EDITOR_WINDOW_XSIZE - 20, EDITOR_WINDOW_YSIZE - 20))
 
+  -- Compute size and positions of everything.
+  self.root_page:layout(self, Pos(10, 10), Size(EDITOR_WINDOW_XSIZE - 20, EDITOR_WINDOW_YSIZE - 20))
   self:setPosition(0.1, 0.1)
+
+  self.root_page:loadConfig(self.level_config)
 end
 

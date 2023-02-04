@@ -79,7 +79,56 @@ local default_translations = {
   ["level_editor.towns.row_labels[12].name"] = "Level 13",
 }
 
--- XXX class "Value" IMPLEMENT!
+class "LevelValue"
+--@type LevelValue
+local LevelValue = _G["LevelValue"]
+
+--! Integer level configuration value in the level config editor.
+--!param level_cfg_path (str) Absolute path in the level configuration file for this value.
+--!param name_path (str) Absolute path to the name string in the language files for this value.
+--!param tooltip_path (nil or str) If present, absolute path to the tooltip string in the language files for this value.
+--!param unit_path (nil or str) If present, the absolute path to the name string of the unit for this value.
+--!param min_value (nil or integer) If present the lowest allowed value of this value.
+--!param max_value (nil or integer) If present the highest allowed value of this value.
+function LevelValue:LevelValue(level_cfg_path, name_path, tooltip_path, unit_path, min_value, max_value)
+  self.level_cfg_path = level_cfg_path
+  self.name_path = name_path
+  self.tooltip_path = tooltip_path
+  self.unit_path = unit_path
+  self.min_value = min_value
+  self.max_value = max_value
+  assert(not self.min_value or not self.max_value or self.min_value <= self.max_value)
+
+  self.text_box = nil -- Text box in the editor.
+  self.current_value = 0
+end
+
+function LevelValue:loadConfig(cfg)
+  local number = TreeAccess.readTree(cfg, self.level_cfg_path)
+  self:setBoxValue(number)
+  if not number then
+    print("Warning: Level configuration \"" .. self.level_cfg_path .. "\" does not exist in the file.")
+  end
+end
+
+function LevelValue:setBoxValue(value)
+  if not value then value = self.current_value end
+
+  if type(value) ~= "number" then value = 0 end
+  if self.min_value and value < self.min_value then value = self.min_value end
+  if self.max_value and value > self.max_value then value = self.max_value end
+  self.current_value = math.floor(value) -- Ensure it's an integer even if the bounds are not.
+  self.text_box:setText(tostring(self.current_value))
+end
+
+function LevelValue:confirm()
+  self.current_value = tonumber(self.text_box.text) or self.current_value
+  self:setBoxValue()
+end
+
+function LevelValue:abort()
+  self:setBoxValue()
+end
 
 local function substBrackets(text, insert_value)
   if not insert_value then return text end
@@ -88,27 +137,27 @@ end
 
 local function makeNumericValue(level_cfg_path, path_identifier, min_value, max_value, unit_name_path, key_value)
   local base_path = lang_prefix .. "."
-  return {
-    level_cfg_path = substBrackets(level_cfg_path, key_value),
-    name_path = path_identifier and substBrackets(base_path .. path_identifier ..".name", key_value) or nil,
-    tooltip_path = path_identifier and substBrackets(base_path .. path_identifier ..".tooltip", key_value) or nil,
-    unit_path = unit_name_path and lang_prefix .. ".unit_names." .. unit_name_path,
-    min_value = min_value,
-    max_value = max_value
-  }
+
+  local level_cfg_path = substBrackets(level_cfg_path, key_value)
+  local name_path = path_identifier and substBrackets(base_path .. path_identifier ..".name", key_value) or nil
+  local tooltip_path = path_identifier and substBrackets(base_path .. path_identifier ..".tooltip", key_value) or nil
+  local unit_path = unit_name_path and lang_prefix .. ".unit_names." .. unit_name_path
+  local min_value = min_value
+  local max_value = max_value
+  return LevelValue(level_cfg_path, name_path, tooltip_path, unit_path, min_value, max_value)
 end
 
 local min_salary_values = {
-  makeNumericValue("#staff[].MinSalary", "nurse.min_salary", 0, nil, "money", 0),
-  makeNumericValue("#staff[].MinSalary", "doctor.min_salary", 0, nil, "money", 1),
-  makeNumericValue("#staff[].MinSalary", "handyman.min_salary", 0, nil, "money", 2),
-  makeNumericValue("#staff[].MinSalary", "receptionist.min_salary", 0, nil, "money", 3),
-  makeNumericValue("#gbv.SalaryAdd[]", "junior.salary", nil, 0, "money", 3),
-  makeNumericValue("#gbv.SalaryAdd[]", "doctor.salary", 0, nil, "money", 4),
-  makeNumericValue("#gbv.SalaryAdd[]", "surgeon.salary", 0, nil, "money", 5),
-  makeNumericValue("#gbv.SalaryAdd[]", "shrink.salary", 0, nil, "money", 6),
-  makeNumericValue("#gbv.SalaryAdd[]", "consultant.salary", 0, nil, "money", 7),
-  makeNumericValue("#gbv.SalaryAdd[]", "research.salary", 0, nil, "money", 8),
+  makeNumericValue("staff[].MinSalary", "nurse.min_salary", 0, nil, "money", 0),
+  makeNumericValue("staff[].MinSalary", "doctor.min_salary", 0, nil, "money", 1),
+  makeNumericValue("staff[].MinSalary", "handyman.min_salary", 0, nil, "money", 2),
+  makeNumericValue("staff[].MinSalary", "receptionist.min_salary", 0, nil, "money", 3),
+  makeNumericValue("gbv.SalaryAdd[]", "junior.salary", nil, 0, "money", 3),
+  makeNumericValue("gbv.SalaryAdd[]", "doctor.salary", 0, nil, "money", 4),
+  makeNumericValue("gbv.SalaryAdd[]", "surgeon.salary", 0, nil, "money", 5),
+  makeNumericValue("gbv.SalaryAdd[]", "shrink.salary", 0, nil, "money", 6),
+  makeNumericValue("gbv.SalaryAdd[]", "consultant.salary", 0, nil, "money", 7),
+  makeNumericValue("gbv.SalaryAdd[]", "research.salary", 0, nil, "money", 8),
 }
 
 local towns_row_name_paths = {}
@@ -119,9 +168,9 @@ local value
 for i = 0, 12 do
   towns_row_name_paths[#towns_row_name_paths + 1] = "level_editor.towns.row_labels[" .. i .. "].name"
   -- Skipping row tooltips!
-  start_cash_col[#start_cash_col + 1] = makeNumericValue("#towns[].StartCash", nil, 0, nil, "money", i)
-  ill_rate_col[#ill_rate_col + 1] = makeNumericValue("#towns[].IllRate", nil, 0, nil, nil, i)
-  interest_rate_col[#interest_rate_col + 1] = makeNumericValue("#towns[].InterestRate", nil, 0, nil, "percentage100", i)
+  start_cash_col[#start_cash_col + 1] = makeNumericValue("towns[].StartCash", nil, 0, nil, "money", i)
+  ill_rate_col[#ill_rate_col + 1] = makeNumericValue("towns[].IllRate", nil, 0, nil, nil, i)
+  interest_rate_col[#interest_rate_col + 1] = makeNumericValue("towns[].InterestRate", nil, 0, nil, "percentage100", i)
 end
 local towns_entries = {start_cash_col, interest_rate_col, interest_rate_col} -- Array of column arrays.
 local towns_col_name_paths = {
@@ -175,16 +224,16 @@ end
 --!param x (int) X position of the top-left corner.
 --!param y (int) Y position of the top-left corner.
 --!param size (Size) Width and height of the panel.
---!param min_val (int) Lowest allowed value.
---!param max_val (int) Highest allowed value.
-local function makeTextBox(window, text_boxes, x, y, size, min_val, max_val)
+--!param value (LevelValue) Value displayed and edited in the box.
+local function makeTextBox(window, text_boxes, x, y, size, value)
   local text_box = window:addBevelPanel(x, y, size.w, size.h, TEXT_BG, TEXT_FG)
-  text_box = text_box:makeTextbox(nil, nil) -- confirm_cb, abort_cb)
-  text_box:allowedInput("numbers")
-  local length = math.max(#tostring(min_val), #tostring(max_val))
-  text_box:characterLimit(length)
-
+  local function confirm_cb() value:confirm() end
+  local function abort_cb() value:abort() end
+  text_box = text_box:makeTextbox(confirm_cb, abort_cb) -- confirm_cb, abort_cb)
   text_boxes[#text_boxes + 1] = text_box
+
+  value.text_box = text_box
+  value:setBoxValue()
 end
 
 local function makeUnit(window, widgets, x, y, size, unit_path)
@@ -297,7 +346,7 @@ function ValueSection:layout(window, pos)
   for idx, val in ipairs(self.values) do
     if idx > 1 then y = y + self.value_sep end
     makeLabel(window, self.widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path)
-    makeTextBox(window, self.text_boxes, val_x, y, self.value_size)
+    makeTextBox(window, self.text_boxes, val_x, y, self.value_size, val)
     makeUnit(window, self.widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
   end
@@ -321,11 +370,11 @@ function ValueSection:computeSize()
 end
 
 function ValueSection:loadConfig(cfg)
-  -- XXX Implement
+  for _, val in ipairs(self.values) do val:loadConfig(cfg) end
 end
 
 function ValueSection:saveConfig(cfg)
-  -- XXX Implement
+  for _, val in ipairs(self.values) do cfg = val:saveConfig(cfg) end
   return cfg
 end
 
@@ -382,7 +431,6 @@ function TableSection:_getTableColsRows()
   -- 'values' has column arrays.
   local num_cols = #self.values
   local num_rows = #self.values[1]
-  print("Table size: " .. num_cols .. " columns, " .. num_rows .. " rows.")
   return Size(num_cols, num_rows)
 end
 
@@ -420,7 +468,7 @@ function TableSection:layout(window, pos)
     makeLabel(window, self.widgets, x, y, label_size, self.row_name_paths[row], self.row_tooltip_paths[row])
     x = x + label_size.w + self.col_label_sep
     for col = 1, table_rows_cols.w do
-      makeTextBox(window, self.text_boxes, x, y, label_size)
+      makeTextBox(window, self.text_boxes, x, y, label_size, self.values[col][row])
       x = x + label_size.w
       if col < table_rows_cols.w then x = x + self.intercol_sep end
     end
@@ -448,11 +496,15 @@ function TableSection:computeSize()
 end
 
 function TableSection:loadConfig(cfg)
-  -- XXX Implement
+  for _, vals_col in ipairs(self.values) do
+    for _, val in ipairs(vals_col) do val:loadConfig(cfg) end
+  end
 end
 
 function TableSection:saveConfig(cfg)
-  -- XXX Implement
+  for _, vals_col in ipairs(self.values) do
+    for _, val in ipairs(vals_col) do cfg = val:saveConfig(cfg) end
+  end
   return cfg
 end
 
@@ -466,9 +518,8 @@ local EditPage = _G["EditPage"]
 --! A 'screen' with values that can be modified.
 --!param name_path Path in _S with the name of the page.
 --!param sections (array TableSection, ValueSection) Sections of settings that can be edited in this screen.
-function EditPage:EditPage(name_path, pages, sections)
+function EditPage:EditPage(name_path, sections)
   self.name_path = name_path -- Can be nil
-  self.child_pages = pages -- Array child pages.
   self.sections = sections -- Array of value and table sections.
 
   self.window = nil -- Containing window.
@@ -538,14 +589,12 @@ end
 
 --! Load the given level config file into the editor.
 function EditPage:loadConfig(cfg)
-  for _, page in ipairs(self.pages) do page:loadConfig(cfg) end
   for _, sect in ipairs(self.sections) do sect:loadConfig(cfg) end
 end
 
 --! Update the give level config with the values in the editor.
 function EditPage:saveConfig(cfg)
   -- XXX Needs a deep clone somewhere (but not here).
-  for _, page in ipairs(self.pages) do cfg = page:saveConfig(cfg) end
   for _, sect in ipairs(self.sections) do cfg = sect:saveConfig(cfg) end
   return cfg
 end
@@ -592,7 +641,7 @@ function LevelEditorValues.getRootPage()
       _town_table_col_name_paths, _town_table_col_tooltip_paths,
       towns_entries)
 
-  local salariesPage = EditPage("level_editor.pages.staffpage", {}, {min_salary_section, towns_section})
+  local salariesPage = EditPage("level_editor.pages.staffpage", {min_salary_section, towns_section})
   salariesPage:setNameSize(Size(250, 30))
   return salariesPage
 --  return EditPage(nil, {min_salary_section, doctor_salaries_section, towns_section})
