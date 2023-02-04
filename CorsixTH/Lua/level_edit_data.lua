@@ -319,6 +319,16 @@ function ValueSection:computeSize()
 
   return Size(w, h)
 end
+
+function ValueSection:loadConfig(cfg)
+  -- XXX Implement
+end
+
+function ValueSection:saveConfig(cfg)
+  -- XXX Implement
+  return cfg
+end
+
 -- }}}
 -- {{{ TableSection
 class "TableSection" (Section)
@@ -437,6 +447,15 @@ function TableSection:computeSize()
   return Size(hor_size, vert_size)
 end
 
+function TableSection:loadConfig(cfg)
+  -- XXX Implement
+end
+
+function TableSection:saveConfig(cfg)
+  -- XXX Implement
+  return cfg
+end
+
 -- }}}
 -- {{{ EditPage (some screen area to display and modify level-config values).
 class "EditPage"
@@ -446,10 +465,11 @@ local EditPage = _G["EditPage"]
 
 --! A 'screen' with values that can be modified.
 --!param name_path Path in _S with the name of the page.
---!param Values that can be edited in this screen.
-function EditPage:EditPage(name_path, sections)
+--!param sections (array TableSection, ValueSection) Sections of settings that can be edited in this screen.
+function EditPage:EditPage(name_path, pages, sections)
   self.name_path = name_path -- Can be nil
-  self.sections = sections -- Array.
+  self.child_pages = pages -- Array child pages.
+  self.sections = sections -- Array of value and table sections.
 
   self.window = nil -- Containing window.
   self.widgets = {} -- Widgets of the page.
@@ -496,6 +516,8 @@ function EditPage:layout(window, pos, size)
   -- Clear widgets.
   self.widgets = {}
 
+  -- TODO: Also consider multiple columns!
+
   local x, y = pos.x, pos.y
   local right_x = x
   -- Name.
@@ -512,6 +534,20 @@ function EditPage:layout(window, pos, size)
     right_x = math.max(right_x, x + sz.w)
   end
   -- XXX self:verifySize(Size(right_x - pos.x, y - pos.y)) not needed?
+end
+
+--! Load the given level config file into the editor.
+function EditPage:loadConfig(cfg)
+  for _, page in ipairs(self.pages) do page:loadConfig(cfg) end
+  for _, sect in ipairs(self.sections) do sect:loadConfig(cfg) end
+end
+
+--! Update the give level config with the values in the editor.
+function EditPage:saveConfig(cfg)
+  -- XXX Needs a deep clone somewhere (but not here).
+  for _, page in ipairs(self.pages) do cfg = page:saveConfig(cfg) end
+  for _, sect in ipairs(self.sections) do cfg = sect:saveConfig(cfg) end
+  return cfg
 end
 -- }}}
 
@@ -556,7 +592,7 @@ function LevelEditorValues.getRootPage()
       _town_table_col_name_paths, _town_table_col_tooltip_paths,
       towns_entries)
 
-  local salariesPage = EditPage("level_editor.pages.staffpage", {min_salary_section, towns_section})
+  local salariesPage = EditPage("level_editor.pages.staffpage", {}, {min_salary_section, towns_section})
   salariesPage:setNameSize(Size(250, 30))
   return salariesPage
 --  return EditPage(nil, {min_salary_section, doctor_salaries_section, towns_section})
