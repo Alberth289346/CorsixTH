@@ -59,24 +59,27 @@ local default_translations = {
   -- Unit names
   ["level_editor.unit_names.money"] = "$",
 
-  -- Towns table (tooltips are missing)
-  ["level_editor.towns.start_cash_name"] = "Initial amount of cash",
-  ["level_editor.towns.ill_rate_name"] = "Illnes rate",
-  ["level_editor.towns.interest_rate_name"] = "Interest rate",
-  ["level_editor.towns.level_names[0]"] = "Level 1",
-  ["level_editor.towns.level_names[1]"] = "Level 2",
-  ["level_editor.towns.level_names[2]"] = "Level 3",
-  ["level_editor.towns.level_names[3]"] = "Level 4",
-  ["level_editor.towns.level_names[4]"] = "Level 5",
-  ["level_editor.towns.level_names[5]"] = "Level 6",
-  ["level_editor.towns.level_names[6]"] = "Level 7",
-  ["level_editor.towns.level_names[7]"] = "Level 8",
-  ["level_editor.towns.level_names[8]"] = "Level 9",
-  ["level_editor.towns.level_names[9]"] = "Level 10",
-  ["level_editor.towns.level_names[10]"] = "Level 11",
-  ["level_editor.towns.level_names[11]"] = "Level 12",
-  ["level_editor.towns.level_names[12]"] = "Level 13",
+  -- Towns table (tooltips are mostly missing)
+  ["level_editor.towns.column_labels.start_cash.name"] = "Initial cash",
+  ["level_editor.towns.column_labels.start_cash.tooltip"] = "Initial amount of money",
+  ["level_editor.towns.column_labels.ill_rate.name"] = "Illness rate",
+  ["level_editor.towns.column_labels.interest_rate.name"] = "Interest rate",
+  ["level_editor.towns.row_labels[0].name"] = "Level 1",
+  ["level_editor.towns.row_labels[1].name"] = "Level 2",
+  ["level_editor.towns.row_labels[2].name"] = "Level 3",
+  ["level_editor.towns.row_labels[3].name"] = "Level 4",
+  ["level_editor.towns.row_labels[4].name"] = "Level 5",
+  ["level_editor.towns.row_labels[5].name"] = "Level 6",
+  ["level_editor.towns.row_labels[6].name"] = "Level 7",
+  ["level_editor.towns.row_labels[7].name"] = "Level 8",
+  ["level_editor.towns.row_labels[8].name"] = "Level 9",
+  ["level_editor.towns.row_labels[9].name"] = "Level 10",
+  ["level_editor.towns.row_labels[10].name"] = "Level 11",
+  ["level_editor.towns.row_labels[11].name"] = "Level 12",
+  ["level_editor.towns.row_labels[12].name"] = "Level 13",
 }
+
+-- XXX class "Value" IMPLEMENT!
 
 local function substBrackets(text, insert_value)
   if not insert_value then return text end
@@ -108,22 +111,28 @@ local min_salary_values = {
   makeNumericValue("#gbv.SalaryAdd[]", "research.salary", 0, nil, "money", 8),
 }
 
-local towns_col_name_paths = {}
+local towns_row_name_paths = {}
 local start_cash_col = {}
 local ill_rate_col = {}
 local interest_rate_col = {}
 local value
 for i = 0, 12 do
-  towns_col_name_paths[#towns_col_name_paths + 1] = "level_editor.towns.level_names[" .. i .. "]"
+  towns_row_name_paths[#towns_row_name_paths + 1] = "level_editor.towns.row_labels[" .. i .. "].name"
+  -- Skipping row tooltips!
   start_cash_col[#start_cash_col + 1] = makeNumericValue("#towns[].StartCash", nil, 0, nil, "money", i)
   ill_rate_col[#ill_rate_col + 1] = makeNumericValue("#towns[].IllRate", nil, 0, nil, nil, i)
   interest_rate_col[#interest_rate_col + 1] = makeNumericValue("#towns[].InterestRate", nil, 0, nil, "percentage100", i)
 end
 local towns_entries = {start_cash_col, interest_rate_col, interest_rate_col} -- Array of column arrays.
-local towns_row_name_paths = {
-  "level_editor.towns.start_cash_name",
-  "level_editor.towns.ill_rate_name",
-  "level_editor.towns.interest_rate_name"
+local towns_col_name_paths = {
+  "level_editor.towns.column_labels.start_cash.name",
+  "level_editor.towns.column_labels.ill_rate.name",
+  "level_editor.towns.column_labels.interest_rate.name"
+}
+local towns_col_tooltip_paths = {
+  "level_editor.towns.column_labels.start_cash.tooltip",
+  "level_editor.towns.column_labels.ill_rate.tooltip",
+  "level_editor.towns.column_labels.interest_rate.tooltip"
 }
 
 local PANEL_BG = {red = 100, green = 100, blue = 100}
@@ -319,7 +328,11 @@ local TableSection = _G["TableSection"]
 
 --! Section that associates one or more values for each index in the domain.
 --!param title_path (str) Language path to the title name string.
---!param values (array of ConfigValue), ConfigValue descriptions. Names and tooltips are not used.
+--!param row_name_paths String names for row labels.
+--!param row_tooltip_paths String names for row label tooltips.
+--!param col_name_paths String names for column labels.
+--!para, col_tooltip_paths String names for column tooltips.
+--!param values (array of column array of Value) Values in the table.
 function TableSection:TableSection(title_path, row_name_paths, row_tooltip_paths, col_name_paths, col_tooltip_paths, values)
   Section.Section(self, title_path)
   self.row_name_paths = row_name_paths or {}
@@ -332,10 +345,11 @@ function TableSection:TableSection(title_path, row_name_paths, row_tooltip_paths
   assert(values)
 
   local table_rows_cols = self:_getTableColsRows()
-  assert(#row_name_paths == table_rows_cols.w,
-      "Unequal row length: names = " .. #row_name_paths .. ", values width = " .. table_rows_cols.w)
-  assert(#col_name_paths == table_rows_cols.h,
-      "Unequal col length: names = " .. #col_name_paths .. ", values height = " .. table_rows_cols.h)
+  -- Verify dimensions (hor, vert).
+  assert(#row_name_paths == table_rows_cols.h,
+      "Unequal number of rows: names = " .. #row_name_paths .. ", values height = " .. table_rows_cols.h)
+  assert(#col_name_paths == table_rows_cols.w,
+      "Unequal number of columns: names = " .. #col_name_paths .. ", values width = " .. table_rows_cols.w)
 
   for i, c in ipairs(values) do
     assert(#c == table_rows_cols.h,
@@ -343,11 +357,11 @@ function TableSection:TableSection(title_path, row_name_paths, row_tooltip_paths
   end
 
   self.title_height = 20 -- Amount of vertical space for the title.
-  self.title_sep = 5 -- Amount of vertical space between the title and the column names,
-  self.row_label_sep = 10 -- Amount of vertical space between the column names and the first row.
-  self.col_label_sep = 10 -- Amount of horizontal space between the row names and the first column.
-  self.col_width = 50 -- Width of a column values (includes the column label).
-  self.row_height = 15 -- Height of a row values (includes the row label).
+  self.title_sep = 10 -- Amount of vertical space between the title and the column names,
+  self.row_label_sep = 7 -- Amount of vertical space between the column names and the first row.
+  self.col_label_sep = 7 -- Amount of horizontal space between the row names and the first column.
+  self.col_width = 100 -- Width of a column values (includes the column label).
+  self.row_height = 20 -- Height of a row values (includes the row label).
   self.intercol_sep = 5 -- Horizontal space between two columns in the table.
   self.interrow_sep = 5 -- Vertical space between two rows in the table.
 end
@@ -355,8 +369,10 @@ end
 --! Get the number of rows and columns of the table.
 --!return (Size) Number of columns, number of rows.
 function TableSection:_getTableColsRows()
-  local num_rows = #self.values[1]
+  -- 'values' has column arrays.
   local num_cols = #self.values
+  local num_rows = #self.values[1]
+  print("Table size: " .. num_cols .. " columns, " .. num_rows .. " rows.")
   return Size(num_cols, num_rows)
 end
 
@@ -531,13 +547,14 @@ function LevelEditorValues.getRootPage()
   min_salary_section:setValueSize(Size(50, 20))
 
   local _town_table_title_path = lang_prefix .. ".titles.towns_title"
+  local _town_table_col_name_paths = towns_col_name_paths
+  local _town_table_col_tooltip_paths = towns_col_tooltip_paths
   local _town_table_row_name_paths = towns_row_name_paths
   local _town_table_row_tooltip_paths = nil
-  local _town_table_col_name_paths = towns_col_name_paths
-  local _town_table_col_tooltip_paths = nil
   local towns_section = TableSection(_town_table_title_path,
       _town_table_row_name_paths, _town_table_row_tooltip_paths,
-      _town_table_col_name_paths, _town_table_col_tooltip_paths, towns_entries)
+      _town_table_col_name_paths, _town_table_col_tooltip_paths,
+      towns_entries)
 
   local salariesPage = EditPage("level_editor.pages.staffpage", {min_salary_section, towns_section})
   salariesPage:setNameSize(Size(250, 30))
