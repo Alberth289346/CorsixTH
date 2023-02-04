@@ -141,6 +141,14 @@ local function getTranslatedText(name)
   return name
 end
 
+--! Make a bevel for some text.
+--!param window Window to attach the panel to.
+--!param widgets (Array of Panel) Storage for created panels. Appended in-place.
+--!param x (int) X position of the top-left corner.
+--!param y (int) Y position of the top-left corner.
+--!param size (Size) Width and height of the panel.
+--!param name_path (string) String path for the text to display.
+--!param tooltip_path (string) String path for the tooltip to show.
 local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
   if name_path then
@@ -152,6 +160,14 @@ local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
   widgets[#widgets + 1] = panel
 end
 
+--! Make a textbox for entering a number.
+--!param widgets (Array of Panel) Storage for created text boxes. Appended in-place.
+--!param text_boxes (array of text boxeS) Storage for created text boxes, appended in-place.
+--!param x (int) X position of the top-left corner.
+--!param y (int) Y position of the top-left corner.
+--!param size (Size) Width and height of the panel.
+--!param min_val (int) Lowest allowed value.
+--!param max_val (int) Highest allowed value.
 local function makeTextBox(window, text_boxes, x, y, size, min_val, max_val)
   local text_box = window:addBevelPanel(x, y, size.w, size.h, TEXT_BG, TEXT_FG)
   text_box = text_box:makeTextbox(nil, nil) -- confirm_cb, abort_cb)
@@ -306,11 +322,12 @@ local TableSection = _G["TableSection"]
 --!param values (array of ConfigValue), ConfigValue descriptions. Names and tooltips are not used.
 function TableSection:TableSection(title_path, row_name_paths, row_tooltip_paths, col_name_paths, col_tooltip_paths, values)
   Section.Section(self, title_path)
-  self.row_name_paths = row_name_paths
-  self.row_tooltip_paths = row_tooltip_paths
-  self.col_name_paths = col_name_paths
-  self.col_tooltip_paths = col_tooltip_paths
+  self.row_name_paths = row_name_paths or {}
+  self.row_tooltip_paths = row_tooltip_paths or {}
+  self.col_name_paths = col_name_paths or {}
+  self.col_tooltip_paths = col_tooltip_paths or {}
   self.values = values -- Array of column arrays.
+  self.text_boxes = {} -- Textbox widget for each value.
 
   assert(values)
 
@@ -358,19 +375,46 @@ function TableSection:layout(window, pos)
     max_x = math.max(max_x, x + self.title_size.w)
   end
 
-  self.col_headers = {}
-  self.row_headers = {}
+  local table_rows_cols = self:_getTableColsRows()
 
-  self:verifySize(Size(0, 0))
+  -- Column headers
+  local label_size = Size(self.col_width, self.row_height)
+  x = pos.x + self.col_width + self.col_label_sep -- Skip space for the row labels
+  for col = 1, table_rows_cols.w do
+    makeLabel(window, self.widgets, x, y, label_size, self.col_name_paths[col], self.col_tooltip_paths[col])
+    x = x + label_size.w
+    if col < table_rows_cols.w then x = x + self.intercol_sep end
+  end
+  max_x = math.max(max_x, x)
+  y = y + self.row_height + self.row_label_sep
+
+  -- Rows
+  for row = 1, table_rows_cols.h do
+    x = pos.x
+    makeLabel(window, self.widgets, x, y, label_size, self.row_name_paths[row], self.row_tooltip_paths[row])
+    x = x + label_size.w + self.col_label_sep
+    for col = 1, table_rows_cols.w do
+      makeTextBox(window, self.text_boxes, x, y, label_size)
+      x = x + label_size.w
+      if col < table_rows_cols.w then x = x + self.intercol_sep end
+    end
+    max_x = math.max(max_x, x)
+    y = y + self.row_height
+    if row < table_rows_cols.h then y = y + self.interrow_sep end
+  end
+
+  self:verifySize(Size(max_x - pos.x, y - pos.y))
 end
 
 function TableSection:computeSize()
   local table_rows_cols = self:_getTableColsRows()
 
+  -- Horizontal size.
   local hor_size = self.col_width + self.col_label_sep + self.col_width
   hor_size = hor_size + (table_rows_cols.w - 1) * (self.intercol_sep + self.col_width)
-  hor_size = math.max(hor_size, self.title_size.w)
+  if self.title_path then hor_size = math.max(hor_size, self.title_size.w) end
 
+  -- Vertical size.
   local vert_size = self.title_path and (self.title_size.h + self.title_sep) or 0
   vert_size = vert_size + self.row_height + self.row_label_sep + self.row_height
   vert_size = vert_size + (table_rows_cols.h - 1) * (self.interrow_sep + self.row_height)
