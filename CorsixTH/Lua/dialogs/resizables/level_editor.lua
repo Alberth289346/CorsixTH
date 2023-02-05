@@ -46,6 +46,10 @@ function UILevelEditor:UILevelEditor(ui)
   self.root_page:layout(self, Pos(10, 10), Size(EDITOR_WINDOW_XSIZE - 20, EDITOR_WINDOW_YSIZE - 20))
   self:setPosition(0.1, 0.1)
 
-  self.root_page:loadConfig(self.level_config)
+  self.root_page:loadSaveConfig(self.level_config, false)
+  -- Saving:
+  --local c = {}
+  --self.root_page:loadSaveConfig(c, true)
+  --print(serialize(c))
 end
 

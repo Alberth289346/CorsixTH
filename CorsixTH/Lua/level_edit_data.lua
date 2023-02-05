@@ -100,10 +100,22 @@ function LevelValue:LevelValue(level_cfg_path, name_path, tooltip_path, unit_pat
   assert(not self.min_value or not self.max_value or self.min_value <= self.max_value)
 
   self.text_box = nil -- Text box in the editor.
-  self.current_value = 0
+  self.current_value = nil -- Current value.
 end
 
-function LevelValue:loadConfig(cfg)
+--! Load the value from the level config file or write the value into a *new* level
+--  config file.
+--!param cfg (nested tables with values) Level config file to read or create.
+--!param store (bool) If, write the value to a new spot in the level config, else
+--  read the value and update the current value.
+function LevelValue:loadSaveConfig(cfg, store)
+  if store then
+    -- Save the value to the configuration.
+    TreeAccess.addTree(cfg, self.level_cfg_path, self.current_value)
+    return
+  end
+
+  -- Retrieve the value from the configuration and update this element.
   local number = TreeAccess.readTree(cfg, self.level_cfg_path)
   self:setBoxValue(number)
   if not number then
@@ -111,6 +123,8 @@ function LevelValue:loadConfig(cfg)
   end
 end
 
+--! Set the value of the setting to the supplied value or to a default value.
+--!param value (optional integer) Value to use if supplied.
 function LevelValue:setBoxValue(value)
   if not value then value = self.current_value end
 
@@ -118,32 +132,64 @@ function LevelValue:setBoxValue(value)
   if self.min_value and value < self.min_value then value = self.min_value end
   if self.max_value and value > self.max_value then value = self.max_value end
   self.current_value = math.floor(value) -- Ensure it's an integer even if the bounds are not.
-  self.text_box:setText(tostring(self.current_value))
+
+  if self.text_box then -- Avoid a crash when updated without having a text box.
+    self.text_box:setText(tostring(self.current_value))
+  end
 end
 
+--! Callback that the user confirmed entering a new value. Apply it for as far as possible.
 function LevelValue:confirm()
   self.current_value = tonumber(self.text_box.text) or self.current_value
   self:setBoxValue()
 end
 
+--! Callback that the user aborted editing, revert to the last stored value.
 function LevelValue:abort()
   self:setBoxValue()
 end
 
+--! Replace a '[]' by '[insert_value]'.
+--!param text (str) String possibly containing the '[]'.
+--!param insert_value Value to insert, is converted to string.
 local function substBrackets(text, insert_value)
   if not insert_value then return text end
   return string.gsub(text, "[[]]", "[" .. insert_value .. "]")
 end
 
+-- For debugging: Level config names of created value instances.
+-- Automatically enabled with the "debug" setting in the configuration file.
+local existing_values = {}
+
+--! Make a numeric Value instance for a setting in the level config file.
+--!param level_cfg_path (str) Absolute path to the value in the level config
+--  file, may contain [] as placeholder for a key value.
+--!param path_identifier (str) Name of the name and the tooltip strings in a
+--  language file that contains the name respectively tooltip text of the value,
+--  except the common start name (See lang_prefix) and for a final ".name"
+--  respectively ".tooltip". May contain a '[]' placeholder that will be
+--  replaced by '[key_value]'.
+--!param min_value (nil or integer) Smallest allowed value of the setting.
+--!param max_value (nil or integer) Largest allowed value of the setting.
+--!param unit_name_path (nil or str) String name in a translation file
+--  containing the unit name of this value. The name gets prefixed with the
+--  common start name (See lang_prefix) and ".unit_names".
+--!param key_value (optional string or number) Value to insert in '[]'
+--  placeholder in the 'path_identifier' string name.
+--!return (Value) The constructed Value instance.
 local function makeNumericValue(level_cfg_path, path_identifier, min_value, max_value, unit_name_path, key_value)
   local base_path = lang_prefix .. "."
 
   local level_cfg_path = substBrackets(level_cfg_path, key_value)
+  -- Debugging aid against using the same level config value multiple times.
+  if TheApp.config.debug then
+    assert(not existing_values[level_cfg_path], "Using level cfg path " .. level_cfg_path .. " again.")
+    existing_values[level_cfg_path] = true
+  end
+
   local name_path = path_identifier and substBrackets(base_path .. path_identifier ..".name", key_value) or nil
   local tooltip_path = path_identifier and substBrackets(base_path .. path_identifier ..".tooltip", key_value) or nil
   local unit_path = unit_name_path and lang_prefix .. ".unit_names." .. unit_name_path
-  local min_value = min_value
-  local max_value = max_value
   return LevelValue(level_cfg_path, name_path, tooltip_path, unit_path, min_value, max_value)
 end
 
@@ -172,7 +218,7 @@ for i = 0, 12 do
   ill_rate_col[#ill_rate_col + 1] = makeNumericValue("towns[].IllRate", nil, 0, nil, nil, i)
   interest_rate_col[#interest_rate_col + 1] = makeNumericValue("towns[].InterestRate", nil, 0, nil, "percentage100", i)
 end
-local towns_entries = {start_cash_col, interest_rate_col, interest_rate_col} -- Array of column arrays.
+local towns_entries = {start_cash_col, ill_rate_col, interest_rate_col} -- Array of column arrays.
 local towns_col_name_paths = {
   "level_editor.towns.column_labels.start_cash.name",
   "level_editor.towns.column_labels.ill_rate.name",
@@ -189,7 +235,13 @@ local PANEL_FG = {red = 200, green = 200, blue = 200}
 local TEXT_BG = {red = 0, green = 0, blue = 0}
 local TEXT_FG = {red = 250, green = 250, blue = 250}
 
+local function typeIsTable(v)
+  local t = type(v)
+  return t == "table" or t == "userdata"
+end
+
 local function getTranslatedText(name)
+  print(type(_S))
   local text = TreeAccess.readTree(_S, name)
   if type(text) == "string" then return text end
   text = default_translations[name]
@@ -219,8 +271,9 @@ local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
 end
 
 --! Make a textbox for entering a number.
+--!param window Window to attach the panel to.
 --!param widgets (Array of Panel) Storage for created text boxes. Appended in-place.
---!param text_boxes (array of text boxeS) Storage for created text boxes, appended in-place.
+--!param text_boxes (array of text boxes) Storage for created text boxes, appended in-place.
 --!param x (int) X position of the top-left corner.
 --!param y (int) Y position of the top-left corner.
 --!param size (Size) Width and height of the panel.
@@ -236,6 +289,13 @@ local function makeTextBox(window, text_boxes, x, y, size, value)
   value:setBoxValue()
 end
 
+--! Add a panel to display the unit of a value if it has been supplied.
+--!param window Window to attach the panel to.
+--!param widgets (Array of Panel) Storage for created text boxes. Appended in-place.
+--!param x (int) X position of the top-left corner.
+--!param y (int) Y position of the top-left corner.
+--!param size (Size) Width and height of the panel.
+--!param unit_path Name of the string in the translations that contains the unit of the value.
 local function makeUnit(window, widgets, x, y, size, unit_path)
   if not unit_path then return end
 
@@ -369,15 +429,14 @@ function ValueSection:computeSize()
   return Size(w, h)
 end
 
-function ValueSection:loadConfig(cfg)
-  for _, val in ipairs(self.values) do val:loadConfig(cfg) end
+--! Load the value from the level config file or write the value into a *new* level
+--  config file.
+--!param cfg (nested tables with values) Level config file to read or create.
+--!param store (bool) If, write the value to a new spot in the level config, else
+--  read the value and update the current value.
+function ValueSection:loadSaveConfig(cfg, store)
+  for _, val in ipairs(self.values) do val:loadSaveConfig(cfg, store) end
 end
-
-function ValueSection:saveConfig(cfg)
-  for _, val in ipairs(self.values) do cfg = val:saveConfig(cfg) end
-  return cfg
-end
-
 -- }}}
 -- {{{ TableSection
 class "TableSection" (Section)
@@ -495,19 +554,11 @@ function TableSection:computeSize()
   return Size(hor_size, vert_size)
 end
 
-function TableSection:loadConfig(cfg)
+function TableSection:loadSaveConfig(cfg, store)
   for _, vals_col in ipairs(self.values) do
-    for _, val in ipairs(vals_col) do val:loadConfig(cfg) end
+    for _, val in ipairs(vals_col) do val:loadSaveConfig(cfg, store) end
   end
 end
-
-function TableSection:saveConfig(cfg)
-  for _, vals_col in ipairs(self.values) do
-    for _, val in ipairs(vals_col) do cfg = val:saveConfig(cfg) end
-  end
-  return cfg
-end
-
 -- }}}
 -- {{{ EditPage (some screen area to display and modify level-config values).
 class "EditPage"
@@ -587,18 +638,19 @@ function EditPage:layout(window, pos, size)
   -- XXX self:verifySize(Size(right_x - pos.x, y - pos.y)) not needed?
 end
 
---! Load the given level config file into the editor.
-function EditPage:loadConfig(cfg)
-  for _, sect in ipairs(self.sections) do sect:loadConfig(cfg) end
-end
-
---! Update the give level config with the values in the editor.
-function EditPage:saveConfig(cfg)
-  -- XXX Needs a deep clone somewhere (but not here).
-  for _, sect in ipairs(self.sections) do cfg = sect:saveConfig(cfg) end
-  return cfg
+--! Load the value from the level config file or write the value into a *new* level
+--  config file.
+--!param cfg (nested tables with values) Level config file to read or create.
+--!param store (bool) If, write the value to a new spot in the level config, else
+--  read the value and update the current value.
+function EditPage:loadSaveConfig(cfg, store)
+  for _, sect in ipairs(self.sections) do sect:loadSaveConfig(cfg, store) end
 end
 -- }}}
+
+-- XXX Create LvlConfigTabPage, for a tree of EditPage.
+-- XXX Auto-create EditPage instance to always make all sections available.
+-- XXX Rename XYZ classes to LvlConfigXYZ classes.
 
 class "LevelEditorValues"
 
