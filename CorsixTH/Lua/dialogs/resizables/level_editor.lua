@@ -18,6 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+corsixth.require("level_editor.data_storage")
+local level_cfg_data = corsixth.require("level_editor.level_config")
+
 class "UILevelEditor" (UIResizable)
 
 ---@type UILevelEditor
@@ -30,7 +33,6 @@ local EDITOR_WINDOW_XSIZE = 600
 local EDITOR_WINDOW_YSIZE = 580
 
 function UILevelEditor:UILevelEditor(ui)
-  print("level editor!")
   self:UIResizable(ui, EDITOR_WINDOW_XSIZE, EDITOR_WINDOW_YSIZE, col_bg)
   self.resizable = false
 
