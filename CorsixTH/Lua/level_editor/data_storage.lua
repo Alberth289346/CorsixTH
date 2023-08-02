@@ -458,6 +458,7 @@ end
 class "LevelPage"
 local LevelPage = _G["LevelPage"]
 
+-- Abstract base class.
 function LevelPage:LevelPage()
   self.widgets = {}
 end

@@ -38,7 +38,7 @@ local function _make_path(path_value, prefic, level_cfg_path)
   return nil
 end
 
---! Construct a LevelValue instance.
+--! Construct a LevelValue instance (an elementary editable numeric value).
 --!param settings (table) Settings for the instance.
 --!return (LevelValue) The constructed level value.
 local function makeValue(settings)
@@ -91,6 +91,31 @@ local function makeTableSection(settings)
   return section
 end
 
+local function makeEditPageSection(settings)
+  local section = LevelEditPage(settings.name_path, settings)
+  if settings.name_size then section:setNameSize(settings.name_size) end
+  section:setNameSep(settings.name_sep, settings.section_sep)
+  return section
+end
+
+local function makeTabPageSection(settings)
+  local section = LevelTabPage(settings.name_path, settings)
+  if settings.title_size then section.title_size = settings,title_size end
+  if settings.title_sep then section.title_sep = settings.title_sep end
+  if settings.page_tab_size then section.page_tab_size = settings.page_tab_size end
+  if settings.edit_sep then section.edit_sep = settings.edit_sep end
+  return section
+end
+
+-- TODO Not all settings above are documented, have a function, do parameter checking.
+-- TODO Not for every setting it makes sense to use a number.
+
+-- TODO No all data below is used, is ordered on topic, or useful.
+-- TODO Some sections should be extendable with more rows.
+
+
+-- ===============================================================
+-- Level config data.
 
 local town_values = makeValuesSection({
   title_path = "level_editor.town_section.title",
@@ -156,7 +181,7 @@ local various_settings = makeValuesSection({
   makeValue({level_cfg_path = "gbv.AllocDelay", name_path = true})
 })
 
-local various_settings = makeValuesSection({
+local trainings_settings = makeValuesSection({
   title_path = "level_editor.training_settings.title",
   -- 
   [1] = makeValue({level_cfg_path = "gbv.AbilityThreshold[0]", name_path = true}),
@@ -1175,3 +1200,48 @@ local award_bonuses = {
   makeValue({level_cfg_path = "awards_trophies.ResearchPenalty", name_path = true}),
 }
 
+local town_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.town_page",
+  [1] = town_values,
+  towns_section,
+  popn_sectiom
+})
+
+local staff_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.staff_page",
+  [1] = staff_min_salaries,
+  doctor_additional_salaries,
+  staff_levels,
+})
+
+local hospital_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.hospital_page",
+  [1] = various_settings,
+  trainings_settings,
+})
+
+local diseases_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.diseases_page",
+  [1] = expertise_disease_section,
+  visuals_section,
+})
+
+local rooms_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.rooms_page",
+  [1] = expertise_room_section
+})
+
+local players_page = makeEditPageSection({
+  name_path = "level_editor.edit_page.players_page",
+  [1] = computer_players
+})
+
+return makeTabPageSection({
+  title_path = "level_editor.tab_page.main",
+  town_page,
+  staff_page,
+  hospital_page,
+  diseases_page,
+  rooms_page,
+  players_page
+})
