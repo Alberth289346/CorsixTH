@@ -20,6 +20,12 @@ SOFTWARE. --]]
 
 require("pos_size")
 
+local TEXT_BG = {red = 20, green = 150, blue = 200}
+local TEXT_FG = {red = 20, green = 20, blue = 20}
+local PANEL_BG = {red = 130, green = 70, blue= 43}
+local PANEL_FG = {red= 80, green = 170, blue = 100}
+
+
 -- ===================================================================
 class "LevelValue"
 
@@ -508,8 +514,8 @@ end
 --! Configure vertical space between the name of the page and the first
 --  section as well as vertical space between two sections.
 function LevelEditPage:setNameSep(name_sep, section_sep)
-  self.name_sep = name_sep
-  self.section_sep = section_sep
+  if name_sep then self.name_sep = name_sep end
+  if section_sep then self.section_sep = section_sep end
   return self
 end
 
@@ -580,6 +586,10 @@ function LevelTabPage:LevelTabPage(title_path, level_pages)
   self.edit_sep = 10 -- Amount of vertical space between the page tabs and the edit pages.
 end
 
+--! Compute layout of the elements at the page.
+--!param window Window to add the new widgets.
+--!param pos (Pos) Position of the to-left corner.
+--!param size (Size) Size if the page.
 function LevelTabPage:layout(window, pos, size)
   local x, y = pos.x, pos.y
   -- Add title.
@@ -591,12 +601,12 @@ function LevelTabPage:layout(window, pos, size)
   local xpos = pos.x
   local remaining_width = size.w
   for i, level_page in ipairs(self.level_pages) do
-    if xpos > pos.x and page_tab_size.w > remaining_width then
+    if xpos > pos.x and self.page_tab_size.w > remaining_width then
       xpos = pos.x
       remaining_width = size.w
       y = y + self.page_tab_size.h
     end
-    panel = makeLabel(window, x, y, self.page_tab_size, level_page.title_path)
+    local panel = makeLabel(window, self.widgets, x, y, self.page_tab_size, level_page.title_path)
     panel.on_click =  --[[persistable:LevelTabPage:onClickTab]] function() self:onClickTab(i) end
   end
   y = y + self.edit_sep

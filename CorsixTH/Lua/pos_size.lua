@@ -21,7 +21,7 @@ SOFTWARE. --]]
 class "Pos"
 
 ---@type Pos
-local Size = _G["Pos"]
+local Pos = _G["Pos"]
 
 function Pos:Pos(x, y)
   self.x = x

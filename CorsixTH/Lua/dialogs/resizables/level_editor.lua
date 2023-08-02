@@ -38,7 +38,10 @@ function UILevelEditor:UILevelEditor(ui)
 
   self.ui = ui
   self.on_top = true
+  self.level_cfg_data = level_cfg_data
 
+  self.level_cfg_data:layout(self, Pos(10, 10),
+      Size(EDITOR_WINDOW_XSIZE - 20,EDITOR_WINDOW_YSIZE - 20))
   self:setDefaultPosition(0.1, 0.1)
 end
 

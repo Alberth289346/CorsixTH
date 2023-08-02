@@ -100,7 +100,7 @@ end
 
 local function makeTabPageSection(settings)
   local section = LevelTabPage(settings.name_path, settings)
-  if settings.title_size then section.title_size = settings,title_size end
+  if settings.title_size then section.title_size = settings.title_size end
   if settings.title_sep then section.title_sep = settings.title_sep end
   if settings.page_tab_size then section.page_tab_size = settings.page_tab_size end
   if settings.edit_sep then section.edit_sep = settings.edit_sep end
@@ -151,7 +151,7 @@ local doctor_additional_salaries = makeValuesSection({
 local various_settings = makeValuesSection({
   title_path = "level_editor.various_settings.title",
   -- TODO Split this in a more sane way.
-  [1] = makeValue({level_cfg_path = "gbv.SalaryAbilityDivisor", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAbilityDivisor", name_path = true}),
   makeValue({level_cfg_path = "gbv.ResearchPointsDivisor", name_path = true}),
   makeValue({level_cfg_path = "gbv.StartRating", name_path = true}),
   makeValue({level_cfg_path = "gbv.StartCost", name_path = true}),
@@ -183,8 +183,7 @@ local various_settings = makeValuesSection({
 
 local trainings_settings = makeValuesSection({
   title_path = "level_editor.training_settings.title",
-  -- 
-  [1] = makeValue({level_cfg_path = "gbv.AbilityThreshold[0]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AbilityThreshold[0]", name_path = true}),
   makeValue({level_cfg_path = "gbv.AbilityThreshold[1]", name_path = true}),
   makeValue({level_cfg_path = "gbv.AbilityThreshold[2]", name_path = true}),
   makeValue({level_cfg_path = "gbv.TrainingValue[0]", name_path = true}),
@@ -1050,7 +1049,7 @@ local staff_levels = makeValuesSection({
   -- value_size
   -- unit_size
   -- TODO title_sep, value_sep
-  [1] = makeValue({level_cfg_path = "staff_levels[0].Month"}),
+  makeValue({level_cfg_path = "staff_levels[0].Month"}),
   makeValue({level_cfg_path = "staff_levels[0].Nurses"}),
   makeValue({level_cfg_path = "staff_levels[0].Doctors"}),
   makeValue({level_cfg_path = "staff_levels[0].Handymen"}),
@@ -1202,38 +1201,38 @@ local award_bonuses = {
 
 local town_page = makeEditPageSection({
   name_path = "level_editor.edit_page.town_page",
-  [1] = town_values,
+  town_values,
   towns_section,
   popn_sectiom
 })
 
 local staff_page = makeEditPageSection({
   name_path = "level_editor.edit_page.staff_page",
-  [1] = staff_min_salaries,
+  staff_min_salaries,
   doctor_additional_salaries,
   staff_levels,
 })
 
 local hospital_page = makeEditPageSection({
   name_path = "level_editor.edit_page.hospital_page",
-  [1] = various_settings,
+  various_settings,
   trainings_settings,
 })
 
 local diseases_page = makeEditPageSection({
   name_path = "level_editor.edit_page.diseases_page",
-  [1] = expertise_disease_section,
+  expertise_disease_section,
   visuals_section,
 })
 
 local rooms_page = makeEditPageSection({
   name_path = "level_editor.edit_page.rooms_page",
-  [1] = expertise_room_section
+  expertise_room_section
 })
 
 local players_page = makeEditPageSection({
   name_path = "level_editor.edit_page.players_page",
-  [1] = computer_players
+  computer_players
 })
 
 return makeTabPageSection({
