@@ -54,7 +54,7 @@ local function makeValue(settings)
   --  * "max_value" If set, the largest value that is allowed.
   local name_path = _make_path(settings.name_path, "name", settings.level_cfg_path)
   local tooltip_path = _make_path(settings.tooltip_path, "tooltip", settings.level_cfg_path)
-  local unit_path = _make_path(settings.unit_path, "unir", settings.level_cfg_path)
+  local unit_path = _make_path(settings.unit_path, "unit", settings.level_cfg_path)
   return LevelValue(settings.level_cfg_path, name_path, tooltip_path, unit_path,
       settings.min_value, settings.max_value)
 end
@@ -128,7 +128,7 @@ local town_values = makeValuesSection({
   makeValue({level_cfg_path = "town.StartRep", name_path = true}),
   makeValue({level_cfg_path = "town.OverdraftDiff", name_path = true}),
 })
-
+--[[
 local staff_min_salaries = makeValuesSection({
   title_path = "level_editor.staff_salaries_section.title",
   makeValue({level_cfg_path = "staff[0].MinSalary", name_path = true}),
@@ -272,7 +272,7 @@ local towns_section = makeTableSection({
   col_values = {towns_col1, towns_col2, towns_col3, towns_col4},
   col_names = towns_col_names
 })
-
+--]]
 local popn_col1 = {
   makeValue({level_cfg_path = "gbv.popn[0].Month"}),
   makeValue({level_cfg_path = "gbc.popn[1].Month"}),
@@ -286,7 +286,7 @@ local popn_col2 = {
 local popn_row_names = {
   "level_editor.row_names.gbv.popn[0]",
   "level_editor.row_names.gbv.popn[1]",
-  "level_editor.row_names.gbv.popn[3]",
+  "level_editor.row_names.gbv.popn[2]",
 }
 local popn_col_names = {
   "level_editor.col_names.gbv.popn.month",
@@ -298,7 +298,7 @@ local popn_sectiom = makeTableSection({
   col_values = {popn_col1, popn_col2},
   col_names = popn_col_names
 })
-
+--[[
 local expertise_diseases_col1 = {
   makeValue({level_cfg_path = "expertise[2].StartPrice"}),
   makeValue({level_cfg_path = "expertise[3].StartPrice"}),
@@ -1198,14 +1198,16 @@ local award_bonuses = {
   makeValue({level_cfg_path = "awards_trophies.ResearchBonus", name_path = true}),
   makeValue({level_cfg_path = "awards_trophies.ResearchPenalty", name_path = true}),
 }
+--]]
 
 local town_page = makeEditPageSection({
   name_path = "level_editor.edit_page.town_page",
   town_values,
-  towns_section,
+--  towns_section,
   popn_sectiom
 })
 
+--[[
 local staff_page = makeEditPageSection({
   name_path = "level_editor.edit_page.staff_page",
   staff_min_salaries,
@@ -1234,13 +1236,13 @@ local players_page = makeEditPageSection({
   name_path = "level_editor.edit_page.players_page",
   computer_players
 })
-
+--]]
 return makeTabPageSection({
   title_path = "level_editor.tab_page.main",
   town_page,
-  staff_page,
-  hospital_page,
-  diseases_page,
-  rooms_page,
-  players_page
+--  staff_page,
+--  hospital_page,
+--  diseases_page,
+--  rooms_page,
+--  players_page
 })
