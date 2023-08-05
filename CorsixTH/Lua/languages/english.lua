@@ -916,6 +916,49 @@ map_editor_window = {
   }
 }
 
+level_editor = {
+  edit_page = {
+    town_page = "Town configuration",
+  },
+
+  name = {
+    town = {
+      InterestRate = "Interest rate",
+      StartCash = "Initial cash",
+      StartRep = "Initial reputation",
+      OverdraftDiff = "Overdraft rate",
+    }
+  },
+
+  town_section = {
+    title = "Town settings",
+  },
+
+  gbv = {
+    popn = {
+      title = "Population changes",
+    }
+  },
+  col_names = {
+    gbv = {
+      popn = {
+        month = "Start month",
+        change = "Rate of change",
+      }
+    }
+  },
+  row_names = {
+    gbv = {
+      popn = {
+        [0] = "Change 1",
+        [1] = "Change 2",
+        [2] = "Change 3",
+      }
+    }
+  }
+}
+
+
 hotkeys_file_err = {
   file_err_01 = "Unable to load hotkeys.txt file. Please ensure that CorsixTH " ..
         "has permission to read/write ",
