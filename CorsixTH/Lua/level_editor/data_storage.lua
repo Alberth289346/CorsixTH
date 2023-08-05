@@ -131,6 +131,7 @@ end
 --!param tooltip_path (string) String path for the tooltip to show.
 local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
+  print("Label at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   if name_path then
     panel:setLabel(getTranslatedText(name_path), nil, "left")
     if tooltip_path then
@@ -151,6 +152,7 @@ end
 --!param value (LevelValue) Value displayed and edited in the box.
 local function makeTextBox(window, text_boxes, x, y, size, value)
   local text_box = window:addBevelPanel(x, y, size.w, size.h, TEXT_BG, TEXT_FG)
+  print("text-box at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   local function confirm_cb() value:confirm() end
   local function abort_cb() value:abort() end
   text_box = text_box:makeTextbox(confirm_cb, abort_cb) -- confirm_cb, abort_cb)
@@ -171,6 +173,7 @@ local function makeUnit(window, widgets, x, y, size, unit_path)
   if not unit_path then return end
 
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
+  print("Unit at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   panel:setLabel(getTranslatedText(unit_path))
   widgets[#widgets + 1] = panel
 end
@@ -321,6 +324,7 @@ function LevelValuesSection:layout(window, pos)
     makeUnit(window, self._widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
   end
+  print("LevelValueSection:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. max_x .. ", " .. y .. ")")
   self:verifySize(Size(max_x - pos.x, y - pos.y))
 end
 
@@ -459,6 +463,7 @@ function LevelTableSection:layout(window, pos)
     if row < table_rows_cols.h then y = y + self.interrow_sep end
   end
 
+  print("LevelTableSection:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. max_x .. ", " .. y .. ")")
   self:verifySize(Size(max_x - pos.x, y - pos.y))
 end
 
@@ -581,6 +586,7 @@ function LevelEditPage:layout(window, pos, size)
   if self.name_path then
     makeLabel(window, self._widgets, pos.x, section_top, self.name_size, self.name_path)
     section_top = section_top + self.name_size.h + self.name_sep
+    print("LevelEditPage:layout: name at (" .. pos.x .. ", " .. pos.y .. " - " .. section_top .. ")")
   end
 
   local sect_idx = 1
@@ -667,6 +673,8 @@ function LevelTabPage:layout(window, pos, size)
     panel.on_click =  --[[persistable:LevelTabPage:onClickTab]] function() self:onClickTab(i) end
   end
   y = y + self.edit_sep
+  print("LevelTabPage:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. xpos .. ", " .. y .. ")")
+
   -- Add edit pages.
   for _, level_page in ipairs(self._level_pages) do
     level_page:layout(window, Pos(pos.x, y), Size(size.w, size.h - (y - pos.y)))
