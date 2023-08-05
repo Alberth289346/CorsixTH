@@ -171,6 +171,12 @@ function Panel:Panel()
   self.visible = nil
 end
 
+--! Enable or diasble visibility of the panel.
+--!param visibility (bool) Whether to show the panel.
+function Panel:setVisible(visibility)
+  self.visibility = visibility
+end
+
 local panel_mt = permanent("Window.<panel_mt>", getmetatable(Panel()))
 
 function Panel:makeButton(...)

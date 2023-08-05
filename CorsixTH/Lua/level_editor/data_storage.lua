@@ -37,7 +37,9 @@ local function getTranslatedText(name)
   return name
 end
 
--- ===================================================================
+--===================================================================
+
+--! A nummeric value to be edited.
 class "LevelValue"
 
 --@type LevelValue
@@ -66,7 +68,7 @@ function LevelValue:LevelValue(level_cfg_path, name_path, tooltip_path,
   self.max_value = max_value
   assert(not self.min_value or not self.max_value or self.min_value <= self.max_value)
 
-  self.text_box = nil -- Text box in the editor.
+  self._text_box = nil -- Text box in the editor.
   self.current_value = nil -- Current value.
 end
 
@@ -80,6 +82,7 @@ function LevelValue:loadSaveConfig(cfg, store)
     -- Save the value to the configuration.
     TreeAccess.addTree(cfg, self.level_cfg_path, self.current_value)
     return
+    -- XXX Needs load as well!
   end
 
   -- Retrieve the value from the configuration and update this element.
@@ -102,14 +105,14 @@ function LevelValue:setBoxValue(value)
   if self.max_value and value > self.max_value then value = self.max_value end
   self.current_value = math.floor(value) -- Ensure it's an integer even if the bounds are not.
 
-  if self.text_box then -- Avoid a crash when updated without having a text box.
-    self.text_box:setText(tostring(self.current_value))
+  if self._text_box then -- Avoid a crash when updated without having a text box.
+    self._text_box:setText(tostring(self.current_value))
   end
 end
 
 --! Callback that the user confirmed entering a new value. Apply it.
 function LevelValue:confirm()
-  self.current_value = tonumber(self.text_box.text) or self.current_value
+  self.current_value = tonumber(self._text_box.text) or self.current_value
   self:setBoxValue()
 end
 
@@ -173,7 +176,8 @@ local function makeUnit(window, widgets, x, y, size, unit_path)
 end
 
 -- ===================================================================
--- Common base class for editable area in the level editor.
+
+--! Common base class for editable area in the level editor.
 class "LevelSection"
 
 --@type LevelSection
@@ -183,9 +187,21 @@ local LevelSection = _G["LevelSection"]
 --!param title_path (str) Language path to the title name string.
 function LevelSection:LevelSection(title_path)
   self.title_path = title_path -- Displayed name of the section.
-  self.widgets = {} -- Widgets of the section.
+  self._widgets = {} -- Widgets of the section.
+  self._text_boxes = {} -- Text boxes of the section.
 
   self.title_size = Size(100, 25)
+end
+
+--! Set visibility of the widgets to the value of the parameter.
+--!param (bool) Whether the widgets and/or text boxes should be visible.
+function LevelSection:setVisible(is_vsisible)
+  for _, widget in ipairs(self._widgets) do
+    widget:setVisible(is_vsisible)
+  end
+  for _, box in ipairs(self._text_boxes) do
+    box:setVisible(is_vsisible)
+  end
 end
 
 --! Configure the size of the title area.
@@ -220,7 +236,8 @@ function LevelSection:computeSize()
 end
 
 -- ===================================================================
--- Section with one or more related values.
+
+--! Section with one or more related values.
 class "LevelValuesSection" (LevelSection)
 
 --@type LevelValuesSection
@@ -232,7 +249,6 @@ local LevelValuesSection = _G["LevelValuesSection"]
 function LevelValuesSection:LevelValuesSection(title_path, values)
   LevelSection.LevelSection(self, title_path)
   self.values = values -- Array.
-  self.text_boxes = {} -- Textbox widget for each value.
 
   self.label_size = Size(100, 20)
   self.value_size = Size(30, 20)
@@ -281,14 +297,14 @@ end
 --!param pos Top-left position of the area.
 function LevelValuesSection:layout(window, pos)
   -- Clear widgets and text boxes.
-  self.widgets = {}
-  self.boxes = {}
+  self._widgets = {}
+  self._text_boxes = {}
 
   local x, y = pos.x, pos.y
   local max_x = x
   -- Title.
   if self.title_path then
-    makeLabel(window, self.widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
     y = y + self.title_size.h + self.title_sep
     max_x = math.max(max_x, x + self.title_size.w)
   end
@@ -300,9 +316,9 @@ function LevelValuesSection:layout(window, pos)
   max_x = math.max(max_x, right_x)
   for idx, val in ipairs(self.values) do
     if idx > 1 then y = y + self.value_sep end
-    makeLabel(window, self.widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path)
-    makeTextBox(window, self.text_boxes, val_x, y, self.value_size, val)
-    makeUnit(window, self.widgets, unit_x, y, self.unit_size, self.unit_path)
+    makeLabel(window, self._widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path)
+    makeTextBox(window, self._text_boxes, val_x, y, self.value_size, val)
+    makeUnit(window, self._widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
   end
   self:verifySize(Size(max_x - pos.x, y - pos.y))
@@ -332,7 +348,8 @@ function LevelValuesSection:loadSaveConfig(cfg, store)
 end
 
 -- ===================================================================
--- Section with a 2D table of editable values.
+
+--! Section with a 2D table of editable values.
 class "LevelTableSection" (LevelSection)
 
 ---@type LevelTableSection
@@ -353,7 +370,6 @@ function LevelTableSection:LevelTableSection(title_path, row_name_paths,
   self.col_name_paths = col_name_paths or {}
   self.col_tooltip_paths = col_tooltip_paths or {}
   self.values = values -- Array of column arrays.
-  self.text_boxes = {} -- Textbox widget for each value.
 
   assert(values)
 
@@ -401,11 +417,14 @@ end
 --!param window (Window) Window to add the new widgets.
 --!param pos (Pos) Position of the to-left corner.
 function LevelTableSection:layout(window, pos)
+  self._widgets = {}
+  self._text_boxes = {}
+
   local x, y = pos.x, pos.y
   local max_x = x
   -- Title.
   if self.title_path then
-    makeLabel(window, self.widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
     y = y + self.title_size.h + self.title_sep
     max_x = math.max(max_x, x + self.title_size.w)
   end
@@ -416,7 +435,7 @@ function LevelTableSection:layout(window, pos)
   local label_size = Size(self.col_width, self.row_height)
   x = pos.x + self.col_width + self.col_label_sep -- Skip space for the row labels
   for col = 1, table_rows_cols.w do
-    makeLabel(window, self.widgets, x, y, label_size, self.col_name_paths[col],
+    makeLabel(window, self._widgets, x, y, label_size, self.col_name_paths[col],
         self.col_tooltip_paths[col])
     x = x + label_size.w
     if col < table_rows_cols.w then x = x + self.intercol_sep end
@@ -427,11 +446,11 @@ function LevelTableSection:layout(window, pos)
   -- Rows
   for row = 1, table_rows_cols.h do
     x = pos.x
-    makeLabel(window, self.widgets, x, y, label_size, self.row_name_paths[row],
+    makeLabel(window, self._widgets, x, y, label_size, self.row_name_paths[row],
         self.row_tooltip_paths[row])
     x = x + label_size.w + self.col_label_sep
     for col = 1, table_rows_cols.w do
-      makeTextBox(window, self.text_boxes, x, y, label_size, self.values[col][row])
+      makeTextBox(window, self._text_boxes, x, y, label_size, self.values[col][row])
       x = x + label_size.w
       if col < table_rows_cols.w then x = x + self.intercol_sep end
     end
@@ -471,13 +490,14 @@ function LevelTableSection:loadSaveConfig(cfg, store)
 end
 
 -- ===================================================================
--- A "page" at the screen for editing level configuration values.
+
+--! A "page" at the screen for editing level configuration values.
 class "LevelPage"
 local LevelPage = _G["LevelPage"]
 
 -- Abstract base class.
 function LevelPage:LevelPage()
-  self.widgets = {}
+  self._widgets = {}
 end
 
 --! Load the values from the level config or write the values into a *new*
@@ -489,7 +509,14 @@ function LevelPage:loadSaveConfig(cfg, store)
   error("Implement me in " .. class.type(self))
 end
 
+--! Set visibility of the widgets to the value of the parameter.
+--!param (bool) Whether the widgets and/or text boxes should be visible.
+function LevelPage:setVisible(is_vsisible)
+  error("Implement me in " .. class.type(self))
+end
+
 -- ===================================================================
+
 --! A "screen" with displayed sections that can be edited.
 class "LevelEditPage" (LevelPage)
 
@@ -506,12 +533,23 @@ function LevelEditPage:LevelEditPage(name_path, sections)
   self.name_path = name_path -- Can be nil
   self.sections = sections -- Array of sections displayed at the page.
 
-  self.widgets = {} -- Widgets of the page.
+  self._widgets = {} -- Widgets of the page.
 
   self.name_size = Size(100, 15)
   self.name_sep = 5
   self.section_sep = 5 -- Space between sections in a column.
   self.column_sep = 5 -- Space between 'columns'.
+end
+
+--! Set visibility of the widgets to the value of the parameter.
+--!param (bool) Whether the widgets and/or text boxes should be visible.
+function LevelEditPage:setVisible(is_vsisible)
+  for _, widget in ipairs(self._widgets) do
+    widget:setVisible(is_vsisible)
+  end
+  for _, section in ipairs(self.sections) do
+    section:setVisible(is_vsisible)
+  end
 end
 
 --! Set the size of the title name at the page.
@@ -535,13 +573,13 @@ end
 --!param pos (Pos) Position of the to-left corner.
 --!param size (Size) Size if the page.
 function LevelEditPage:layout(window, pos, size)
-  self.widgets = {}
+  self._widgets = {}
 
   local section_top = pos.y
 
   -- Name.
   if self.name_path then
-    makeLabel(window, self.widgets, pos.x, section_top, self.name_size, self.name_path)
+    makeLabel(window, self._widgets, pos.x, section_top, self.name_size, self.name_path)
     section_top = section_top + self.name_size.h + self.name_sep
   end
 
@@ -579,7 +617,8 @@ function LevelEditPage:loadSaveConfig(cfg, store)
 end
 
 -- ===================================================================
--- Class with one or more level edit pages.
+
+--! Class with one or more level edit pages.
 class "LevelTabPage" (LevelPage)
 
 --@type LevelTabPage
@@ -589,12 +628,19 @@ function LevelTabPage:LevelTabPage(title_path, level_pages)
   LevelPage.LevelPage(self)
 
   self.title_path = title_path -- Name in the translation for the title of the tab page.
-  self.level_pages = level_pages -- Array of LevelPage.
+  self._level_pages = {level_pages[1]} -- Array of LevelPage.
+  self._selected_page = nil -- Index of selected page in level_pages.
 
   self.title_size = Size(100, 25)
   self.title_sep = 10 -- Amount of vertical space between the title and page tabs.
   self.page_tab_size = Size(80, 20)
   self.edit_sep = 10 -- Amount of vertical space between the page tabs and the edit pages.
+
+  -- Make everything invisiable initially.
+--  for _, page in ipairs(self._level_pages) do
+  for _, page in ipairs(level_pages) do
+    page:setVisible(false)
+  end
 end
 
 --! Compute layout of the elements at the page.
@@ -605,30 +651,42 @@ function LevelTabPage:layout(window, pos, size)
   local x, y = pos.x, pos.y
   -- Add title.
   if self.title_path then
-    makeLabel(window, self.widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
     y = y + self.title_size.h + self.title_sep
   end
   -- Add edit-page tabs.
   local xpos = pos.x
   local remaining_width = size.w
-  for i, level_page in ipairs(self.level_pages) do
+  for i, level_page in ipairs(self._level_pages) do
     if xpos > pos.x and self.page_tab_size.w > remaining_width then
       xpos = pos.x
       remaining_width = size.w
       y = y + self.page_tab_size.h
     end
-    local panel = makeLabel(window, self.widgets, x, y, self.page_tab_size, level_page.title_path)
+    local panel = makeLabel(window, self._widgets, x, y, self.page_tab_size, level_page.title_path)
     panel.on_click =  --[[persistable:LevelTabPage:onClickTab]] function() self:onClickTab(i) end
   end
   y = y + self.edit_sep
   -- Add edit pages.
-  for _, level_page in ipairs(self.level_pages) do
+  for _, level_page in ipairs(self._level_pages) do
     level_page:layout(window, Pos(pos.x, y), Size(size.w, size.h - (y - pos.y)))
   end
 end
 
+-- User selected a page to display.
+--!param page_num Selected page.
+function LevelTabPage:onClickTab(page_num)
+  if page_num ~= self._selected_page then
+    if self._selected_page >= 1 and self._selected_page <= #self._level_pages then
+      self._level_pages[self._selected_page]:setVisible(false)
+      self._selected_page = page_num
+      self._level_pages[self._selected_page]:setVisible(true)
+    end
+  end
+end
+
 function LevelTabPage:loadSaveConfig(cfg, store)
-  for _, page in ipairs(self.level_pages) do
+  for _, page in ipairs(self._level_pages) do
     page:loadSaveConfig(cfg, store)
   end
 end
