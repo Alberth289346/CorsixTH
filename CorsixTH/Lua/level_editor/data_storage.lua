@@ -19,12 +19,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 require("pos_size")
+require("tree_access")
 
 local TEXT_BG = {red = 20, green = 150, blue = 200}
 local TEXT_FG = {red = 20, green = 20, blue = 20}
 local PANEL_BG = {red = 130, green = 70, blue= 43}
 local PANEL_FG = {red= 80, green = 170, blue = 100}
 
+--! Get a translated string by name.
+--!param name (str) Name of the translated string to get.
+--!return (utf-8 text) The retrieved translated string.
+local function getTranslatedText(name)
+  local text = TreeAccess.readTree(_S, name)
+  if type(text) == "string" then return text end
+
+  print("Warning: Translated text named \"" .. name .. "\" does not exist.")
+  return name
+end
 
 -- ===================================================================
 class "LevelValue"
@@ -545,7 +556,7 @@ function LevelEditPage:layout(window, pos, size)
         break -- Won't fit in this column, move to the next column.
       end
 
-      self.sections[sect_idx]:layout(Pos(current_left, current_top))
+      self.sections[sect_idx]:layout(window, Pos(current_left, current_top))
       next_left = math.max(next_left, current_left + sect_size.w)
       current_top = current_top + sect_size.h + self.section_sep
       sect_idx = sect_idx + 1
@@ -612,7 +623,7 @@ function LevelTabPage:layout(window, pos, size)
   y = y + self.edit_sep
   -- Add edit pages.
   for _, level_page in ipairs(self.level_pages) do
-    level_page:layout(window, pos.x, y, Size(size.w, size.h - (y - pos.y)))
+    level_page:layout(window, Pos(pos.x, y), Size(size.w, size.h - (y - pos.y)))
   end
 end
 

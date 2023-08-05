@@ -29,8 +29,8 @@ local UILevelEditor = _G["UILevelEditor"]
 
 local col_bg = {red = 154, green = 146, blue = 198}
 
-local EDITOR_WINDOW_XSIZE = 600
-local EDITOR_WINDOW_YSIZE = 580
+local EDITOR_WINDOW_XSIZE = 640
+local EDITOR_WINDOW_YSIZE = 480
 
 function UILevelEditor:UILevelEditor(ui)
   self:UIResizable(ui, EDITOR_WINDOW_XSIZE, EDITOR_WINDOW_YSIZE, col_bg)
