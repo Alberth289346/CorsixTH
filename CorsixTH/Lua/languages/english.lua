@@ -919,6 +919,11 @@ map_editor_window = {
 level_editor = {
   edit_page = {
     town_page = "Town configuration",
+    staff_page = "Staff configuration",
+  },
+  tab_page = {
+    town_page = "Towns",
+    staff_page = "Staff",
   },
 
   name = {
@@ -927,11 +932,38 @@ level_editor = {
       StartCash = "Initial cash",
       StartRep = "Initial reputation",
       OverdraftDiff = "Overdraft rate",
+    },
+    staff = {
+      [0] = { MinSalary = "Minimum nurse salary" },
+      [1] = { MinSalary = "Minimum doctor salary" },
+      [2] = { MinSalary = "Minimum handyman salary" },
+      [3] = { MinSalary = "Minimum receptionist salary" },
+    },
+    payroll = { MaxSalary = "Maximum salary" },
+
+    gbv = {
+      SalaryAdd = {
+        [3] = "Junior",
+        [4] = "Doctor",
+        [5] = "Surgeon",
+        [6] = "Shrink",
+        [7] = "Consultant",
+        [8] = "Researcher",
+      }
     }
   },
 
   town_section = {
     title = "Town settings",
+  },
+  staff_salaries_section = {
+    title = "Staff salaries",
+  },
+  additional_salaries_section = {
+    title = "Additional salaries",
+  },
+  staff_levels_section = {
+    title = "Staff levels",
   },
 
   gbv = {

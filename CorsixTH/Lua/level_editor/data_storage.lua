@@ -131,7 +131,6 @@ end
 --!param tooltip_path (string) String path for the tooltip to show.
 local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
-  print("Label at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   if name_path then
     panel:setLabel(getTranslatedText(name_path), nil, "left")
     if tooltip_path then
@@ -152,7 +151,6 @@ end
 --!param value (LevelValue) Value displayed and edited in the box.
 local function makeTextBox(window, text_boxes, x, y, size, value)
   local text_box = window:addBevelPanel(x, y, size.w, size.h, TEXT_BG, TEXT_FG)
-  print("text-box at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   local function confirm_cb() value:confirm() end
   local function abort_cb() value:abort() end
   text_box = text_box:makeTextbox(confirm_cb, abort_cb) -- confirm_cb, abort_cb)
@@ -173,7 +171,6 @@ local function makeUnit(window, widgets, x, y, size, unit_path)
   if not unit_path then return end
 
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
-  print("Unit at (" .. x .. "," .. y .. ") - (" .. x + size.w .. ", " .. y + size.h .. ")")
   panel:setLabel(getTranslatedText(unit_path))
   widgets[#widgets + 1] = panel
 end
@@ -324,7 +321,6 @@ function LevelValuesSection:layout(window, pos)
     makeUnit(window, self._widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
   end
-  print("LevelValueSection:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. max_x .. ", " .. y .. ")")
   self:verifySize(Size(max_x - pos.x, y - pos.y))
 end
 
@@ -532,16 +528,19 @@ local LevelEditPage = _G["LevelEditPage"]
 --!param name_path Path in _S with the name of the page.
 --!param sections (array of LevelSection) Sections of settings that can be
 --    edited in this screen.
-function LevelEditPage:LevelEditPage(name_path, sections)
+function LevelEditPage:LevelEditPage(title_path, name_path, sections)
   LevelPage.LevelPage(self)
 
-  self.name_path = name_path -- Can be nil
+  assert(name_path) -- Needed by a tab page.
+
+  self.name_path = name_path -- Name of the page in a tab of a tab-page.
+  self.title_path = title_path -- title of the edit page, may be nil.
   self.sections = sections -- Array of sections displayed at the page.
 
   self._widgets = {} -- Widgets of the page.
 
-  self.name_size = Size(100, 15)
-  self.name_sep = 5
+  self.title_size = Size(100, 15)
+  self.title_sep = 5
   self.section_sep = 5 -- Space between sections in a column.
   self.column_sep = 5 -- Space between 'columns'.
 end
@@ -559,16 +558,16 @@ end
 
 --! Set the size of the title name at the page.
 --!param sz (Size) Desired size of the title area.
-function LevelEditPage:setNameSize(sz)
+function LevelEditPage:setTitleSize(sz)
   assert(class.type(sz) == "Size")
-  self.name_size = sz
+  self.title_size = sz
   return self
 end
 
---! Configure vertical space between the name of the page and the first
+--! Configure vertical space between the title of the page and the first
 --  section as well as vertical space between two sections.
-function LevelEditPage:setNameSep(name_sep, section_sep)
-  if name_sep then self.name_sep = name_sep end
+function LevelEditPage:setTitleSep(title_sep, section_sep)
+  if title_sep then self.title_sep = title_sep end
   if section_sep then self.section_sep = section_sep end
   return self
 end
@@ -583,10 +582,9 @@ function LevelEditPage:layout(window, pos, size)
   local section_top = pos.y
 
   -- Name.
-  if self.name_path then
-    makeLabel(window, self._widgets, pos.x, section_top, self.name_size, self.name_path)
-    section_top = section_top + self.name_size.h + self.name_sep
-    print("LevelEditPage:layout: name at (" .. pos.x .. ", " .. pos.y .. " - " .. section_top .. ")")
+  if self.title_path then
+    makeLabel(window, self._widgets, pos.x, section_top, self.title_size, self.title_path)
+    section_top = section_top + self.title_size.h + self.title_sep
   end
 
   local sect_idx = 1
@@ -634,12 +632,12 @@ function LevelTabPage:LevelTabPage(title_path, level_pages)
   LevelPage.LevelPage(self)
 
   self.title_path = title_path -- Name in the translation for the title of the tab page.
-  self._level_pages = {level_pages[1]} -- Array of LevelPage.
+  self._level_pages = level_pages -- Array of LevelPage.
   self._selected_page = nil -- Index of selected page in level_pages.
 
   self.title_size = Size(100, 25)
   self.title_sep = 10 -- Amount of vertical space between the title and page tabs.
-  self.page_tab_size = Size(80, 20)
+  self.page_tab_size = Size(80, 20) -- Size of a tab with a edit page name
   self.edit_sep = 10 -- Amount of vertical space between the page tabs and the edit pages.
 
   -- Make everything invisiable initially.
@@ -669,11 +667,10 @@ function LevelTabPage:layout(window, pos, size)
       remaining_width = size.w
       y = y + self.page_tab_size.h
     end
-    local panel = makeLabel(window, self._widgets, x, y, self.page_tab_size, level_page.title_path)
+    local panel = makeLabel(window, self._widgets, x, y, self.page_tab_size, level_page.name_path)
     panel.on_click =  --[[persistable:LevelTabPage:onClickTab]] function() self:onClickTab(i) end
   end
-  y = y + self.edit_sep
-  print("LevelTabPage:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. xpos .. ", " .. y .. ")")
+  y = y + self.page_tab_size.h + self.edit_sep -- First row + empty space below the rows.
 
   -- Add edit pages.
   for _, level_page in ipairs(self._level_pages) do

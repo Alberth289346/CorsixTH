@@ -92,9 +92,9 @@ local function makeTableSection(settings)
 end
 
 local function makeEditPageSection(settings)
-  local section = LevelEditPage(settings.name_path, settings)
-  if settings.name_size then section:setNameSize(settings.name_size) end
-  section:setNameSep(settings.name_sep, settings.section_sep)
+  local section = LevelEditPage(settings.title_path, settings.name_path, settings)
+  if settings.title_size then section:setNameSize(settings.title_size) end
+  section:setTitleSep(settings.name_sep, settings.section_sep)
   return section
 end
 
@@ -128,7 +128,7 @@ local town_values = makeValuesSection({
   makeValue({level_cfg_path = "town.StartRep", name_path = true}),
   makeValue({level_cfg_path = "town.OverdraftDiff", name_path = true}),
 })
---[[
+
 local staff_min_salaries = makeValuesSection({
   title_path = "level_editor.staff_salaries_section.title",
   makeValue({level_cfg_path = "staff[0].MinSalary", name_path = true}),
@@ -148,6 +148,7 @@ local doctor_additional_salaries = makeValuesSection({
   makeValue({level_cfg_path = "gbv.SalaryAdd[8]", name_path = true}),
 })
 
+--[[
 local various_settings = makeValuesSection({
   title_path = "level_editor.various_settings.title",
   -- TODO Split this in a more sane way.
@@ -1042,9 +1043,10 @@ local lose_conditions_col5 = {
   makeValue({level_cfg_path = "lose_criteria[5].Bound"}),
 }
 -- TODO ADD lose criteria table
+--]]
 
 local staff_levels = makeValuesSection({
-  title_path = "level_editor.staff_levels.title",
+  title_path = "level_editor.staff_levels_section.title",
   -- label_size
   -- value_size
   -- unit_size
@@ -1061,6 +1063,7 @@ local staff_levels = makeValuesSection({
   makeValue({level_cfg_path = "staff_levels[0].JrRate"}),
 })
 
+--[[
 local emergency_control = {
   makeValue({level_cfg_path = "emergency_control[0].StartMonth"}),
   makeValue({level_cfg_path = "emergency_control[0].EndMonth"}),
@@ -1201,20 +1204,22 @@ local award_bonuses = {
 --]]
 
 local town_page = makeEditPageSection({
-  name_path = "level_editor.edit_page.town_page",
+  title_path = "level_editor.edit_page.town_page",
+  name_path = "level_editor.tab_page.town_page",
   town_values,
 --  towns_section,
   popn_sectiom
 })
 
---[[
 local staff_page = makeEditPageSection({
-  name_path = "level_editor.edit_page.staff_page",
+  title_path = "level_editor.edit_page.staff_page",
+  name_path = "level_editor.tab_page.staff_page",
   staff_min_salaries,
   doctor_additional_salaries,
   staff_levels,
 })
 
+--[[
 local hospital_page = makeEditPageSection({
   name_path = "level_editor.edit_page.hospital_page",
   various_settings,
@@ -1239,8 +1244,9 @@ local players_page = makeEditPageSection({
 --]]
 return makeTabPageSection({
   title_path = "level_editor.tab_page.main",
+  page_tab_size = Size(50, 20),
   town_page,
---  staff_page,
+  staff_page,
 --  hospital_page,
 --  diseases_page,
 --  rooms_page,

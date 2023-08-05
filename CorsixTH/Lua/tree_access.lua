@@ -113,6 +113,7 @@ function TreeAccess.getFromTree(tree, name_parts)
       value = rawget(value, TreeAccess.normalizeKey(name_part))
     elseif type(value) == "userdata" then
       -- No rawget here :(
+      --print("name_part: " .. name_part)
       value = value[TreeAccess.normalizeKey(name_part)]
     else
       return nil
