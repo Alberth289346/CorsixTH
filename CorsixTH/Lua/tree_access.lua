@@ -102,15 +102,21 @@ end
 --!param name_parts (array of strings) Names or indices of the path to follow.
 --!return Node in the tree at the end of the path, or nil if the path does not exist.
 function TreeAccess.getFromTree(tree, name_parts)
+  -- print(serialize(name_parts))
   if not name_parts then return nil end -- Invalid selection keys.
 
   local value = tree
   for _, name_part in ipairs(name_parts) do
     -- Bail out if there is nothing to select from.
-    if type(value) ~= "table" then return nil end
-
-    -- Use rawget to avoid triggering errors on missing entries.
-    value = rawget(value, TreeAccess.normalizeKey(name_part))
+    if type(value) == "table" then
+      -- Use rawget to avoid triggering errors on missing entries.
+      value = rawget(value, TreeAccess.normalizeKey(name_part))
+    elseif type(value) == "userdata" then
+      -- No rawget here :(
+      value = value[TreeAccess.normalizeKey(name_part)]
+    else
+      return nil
+    end
   end
   return value
 end

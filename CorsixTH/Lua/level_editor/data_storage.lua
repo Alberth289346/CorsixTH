@@ -31,7 +31,7 @@ local PANEL_FG = {red= 80, green = 170, blue = 100}
 --!return (utf-8 text) The retrieved translated string.
 local function getTranslatedText(name)
   local text = TreeAccess.readTree(_S, name)
-  if type(text) == "string" then return text end
+  if text then return text end -- Likely never fails due to _S implementation.
 
   print("Warning: Translated text named \"" .. name .. "\" does not exist.")
   return name
