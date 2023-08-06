@@ -24,6 +24,8 @@ class "Pos"
 local Pos = _G["Pos"]
 
 function Pos:Pos(x, y)
+  assert(type(x) == "number")
+  assert(type(y) == "number")
   self.x = x
   self.y = y
 end
@@ -34,6 +36,8 @@ class "Size"
 local Size = _G["Size"]
 
 function Size:Size(w, h)
+  assert(type(w) == "number")
+  assert(type(h) == "number")
   self.w = w
   self.h = h
 end

@@ -186,7 +186,6 @@ end
 local function makeButton(window, widgets, x, y, size, callback, text_path)
   local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
   local button = panel:makeButton(0, 0, size.w, size.h, nil, callback, nil, nil)
-  print("button at " .. x .. ", " .. y .. " + " .. size.w .. ", " .. size.h)
   button.panel_lowered_active = false
   if text_path then button:setLabel(getTranslatedText(text_path)) end
   widgets[#widgets + 1] = button
@@ -271,7 +270,8 @@ function LevelValuesSection:LevelValuesSection(title_path, values)
   self.value_size = Size(30, 20)
   self.unit_size = Size(20, 20)
   self.title_sep = 10
-  self.value_sep = 5
+  self.value_sep = 2 -- Vertical separator between values.
+  self.label_sep = 2 -- Horizontal space after label.
 end
 
 --! Set the size of the "label" text box of each value in the section.
@@ -327,7 +327,7 @@ function LevelValuesSection:layout(window, pos)
   end
   -- Editable values below the title.
   local label_x = x
-  local val_x = label_x + self.label_size.w
+  local val_x = label_x + self.label_size.w + self.value_sep
   local unit_x = val_x + self.value_size.w
   local right_x = unit_x + self.unit_size.w
   max_x = math.max(max_x, right_x)
@@ -346,7 +346,7 @@ end
 function LevelValuesSection:computeSize()
   local w = 0
   if self.title_path then w = math.max(w, self.title_size.w) end
-  w = math.max(w, self.label_size.w + self.value_size.w + self.unit_size.w)
+  w = math.max(w, self.label_size.w + self.value_sep + self.value_size.w + self.unit_size.w)
 
   local h = 0
   if self.title_path then h = h + self.title_size.h + self.title_sep end
@@ -412,7 +412,7 @@ function LevelTableSection:LevelTableSection(title_path, row_name_paths,
   self.col_width = 100 -- Width of a column values (also sets the column label).
   self.row_height = 20 -- Height of a row values (also sets the row label).
   self.intercol_sep = 5 -- Horizontal space between two columns in the table.
-  self.interrow_sep = 5 -- Vertical space between two rows in the table.
+  self.interrow_sep = 2 -- Vertical space between two rows in the table.
 end
 
 --! Get the number of rows and columns of the table.
@@ -464,8 +464,7 @@ function LevelTableSection:layout(window, pos)
   -- Rows
   for row = 1, table_rows_cols.h do
     x = pos.x
-    makeLabel(window, self._widgets, x, y, label_size, self.row_name_paths[row],
-        self.row_tooltip_paths[row])
+    makeLabel(window, self._widgets, x, y, label_size, self.row_name_paths[row], self.row_tooltip_paths[row])
     x = x + label_size.w + self.col_label_sep
     for col = 1, table_rows_cols.w do
       makeTextBox(window, self._text_boxes, x, y, label_size, self.values[col][row])
@@ -590,6 +589,49 @@ function LevelEditPage:setTitleSep(title_sep, section_sep)
   return self
 end
 
+-- Empty space between placed sections.
+local SECT_VERT_SPACE = 30
+local SECT_HOR_SPACE = 20
+
+--! Compute placemen of a section with a given size inside a given rectangle, where
+--! the top-left area of the rectangle is already used.
+--!param sect_size (Size) Size of the new section to add in the rectangle.
+--!param rect_pos (Pos) Top-left position of the rectangle to place the section in.
+--!param rect_size (Size) Size of the rectangle to place the section in.
+--!return (sect_pos, rect_pos, rect_size, used_size) or nil.
+local function computePlacement(sect_size, rect_pos, rect_size, used_size)
+  if sect_size.h > sect_size.h then return nil end -- Too high to ever fit.
+
+  local delta
+  while true do
+    if sect_size.w >= rect_size.w then return nil end -- Too wide to ever fit.
+
+    -- Does it fit below the current used area?
+    if rect_size.h - used_size.h >= sect_size.h then
+      local sect_pos = Pos(rect_pos.x, rect_pos.y + used_size.h)
+      local new_used_w = math.max(used_size.w, sect_size.w)
+      local new_used_h = math.min(used_size.h + sect_size.h + SECT_VERT_SPACE, rect_size.h)
+      return {
+        sect_pos = sect_pos,
+        rect_pos = rect_pos,
+        rect_size = rect_size,
+        used_size = Size(new_used_w, new_used_h)
+      }
+    end
+
+    -- Too long to fit, try at the right of the used area.
+    delta = used_size.w + SECT_HOR_SPACE
+    rect_pos = Pos(rect_pos.x + delta, rect_pos.y)
+    rect_size = Size(rect_size.w - delta, rect_size.h)
+    used_size = Size(0, 0)
+
+    -- Note that this loop terminates. If the remaining space is too narrow it
+    -- will bail out in the next check. Otherwise, as the section is not too high
+    -- and the vertical size of the rectangle is now fully available, the section
+    -- will fit otherwise.
+  end
+end
+
 --! Compute layout of the elements at the page.
 --!param window Window to add the new widgets.
 --!param pos (Pos) Position of the to-left corner.
@@ -605,28 +647,26 @@ function LevelEditPage:layout(window, pos, size)
     section_top = section_top + self.title_size.h + self.title_sep
   end
 
-  local sect_idx = 1
-  local current_left = pos.x
-  while sect_idx <= #self.sections do -- For each 'column of sections' do
-    local current_top = section_top
-    local next_left = current_left
-    while sect_idx <= #self.sections do -- For each 'row in the column' do
-      local sect_size = self.sections[sect_idx]:computeSize()
-      if current_top + sect_size.h >= size.h then
-        break -- Won't fit in this column, move to the next column.
-      end
+  local rect_pos = Pos(pos.x, section_top)
+  local rect_size = Size(size.w, math.max(0, size.h - section_top - pos.y))
+  local used_size = Size(0, 0)
 
-      self.sections[sect_idx]:layout(window, Pos(current_left, current_top))
-      next_left = math.max(next_left, current_left + sect_size.w)
-      current_top = current_top + sect_size.h + self.section_sep
-      sect_idx = sect_idx + 1
-    end
-    if next_left == current_left then
-      -- Current section doesn't fit at all, drop it!
-      sect_idx = sect_idx + 1
+  local placed_sections = {}
+  for _, section in ipairs(self.sections) do -- For each 'column of sections' do
+    local sect_size = section:computeSize()
+    local placement = computePlacement(sect_size, rect_pos, rect_size, used_size)
+    if placement then
+      local sect_pos = placement.sect_pos
+      rect_pos = placement.rect_pos
+      rect_size = placement.rect_size
+      used_size = placement.used_size
+      section:layout(window, sect_pos)
+      placed_sections[#placed_sections + 1] = section
+    else
       print("Section dropped (too big!!)")
     end
   end
+  self.sections = placed_sections -- Discard dropped sections
   self:setVisible(false) -- Hide the level edit page initially.
 end
 
@@ -696,7 +736,6 @@ end
 -- User selected a page to display.
 --!param page_num Selected page.
 function LevelTabPage:onClickTab(page_num)
-  print("Clicked " .. page_num)
   if page_num ~= self._selected_page then
     if page_num >= 1 and page_num <= #self._level_pages then
       if self._selected_page then -- Hide previous selection, first time there is none.
