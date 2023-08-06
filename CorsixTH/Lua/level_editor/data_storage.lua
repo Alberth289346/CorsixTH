@@ -175,6 +175,23 @@ local function makeUnit(window, widgets, x, y, size, unit_path)
   widgets[#widgets + 1] = panel
 end
 
+--! Make a button for the tab page.
+--!param window Window to attach the panel to.
+--!param widgets (Array of Panel) Storage for created buttons. Appended in-place.
+--!param x (int) X position of the top-left corner.
+--!param y (int) Y position of the top-left corner.
+--!param size (Size) Width and height of the panel.
+--!param callback Function to call when clicked.
+--!param text_path Name of the translated string to display at the button.
+local function makeButton(window, widgets, x, y, size, callback, text_path)
+  local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
+  local button = panel:makeButton(0, 0, size.w, size.h, nil, callback, nil, nil)
+  print("button at " .. x .. ", " .. y .. " + " .. size.w .. ", " .. size.h)
+  button.panel_lowered_active = false
+  if text_path then button:setLabel(getTranslatedText(text_path)) end
+  widgets[#widgets + 1] = button
+end
+
 -- ===================================================================
 
 --! Common base class for editable area in the level editor.
@@ -322,6 +339,7 @@ function LevelValuesSection:layout(window, pos)
     y = y + self.label_size.h
   end
   self:verifySize(Size(max_x - pos.x, y - pos.y))
+  self:setVisible(false) -- Initially hide all LevelSections.
 end
 
 --! Inherited function computing the size of the section without constructing widgets.
@@ -459,8 +477,8 @@ function LevelTableSection:layout(window, pos)
     if row < table_rows_cols.h then y = y + self.interrow_sep end
   end
 
-  print("LevelTableSection:layout (" .. pos.x .. ", " .. pos.y .. ") - (" .. max_x .. ", " .. y .. ")")
   self:verifySize(Size(max_x - pos.x, y - pos.y))
+  self:setVisible(false) -- Initially hide all LevelSections.
 end
 
 --! Inherited function computing the size of the section without constructing widgets.
@@ -609,6 +627,7 @@ function LevelEditPage:layout(window, pos, size)
       print("Section dropped (too big!!)")
     end
   end
+  self:setVisible(false) -- Hide the level edit page initially.
 end
 
 --! Load the value from the level config or write the value into a *new* level
@@ -637,14 +656,8 @@ function LevelTabPage:LevelTabPage(title_path, level_pages)
 
   self.title_size = Size(100, 25)
   self.title_sep = 10 -- Amount of vertical space between the title and page tabs.
-  self.page_tab_size = Size(80, 20) -- Size of a tab with a edit page name
+  self.page_tab_size = Size(80, 25) -- Size of a tab with a edit page name
   self.edit_sep = 10 -- Amount of vertical space between the page tabs and the edit pages.
-
-  -- Make everything invisiable initially.
---  for _, page in ipairs(self._level_pages) do
-  for _, page in ipairs(level_pages) do
-    page:setVisible(false)
-  end
 end
 
 --! Compute layout of the elements at the page.
@@ -659,16 +672,18 @@ function LevelTabPage:layout(window, pos, size)
     y = y + self.title_size.h + self.title_sep
   end
   -- Add edit-page tabs.
-  local xpos = pos.x
+  local xpos = pos.x -- Left position of a tab button.
   local remaining_width = size.w
   for i, level_page in ipairs(self._level_pages) do
-    if xpos > pos.x and self.page_tab_size.w > remaining_width then
+    if self.page_tab_size.w > remaining_width then -- Row is full.
       xpos = pos.x
       remaining_width = size.w
       y = y + self.page_tab_size.h
     end
-    local panel = makeLabel(window, self._widgets, x, y, self.page_tab_size, level_page.name_path)
-    panel.on_click =  --[[persistable:LevelTabPage:onClickTab]] function() self:onClickTab(i) end
+    local callback =  --[[persistable:LevelTabPage_onClickTab]] function() self:onClickTab(i) end
+    makeButton(window, self._widgets, xpos, y, self.page_tab_size, callback, level_page.name_path)
+    xpos = xpos + self.page_tab_size.w
+    remaining_width = remaining_width - self.page_tab_size.w
   end
   y = y + self.page_tab_size.h + self.edit_sep -- First row + empty space below the rows.
 
@@ -681,10 +696,13 @@ end
 -- User selected a page to display.
 --!param page_num Selected page.
 function LevelTabPage:onClickTab(page_num)
+  print("Clicked " .. page_num)
   if page_num ~= self._selected_page then
-    if self._selected_page >= 1 and self._selected_page <= #self._level_pages then
-      self._level_pages[self._selected_page]:setVisible(false)
-      self._selected_page = page_num
+    if page_num >= 1 and page_num <= #self._level_pages then
+      if self._selected_page then -- Hide previous selection, first time there is none.
+        self._level_pages[self._selected_page]:setVisible(false)
+      end
+      self._selected_page = page_num -- And select/show new selection.
       self._level_pages[self._selected_page]:setVisible(true)
     end
   end

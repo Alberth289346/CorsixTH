@@ -931,6 +931,13 @@ function Textbox:Textbox()
   self.cursor_pos = nil
 end
 
+--! Set the visibility of the text box.
+--!param visible Whether the text box is visible.
+function Textbox:setVisible(visible)
+  self.visible = visible
+  self.panel.visible = visible
+end
+
 local textbox_mt = permanent("Window.<textbox_mt>", getmetatable(Textbox()))
 
 function Textbox:onTick()
