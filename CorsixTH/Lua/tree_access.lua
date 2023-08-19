@@ -102,7 +102,7 @@ end
 --!param name_parts (array of strings) Names or indices of the path to follow.
 --!return Node in the tree at the end of the path, or nil if the path does not exist.
 function TreeAccess.getFromTree(tree, name_parts)
-  -- print(serialize(name_parts))
+  print(serialize(name_parts))
   if not name_parts then return nil end -- Invalid selection keys.
 
   local value = tree
@@ -113,7 +113,7 @@ function TreeAccess.getFromTree(tree, name_parts)
       value = rawget(value, TreeAccess.normalizeKey(name_part))
     elseif type(value) == "userdata" then
       -- No rawget here :(
-      --print("name_part: " .. name_part)
+      print("name_part: " .. name_part)
       value = value[TreeAccess.normalizeKey(name_part)]
     else
       return nil

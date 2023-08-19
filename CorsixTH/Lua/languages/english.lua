@@ -916,79 +916,78 @@ map_editor_window = {
   }
 }
 
+-- =========================================
+-- Level editor strings
+--
+
 level_editor = {
-  edit_page = {
-    town_page = "Town configuration",
-    staff_page = "Staff configuration",
+  edit_pages = {
+    town_page = {
+      name = "Town",
+      title = "Town setup"
+    },
+    town_levels_page = {
+      name = "Town levels",
+      title = "Town levels setup"
+    }
   },
   tab_page = {
-    town_page = "Towns",
-    staff_page = "Staff",
-  },
-
-  name = {
-    town = {
-      InterestRate = "Interest rate",
-      StartCash = "Initial cash",
-      StartRep = "Initial reputation",
-      OverdraftDiff = "Overdraft rate",
-    },
-    staff = {
-      [0] = { MinSalary = "Minimum nurse salary" },
-      [1] = { MinSalary = "Minimum doctor salary" },
-      [2] = { MinSalary = "Minimum handyman salary" },
-      [3] = { MinSalary = "Minimum receptionist salary" },
-    },
-    payroll = { MaxSalary = "Maximum salary" },
-
-    gbv = {
-      SalaryAdd = {
-        [3] = "Junior",
-        [4] = "Doctor",
-        [5] = "Surgeon",
-        [6] = "Shrink",
-        [7] = "Consultant",
-        [8] = "Researcher",
-      }
+    page_names = {
+      town_page = "Towns"
     }
   },
-
+  town_levels = {
+    col_names = {
+      interest_rate = "Interest",
+      overdraft_diff = "Overdraft",
+      start_cash = "Initial cash",
+      start_rep = "Initial rep"
+    },
+    row_names = {
+      [0] = "Level 1",
+      [1] = "Level 2",
+      [2] = "Level 3",
+      [3] = "Level 4",
+      [4] = "Level 5",
+      [5] = "Level 6",
+      [6] = "Level 7",
+      [7] = "Level 8",
+      [8] = "Level 9",
+      [9] = "Level 10",
+      [10] = "Level 11",
+      [11] = "Level 12",
+      [12] = "Level 13"
+    },
+    name = "Town levels",
+    title = "Town levels section"
+  },
   town_section = {
-    title = "Town settings",
+    name = "Town",
+    title = "Town section"
   },
-  staff_salaries_section = {
-    title = "Staff salaries",
+  units = {
+    percent = "percentage"
   },
-  additional_salaries_section = {
-    title = "Additional salaries",
-  },
-  staff_levels_section = {
-    title = "Staff levels",
-  },
-
-  gbv = {
-    popn = {
-      title = "Population changes",
-    }
-  },
-  col_names = {
-    gbv = {
-      popn = {
-        month = "Start month",
-        change = "Rate of change",
-      }
-    }
-  },
-  row_names = {
-    gbv = {
-      popn = {
-        [0] = "Change 1",
-        [1] = "Change 2",
-        [2] = "Change 3",
+  values = {
+    town = {
+      InterestRate = {
+        name = "Interest rate"
+      },
+      OverdraftDiff = {
+        name = "Overdraft rate",
+        tooltip = "Money to pay while balance is negative"
+      },
+      StartCash = {
+        name = "Initial cash"
+      },
+      StartRep = {
+        name = "Initial reputation"
       }
     }
   }
 }
+
+-- XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
 
 
 hotkeys_file_err = {

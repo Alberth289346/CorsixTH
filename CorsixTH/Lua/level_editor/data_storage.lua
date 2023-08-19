@@ -26,15 +26,28 @@ local TEXT_FG = {red = 20, green = 20, blue = 20}
 local PANEL_BG = {red = 130, green = 70, blue= 43}
 local PANEL_FG = {red= 80, green = 170, blue = 100}
 
+local TITLE_LABEL_COLS = {
+  fg = {red = 120, green = 100, blue = 80},
+  bg = {red = 80, green = 20, blue = 30},
+}
+local NAME_LABEL_COLS = {
+  fg = {red = 20, green = 100, blue = 180},
+  bg = {red = 80, green = 120, blue = 80},
+}
+
+-- Debug flag to dump strings, causes string names to be used as text.
+local dump_strings = false
+
 --! Get a translated string by name.
 --!param name (str) Name of the translated string to get.
 --!return (utf-8 text) The retrieved translated string.
 local function getTranslatedText(name)
-  local text = TreeAccess.readTree(_S, name)
-  if text then return text end -- Likely never fails due to _S implementation.
-
-  print("Warning: Translated text named \"" .. name .. "\" does not exist.")
-  return name
+  if dump_strings then
+    print(name)
+    return name
+  else
+    return TreeAccess.readTree(_S, name)
+  end
 end
 
 --===================================================================
@@ -48,15 +61,15 @@ local LevelValue = _G["LevelValue"]
 --! Integer level configuration value in the level config editor.
 --!param level_cfg_path (str) Absolute path in the level configuration file for
 --    this value.
---!param name_path (str) Absolute path to the name string in the language files
---    for this value. XXX shuold allow nil for table values.
---!param tooltip_path (nil or str) If present, absolute path to the tooltip
+--!param name_path (nil str) Optional absolute path to the name string in the
+--    language files for this value.
+--!param tooltip_path (nil str) If present, absolute path to the tooltip
 --    string in the language files for this value.
---!param unit_path (nil or str) If present, the absolute path to the name string
+--!param unit_path (nil str) If present, the absolute path to the name string
 --    of the unit for this value.
---!param min_value (nil or integer) If present the lowest allowed value of this
+--!param min_value (nil integer) If present the lowest allowed value of this
 --    value.
---!param max_value (nil or integer) If present the highest allowed value of this
+--!param max_value (nil integer) If present the highest allowed value of this
 --    value.
 function LevelValue:LevelValue(level_cfg_path, name_path, tooltip_path,
     unit_path, min_value, max_value)
@@ -66,6 +79,11 @@ function LevelValue:LevelValue(level_cfg_path, name_path, tooltip_path,
   self.unit_path = unit_path
   self.min_value = min_value
   self.max_value = max_value
+  if dump_strings then
+    if name_path then print(name_path) end
+    if tooltip_path then print(tooltip_path) end
+    if unit_path then print(unit_path) end
+  end
   assert(not self.min_value or not self.max_value or self.min_value <= self.max_value)
 
   self._text_box = nil -- Text box in the editor.
@@ -129,8 +147,11 @@ end
 --!param size (Size) Width and height of the panel.
 --!param name_path (string) String path for the text to display.
 --!param tooltip_path (string) String path for the tooltip to show.
-local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path)
-  local panel = window:addBevelPanel(x, y, size.w, size.h, PANEL_BG, PANEL_FG)
+--!param cold (nil colours) Optional foreground and background colours.
+local function makeLabel(window, widgets, x, y, size, name_path, tooltip_path, cols)
+  local fg = cols and cols.fg or PANEL_FG
+  local bg = cols and cols.bg or PANEL_BG
+  local panel = window:addBevelPanel(x, y, size.w, size.h, fg, bg)
   if name_path then
     panel:setLabel(getTranslatedText(name_path), nil, "left")
     if tooltip_path then
@@ -321,7 +342,7 @@ function LevelValuesSection:layout(window, pos)
   local max_x = x
   -- Title.
   if self.title_path then
-    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path, nil, TITLE_LABEL_COLS)
     y = y + self.title_size.h + self.title_sep
     max_x = math.max(max_x, x + self.title_size.w)
   end
@@ -333,7 +354,7 @@ function LevelValuesSection:layout(window, pos)
   max_x = math.max(max_x, right_x)
   for idx, val in ipairs(self.values) do
     if idx > 1 then y = y + self.value_sep end
-    makeLabel(window, self._widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path)
+    makeLabel(window, self._widgets, label_x, y, self.label_size, val.name_path, val.tooltip_path, NAME_LABEL_COLS)
     makeTextBox(window, self._text_boxes, val_x, y, self.value_size, val)
     makeUnit(window, self._widgets, unit_x, y, self.unit_size, self.unit_path)
     y = y + self.label_size.h
@@ -442,7 +463,7 @@ function LevelTableSection:layout(window, pos)
   local max_x = x
   -- Title.
   if self.title_path then
-    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path, nil, TITLE_LABEL_COLS)
     y = y + self.title_size.h + self.title_sep
     max_x = math.max(max_x, x + self.title_size.w)
   end
@@ -454,7 +475,7 @@ function LevelTableSection:layout(window, pos)
   x = pos.x + self.col_width + self.col_label_sep -- Skip space for the row labels
   for col = 1, table_rows_cols.w do
     makeLabel(window, self._widgets, x, y, label_size, self.col_name_paths[col],
-        self.col_tooltip_paths[col])
+        self.col_tooltip_paths[col], NAME_LABEL_COLS)
     x = x + label_size.w
     if col < table_rows_cols.w then x = x + self.intercol_sep end
   end
@@ -464,7 +485,8 @@ function LevelTableSection:layout(window, pos)
   -- Rows
   for row = 1, table_rows_cols.h do
     x = pos.x
-    makeLabel(window, self._widgets, x, y, label_size, self.row_name_paths[row], self.row_tooltip_paths[row])
+    makeLabel(window, self._widgets, x, y, label_size, self.row_name_paths[row],
+        self.row_tooltip_paths[row], NAME_LABEL_COLS)
     x = x + label_size.w + self.col_label_sep
     for col = 1, table_rows_cols.w do
       makeTextBox(window, self._text_boxes, x, y, label_size, self.values[col][row])
@@ -548,7 +570,7 @@ local LevelEditPage = _G["LevelEditPage"]
 function LevelEditPage:LevelEditPage(title_path, name_path, sections)
   LevelPage.LevelPage(self)
 
-  assert(name_path) -- Needed by a tab page.
+  assert(name_path, "String " .. title_path .. " also needs a name") -- Needed by a tab page.
 
   self.name_path = name_path -- Name of the page in a tab of a tab-page.
   self.title_path = title_path -- title of the edit page, may be nil.
@@ -604,10 +626,10 @@ local function computePlacement(sect_size, rect_pos, rect_size, used_size)
 
   local delta
   while true do
-    if sect_size.w >= rect_size.w then return nil end -- Too wide to ever fit.
+    if false and sect_size.w >= rect_size.w then return nil end -- Too wide to ever fit.
 
     -- Does it fit below the current used area?
-    if rect_size.h - used_size.h >= sect_size.h then
+    if true or rect_size.h - used_size.h >= sect_size.h then
       local sect_pos = Pos(rect_pos.x, rect_pos.y + used_size.h)
       local new_used_w = math.max(used_size.w, sect_size.w)
       local new_used_h = math.min(used_size.h + sect_size.h + SECT_VERT_SPACE, rect_size.h)
@@ -643,7 +665,7 @@ function LevelEditPage:layout(window, pos, size)
 
   -- Name.
   if self.title_path then
-    makeLabel(window, self._widgets, pos.x, section_top, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, pos.x, section_top, self.title_size, self.title_path, nil, TITLE_LABEL_COLS)
     section_top = section_top + self.title_size.h + self.title_sep
   end
 
@@ -708,7 +730,7 @@ function LevelTabPage:layout(window, pos, size)
   local x, y = pos.x, pos.y
   -- Add title.
   if self.title_path then
-    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path)
+    makeLabel(window, self._widgets, x, y, self.title_size, self.title_path, nil, TITLE_LABEL_COLS)
     y = y + self.title_size.h + self.title_sep
   end
   -- Add edit-page tabs.
