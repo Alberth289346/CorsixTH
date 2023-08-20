@@ -920,21 +920,282 @@ map_editor_window = {
 -- Level editor strings
 --
 
+-- Generate with  python merge_strings_in_table.py level_editor_strings2.txt
 level_editor = {
+  doctor_add_salaries = {
+    title = "Doctor bonuses"
+  },
   edit_pages = {
-    town_page = {
-      name = "Town",
-      title = "Town setup"
+    diseases_available_page1 = {
+      name = "Av dis. 1",
+      title = "Availability of diseases - 1"
+    },
+    diseases_available_page2 = {
+      name = "Av dis. 2",
+      title = "Availability of diseases - 2"
+    },
+    diseases_available_page3 = {
+      name = "Av dis. 3s",
+      title = "Availability of diseases - 3"
+    },
+    diseases_expertise_page1 = {
+      name = "Dis. expertise 1",
+      title = "Diseases expertise - 1"
+    },
+    diseases_expertise_page2 = {
+      name = "Dis. expertise 2",
+      title = "Diseases expertise - 2"
+    },
+    diseases_expertise_page3 = {
+      name = "Dis. expertise 3",
+      title = "Diseases expertise - 3"
+    },
+    objects_page1 = {
+      name = "Objects 1",
+      title = "Objects - 1"
+    },
+    objects_page2 = {
+      name = "Objects 2",
+      title = "Objects - 2"
+    },
+    objects_page3 = {
+      name = "Objects 3",
+      title = "Objects - 3"
+    },
+    objects_page4 = {
+      name = "Objects 4",
+      title = "Objects - 4"
+    },
+    objects_page5 = {
+      name = "Objects 5",
+      title = "Objects - 5"
+    },
+    rooms_cost_page1 = {
+      name = "Rooms cost 1",
+      title = "Rooms cost - 1"
+    },
+    rooms_cost_page2 = {
+      name = "Rooms cost 2",
+      title = "Rooms cost - 2"
+    },
+    rooms_expertise_page = {
+      name = "Rooms expertise",
+      title = "Room expertise setup"
+    },
+    staff_page = {
+      name = "Staff",
+      title = "Staff setup"
     },
     town_levels_page = {
       name = "Town levels",
       title = "Town levels setup"
+    },
+    town_page = {
+      name = "Towns",
+      title = "Towns setup"
     }
   },
-  tab_page = {
-    page_names = {
-      town_page = "Towns"
-    }
+  expertise_diseases = {
+    col_names = {
+      Known = "Initially known",
+      MaxDiagDiff = "Diagnosis difficulty",
+      RschReqd = "Required research",
+      StartPrice = "Initial cure cost"
+    },
+    row_names = {
+      [2] = "Bloaty head",
+      [3] = "Hairyritus",
+      [4] = "Elvis",
+      [5] = "Invisibility",
+      [6] = "Radiation",
+      [7] = "Slack tongue",
+      [8] = "Abduction",
+      [9] = "Broken bones",
+      [10] = "Baldness",
+      [11] = "Discrete itching",
+      [12] = "Jellyitus",
+      [13] = "Sleeping illness",
+      [14] = "Pregnant",
+      [15] = "Transparent",
+      [16] = "Uncommon cold",
+      [17] = "Broken wind",
+      [18] = "Spare ribs",
+      [19] = "Kidney beans",
+      [20] = "Broken heart",
+      [21] = "Ruptured noodles",
+      [22] = "Tv personalities",
+      [23] = "Infectuous laughter",
+      [24] = "Corrugated ankles",
+      [25] = "Chronic nose hair",
+      [26] = "Third degree side burns",
+      [27] = "Fake blood",
+      [28] = "Gastric ejections",
+      [29] = "The squits",
+      [30] = "Iron lungs",
+      [31] = "Sweaty palms",
+      [32] = "Heaped piles",
+      [33] = "Gutt rot",
+      [34] = "Golf stones",
+      [35] = "Unexpected swellings"
+    },
+    title = "Diseases expertise"
+  },
+  expertise_rooms = {
+    col_names = {
+      Known = "Initrially known",
+      RschReqd = "Required research",
+      StartPrice = "Initial price"
+    },
+    row_names = {
+      [1] = "GP room",
+      [36] = "Scanner",
+      [37] = "Blood machine",
+      [38] = "Cardio",
+      [39] = "X-ray",
+      [40] = "Ultra scanner",
+      [41] = "Diagnosis room",
+      [42] = "Ward",
+      [43] = "Psychiatry",
+      [44] = "Autopsy",
+      [45] = "Atom analyser",
+      [46] = "Research"
+    },
+    title = "Rooms expertise"
+  },
+  nonvisuals = {
+    col_names = {
+      nonvisuals = "Month",
+      nonvisuals_available = "Is available"
+    },
+    row_names = {
+      nonvisuals_available = {
+        [0] = "Uncommon cold",
+        [1] = "Broken wind",
+        [2] = "Spare ribs",
+        [3] = "Kidney beans",
+        [4] = "Broken heart",
+        [5] = "Ruptured noodles",
+        [6] = "Tv personalities",
+        [7] = "Infectuous laughter",
+        [8] = "Corrugated ankles",
+        [9] = "Chronic nose hair",
+        [10] = "Third degree side burns",
+        [11] = "Fake blood",
+        [12] = "Gastric ejections",
+        [13] = "The squits",
+        [14] = "Iron lungs",
+        [15] = "Sweaty palms",
+        [16] = "Heaped piles",
+        [17] = "Gutt rot",
+        [18] = "Golf stones",
+        [19] = "Unexpected swellings"
+      }
+    },
+    title = "Nonvisual illnesses"
+  },
+  objects = {
+    col_names = {
+      AvailableForLevel = "Exists at all",
+      StartAvail = "Availabel at start",
+      StartCost = "Initial cost",
+      StartStrength = "Initial strength",
+      WhenAvail = "Available after"
+    },
+    row_names = {
+      objects = {
+        [1] = "Desk",
+        [2] = "Cabinet",
+        [3] = "Door",
+        [4] = "Bench",
+        [5] = "Table",
+        [6] = "Chair",
+        [7] = "Drinks",
+        [8] = "Bed",
+        [9] = "Inflator machine",
+        [10] = "Snooker table",
+        [11] = "Receptionist desk",
+        [12] = "Tressle table",
+        [13] = "Cardiogram",
+        [14] = "Scanner",
+        [15] = "Scanner console",
+        [16] = "Screen",
+        [17] = "Jukebox",
+        [18] = "Couch",
+        [19] = "Sofa",
+        [20] = "Crash trolley",
+        [21] = "TV set",
+        [22] = "Ultrascan",
+        [23] = "DNA restorer",
+        [24] = "Cast remover",
+        [25] = "Hair restorer",
+        [26] = "Slack Tongue slicer",
+        [27] = "X-ray",
+        [28] = "Radiation shield",
+        [29] = "X-ray viewer",
+        [30] = "Operating table",
+        [31] = "Lamp",
+        [32] = "Bathroom sink",
+        [33] = "OP sink 1",
+        [34] = "OP sink 2",
+        [35] = "Surgeon screen",
+        [36] = "Lecture chair",
+        [37] = "Projector",
+        [38] = "Open bed screen",
+        [39] = "Pharmacy cabinet",
+        [40] = "Research computer",
+        [41] = "Chemical mixer",
+        [42] = "Blood machine",
+        [43] = "Fire extinguisher",
+        [44] = "Radiator",
+        [45] = "Plant",
+        [46] = "Electrolysis machine",
+        [47] = "Jellyitus machine",
+        [48] = "Gates to hell",
+        [49] = "Closed bed screen",
+        [50] = "Bin",
+        [51] = "Toilet",
+        [52] = "Double door part 1",
+        [53] = "Double door part 2",
+        [54] = "Decontamination shower",
+        [55] = "Autopsy machine",
+        [56] = "Book case",
+        [57] = "Video game",
+        [58] = "Entrance door left",
+        [59] = "Entrance door right",
+        [60] = "Skeleton",
+        [61] = "Comfy chair"
+      }
+    },
+    title = "Objects properties"
+  },
+  popn = {
+    col_names = {
+      gbv = {
+        popn = {
+          change = "Rate of change",
+          month = "Start month"
+        }
+      }
+    },
+    row_names = {
+      gbv = {
+        popn = {
+          [0] = "Change 1",
+          [1] = "Change 2",
+          [2] = "Change 3"
+        }
+      }
+    },
+    title = "Population changes"
+  },
+  rooms_cost1 = {
+    title = "Cost of rooms"
+  },
+  rooms_cost2 = {
+    title = "Cost of rooms"
+  },
+  staff_min_salaries = {
+    title = "Min staff salaries"
   },
   town_levels = {
     col_names = {
@@ -958,17 +1219,190 @@ level_editor = {
       [11] = "Level 12",
       [12] = "Level 13"
     },
-    name = "Town levels",
-    title = "Town levels section"
+    title = "Town levels"
   },
   town_section = {
-    name = "Town",
     title = "Town section"
   },
   units = {
     percent = "percentage"
   },
   values = {
+    gbv = {
+      SalaryAbilityDivisor = {
+        name = "Speed of raise",
+        tooltip = "Ability increase to get a raise"
+      },
+      SalaryAdd = {
+        [3] = {
+          name = "Junior"
+        },
+        [4] = {
+          name = "Doctor"
+        },
+        [5] = {
+          name = "Surgeon"
+        },
+        [6] = {
+          name = "Shrink"
+        },
+        [7] = {
+          name = "Consultant"
+        },
+        [8] = {
+          name = "Researcher"
+        }
+      }
+    },
+    payroll = {
+      MaxSalary = {
+        name = "Max salary"
+      }
+    },
+    rooms = {
+      [7] = {
+        Cost = {
+          name = "Cost of GP"
+        }
+      },
+      [8] = {
+        Cost = {
+          name = "Cost of psychiatry"
+        }
+      },
+      [9] = {
+        Cost = {
+          name = "Cost of ward"
+        }
+      },
+      [10] = {
+        Cost = {
+          name = "Cost of operating theatre"
+        }
+      },
+      [11] = {
+        Cost = {
+          name = "Cost of pharmacy"
+        }
+      },
+      [12] = {
+        Cost = {
+          name = "Cost of cardio"
+        }
+      },
+      [13] = {
+        Cost = {
+          name = "Cost of scanner"
+        }
+      },
+      [14] = {
+        Cost = {
+          name = "Cost of ultra-scan"
+        }
+      },
+      [15] = {
+        Cost = {
+          name = "Cost of blood room"
+        }
+      },
+      [16] = {
+        Cost = {
+          name = "Cost of X-ray room"
+        }
+      },
+      [17] = {
+        Cost = {
+          name = "Cost of inflator room"
+        }
+      },
+      [18] = {
+        Cost = {
+          name = "Cost of dna restorer room"
+        }
+      },
+      [19] = {
+        Cost = {
+          name = "Cost of hair restorer room"
+        }
+      },
+      [20] = {
+        Cost = {
+          name = "Cost of slack tonque room"
+        }
+      },
+      [21] = {
+        Cost = {
+          name = "Cost of fracture room"
+        }
+      },
+      [22] = {
+        Cost = {
+          name = "Cost of Training room"
+        }
+      },
+      [23] = {
+        Cost = {
+          name = "Cost of Electrolysis room"
+        }
+      },
+      [24] = {
+        Cost = {
+          name = "Cost of Jelly-vat room"
+        }
+      },
+      [25] = {
+        Cost = {
+          name = "Cost of staff room"
+        }
+      },
+      [26] = {
+        Cost = {
+          name = "Cost of tv room"
+        }
+      },
+      [27] = {
+        Cost = {
+          name = "Cost of General diag. room"
+        }
+      },
+      [28] = {
+        Cost = {
+          name = "Cost of research room"
+        }
+      },
+      [29] = {
+        Cost = {
+          name = "Cost of toilets"
+        }
+      },
+      [30] = {
+        Cost = {
+          name = "Cost of decontamination room"
+        }
+      }
+    },
+    staff = {
+      [0] = {
+        MinSalary = {
+          name = "Nurse"
+        }
+      },
+      [1] = {
+        MinSalary = {
+          name = "Doctor"
+        }
+      },
+      [2] = {
+        MinSalary = {
+          name = "Handyman"
+        }
+      },
+      [3] = {
+        MinSalary = {
+          name = "Receptionist"
+        }
+      }
+    },
     town = {
       InterestRate = {
         name = "Interest rate"
@@ -984,9 +1418,33 @@ level_editor = {
         name = "Initial reputation"
       }
     }
+  },
+  visuals = {
+    col_names = {
+      visuals = "Month",
+      visuals_available = "Exists at all"
+    },
+    row_names = {
+      visuals_available = {
+        [0] = "Bloaty head",
+        [1] = "Hairyritus",
+        [2] = "Elvis",
+        [3] = "Invisibility",
+        [4] = "Radiation",
+        [5] = "Slack tongue",
+        [6] = "Abduction",
+        [7] = "Broken bones",
+        [8] = "Baldness",
+        [9] = "Discrete itching",
+        [10] = "Jellyitus",
+        [11] = "Sleeping illness",
+        [12] = "Pregnant",
+        [13] = "Transparent"
+      }
+    },
+    title = "Visual illnesses"
   }
 }
-
 -- XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
 
 

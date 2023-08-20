@@ -54,7 +54,8 @@ def parse_string_name(text, linenum):
 def read_input(fpath, handle, lines):
     with open(fpath, "r") as handle:
         for i, line in enumerate(handle):
-            if not line or line[1] == "#" or line.startswith("--"):
+            line.strip()
+            if line == "" or line.startswith("#") or line.startswith("--"):
                 continue # Empty line or comment.
             if "=" in line:
                 m = line_pat.fullmatch(line)

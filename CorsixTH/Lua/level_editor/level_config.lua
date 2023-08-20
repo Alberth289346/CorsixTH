@@ -92,6 +92,53 @@ local function makeTableSection(settings)
   return section
 end
 
+--! Make a partial copy of an array.
+--!param orig (array) Original array to copy a part from. May be nil.
+--!param start (int) First index if the original to copy.
+--!param count (int) Number of elements to copy.
+--!return (array nil) Nil if the original was nil, else the created array.
+local function _copyPartialArray(orig, start, count)
+  if not orig then return nil end
+
+  --assert(#orig >= start) -- Don't allow creating empty parts.
+  local copied = {}
+  for i = 1, count do
+  if orig[start] then copied[i] = orig[start] end
+    start = start + 1
+  end
+  return copied
+end
+
+local function makeMultiTableSections(counts, settings)
+  local sections = {}
+  local start = 1
+  for _, count in ipairs(counts) do
+    -- For the values copy a part of the columns in the row array.
+    local col_values_part = {}
+    for i, col in ipairs(settings.col_values) do
+      col_values_part[i] = _copyPartialArray(col, start, count)
+    end
+    sections[#sections + 1] = makeTableSection({
+      row_names = _copyPartialArray(settings.row_names, start, count),
+      row_tooltips = _copyPartialArray(settings.row_tooltips, start, count),
+      col_values = col_values_part,
+      col_names = settings.col_names,
+      col_tooltips = settings.col_tooltips,
+      title_path = settings.title_path,
+      title_height = settings.title_height,
+      title_sep = settings.title_sep,
+      row_label_sep = settings.row_label_sep,
+      col_label_sep = settings.col_label_sep,
+      col_width = settings.col_width,
+      row_height = settings.row_height,
+      intercol_sep = settings.intercol_sep,
+      interrow_sep = settings.interrow_sep
+    })
+    start = start + count
+  end
+  return sections
+end
+
 local function makeEditPageSection(settings)
   local section = LevelEditPage(settings.title_path, settings.name_path, settings)
   if settings.title_size then section:setNameSize(settings.title_size) end
@@ -122,6 +169,9 @@ end
 local UNIT_PERCENT = "level_editor.units.percent"
 
 
+-- Towns
+
+-- {{{ Town setup
 local town_values = makeValuesSection({
   title_path = "level_editor.town_section.title",
   name_path = "level_editor.town_section.name",
@@ -134,28 +184,8 @@ local town_values = makeValuesSection({
   makeValue({level_cfg_path = "town.StartRep", name_path = true}),
   makeValue({level_cfg_path = "town.OverdraftDiff", name_path = true, unit_path=UNIT_PERCENT, tooltip_path = true}),
 })
-
+-- }}}
 -- {{{
---local staff_min_salaries = makeValuesSection({
---  title_path = "level_editor.titles.sections.staff_salaries",
---  makeValue({level_cfg_path = "staff[0].MinSalary", name_path = true}),
---  makeValue({level_cfg_path = "staff[1].MinSalary", name_path = true}),
---  makeValue({level_cfg_path = "staff[2].MinSalary", name_path = true}),
---  makeValue({level_cfg_path = "staff[3].MinSalary", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAbilityDivisor", name_path = true, tooltip_path = true}),
---  makeValue({level_cfg_path = "payroll.MaxSalary", name_path = true}),
---})
---
---local doctor_additional_salaries = makeValuesSection({
---  title_path = "level_editor.sections.titles.additional_salaries_section_title",
---  makeValue({level_cfg_path = "gbv.SalaryAdd[3]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAdd[4]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAdd[5]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAdd[6]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAdd[7]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.SalaryAdd[8]", name_path = true}),
---})
---
 --local research_section = makeValuesSection({
 --  title_path = "level_editor.sections.titles.various_section_title",
 --  makeValue({level_cfg_path = "gbv.ResearchPointsDivisor", name_path = true, tooltip_path = true}),
@@ -209,6 +239,7 @@ local town_values = makeValuesSection({
 --  makeValue({level_cfg_path = "gbv.RschImproveIncrementPercent", name_path = true, unit_path = "level_editor.units.percent"})
 --})
 -- }}}
+-- {{{ Town levels
 local towns_col1 = {
   makeValue({level_cfg_path = "gbv.towns[0].StartCash"}),
   makeValue({level_cfg_path = "gbv.towns[1].StartCash"}),
@@ -287,729 +318,793 @@ local town_levels_section = makeTableSection({
   col_values = {towns_col1, towns_col2, towns_col3, towns_col4},
   col_names = towns_col_names
 })
+-- }}}
+-- {{{ Population change
+local popn_col1 = {
+  makeValue({level_cfg_path = "gbv.popn[0].Month"}),
+  makeValue({level_cfg_path = "gbc.popn[1].Month"}),
+  makeValue({level_cfg_path = "gbc.popn[2].Month"}),
+}
+local popn_col2 = {
+  makeValue({level_cfg_path = "gbv.popn[0].Change"}),
+  makeValue({level_cfg_path = "gbc.popn[1].Change"}),
+  makeValue({level_cfg_path = "gbc.popn[2].Change"}),
+}
+local popn_row_names = {
+  "level_editor.popn.row_names.gbv.popn[0]",
+  "level_editor.popn.row_names.gbv.popn[1]",
+  "level_editor.popn.row_names.gbv.popn[2]",
+}
+local popn_col_names = {
+  "level_editor.popn.col_names.gbv.popn.month",
+  "level_editor.popn.col_names.gbv.popn.change",
+}
+local popn_sectiom = makeTableSection({
+  title_path = "level_editor.popn.title",
+  name_path = "level_editor.popn.name",
+  row_names = popn_row_names,
+  col_values = {popn_col1, popn_col2},
+  col_names = popn_col_names
+})
+-- }}}
+
+-- {{{ Staff
+
+local staff_min_salaries = makeValuesSection({
+  title_path = "level_editor.staff_min_salaries.title",
+  name_path = "level_editor.staff_min_salaries.name",
+  makeValue({level_cfg_path = "staff[0].MinSalary", name_path = true}),
+  makeValue({level_cfg_path = "staff[1].MinSalary", name_path = true}),
+  makeValue({level_cfg_path = "staff[2].MinSalary", name_path = true}),
+  makeValue({level_cfg_path = "staff[3].MinSalary", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAbilityDivisor", name_path = true, tooltip_path = true}),
+  makeValue({level_cfg_path = "payroll.MaxSalary", name_path = true}),
+})
+
+local doctor_additional_salaries = makeValuesSection({
+  title_path = "level_editor.doctor_add_salaries.title",
+  name_path = "level_editor.doctor_add_salaries.name",
+  makeValue({level_cfg_path = "gbv.SalaryAdd[3]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAdd[4]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAdd[5]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAdd[6]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAdd[7]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.SalaryAdd[8]", name_path = true}),
+})
+-- }}}
+-- XXX Shuold become a table
+--local staff_levels = makeValuesSection({
+--  title_path = "level_editor.staff_levels_section_title",
+--  -- label_size
+--  -- value_size
+--  -- unit_size
+--  -- TODO title_sep, value_sep
+--  makeValue({level_cfg_path = "staff_levels[0].Month", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].Nurses", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].Doctors", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].Handymen", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].Receptionists", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].ShrkRate", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].SurgRate", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].RschRate", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].ConsRate", name_path = true}),
+--  makeValue({level_cfg_path = "staff_levels[0].JrRate", name_path = true}),
+--})
+
+-- {{{ Expertise dideases
+local expertise_diseases_col1 = {
+  makeValue({level_cfg_path = "expertise[2].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[3].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[4].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[5].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[6].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[7].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[8].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[9].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[10].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[11].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[12].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[13].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[14].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[15].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[16].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[17].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[18].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[19].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[20].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[21].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[22].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[23].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[24].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[25].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[26].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[27].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[28].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[29].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[30].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[31].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[32].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[33].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[34].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[35].StartPrice"}),
+}
+local expertise_diseases_col2 = {
+  makeValue({level_cfg_path = "expertise[2].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[3].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[4].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[5].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[6].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[7].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[8].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[9].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[10].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[11].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[12].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[13].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[14].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[15].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[16].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[17].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[18].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[19].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[20].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[21].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[22].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[23].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[24].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[25].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[26].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[27].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[28].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[29].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[30].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[31].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[32].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[33].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[34].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[35].Known", min_value = 0, max_value = 1}),
+}
+local expertise_diseases_col3 = {
+  makeValue({level_cfg_path = "expertise[2].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[3].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[4].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[5].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[6].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[7].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[8].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[9].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[10].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[11].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[12].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[13].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[14].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[15].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[16].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[17].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[18].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[19].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[20].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[21].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[22].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[23].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[24].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[25].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[26].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[27].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[28].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[29].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[30].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[31].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[32].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[33].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[34].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[35].RschReqd"}),
+}
+local expertise_diseases_col4 = {
+  makeValue({level_cfg_path = "expertise[2].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[3].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[4].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[5].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[6].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[7].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[8].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[9].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[10].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[11].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[12].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[13].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[14].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[15].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[16].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[17].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[18].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[19].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[20].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[21].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[22].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[23].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[24].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[25].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[26].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[27].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[28].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[29].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[30].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[31].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[32].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[33].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[34].MaxDiagDiff"}),
+  makeValue({level_cfg_path = "expertise[35].MaxDiagDiff"}),
+}
+local expertise_diseases_row_names = {}
+for i = 2, 35 do
+  expertise_diseases_row_names[#expertise_diseases_row_names + 1] = "level_editor.expertise_diseases.row_names[" .. i .. "]"
+end
+
+local expertise_disease_section = makeMultiTableSections({12, 12, 12}, {
+  title_path = "level_editor.expertise_diseases.title",
+  name_path = "level_editor.expertise_diseases.name",
+  row_names = expertise_diseases_row_names,
+  col_values = {
+    expertise_diseases_col1,
+    expertise_diseases_col2,
+    expertise_diseases_col3,
+    expertise_diseases_col4
+  },
+  col_names = {
+    "level_editor.expertise_diseases.col_names.StartPrice",
+    "level_editor.expertise_diseases.col_names.Known",
+    "level_editor.expertise_diseases.col_names.RschReqd",
+    "level_editor.expertise_diseases.col_names.MaxDiagDiff",
+  }
+})
+-- }}}
+-- {{{ Expertise rooms
+local expertise_room_col1 = {
+  makeValue({level_cfg_path = "expertise[1].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[36].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[37].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[38].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[39].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[40].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[41].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[42].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[43].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[44].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[45].StartPrice"}),
+  makeValue({level_cfg_path = "expertise[46].StartPrice"}),
+}
+local expertise_room_col2 = {
+  makeValue({level_cfg_path = "expertise[1].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[36].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[37].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[38].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[39].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[40].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[41].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[42].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[43].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[44].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[45].Known", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "expertise[46].Known", min_value = 0, max_value = 1}),
+}
+local expertise_room_col3 = {
+  makeValue({level_cfg_path = "expertise[1].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[36].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[37].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[38].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[39].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[40].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[41].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[42].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[43].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[44].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[45].RschReqd"}),
+  makeValue({level_cfg_path = "expertise[46].RschReqd"}),
+}
+local expertise_room_row_names = {
+  "level_editor.expertise_rooms.row_names[1]",
+}
+for i = 36, 46 do
+  expertise_room_row_names[#expertise_room_row_names + 1] = "level_editor.expertise_rooms.row_names[" .. i .. "]"
+end
+
+local expertise_room_section = makeTableSection({
+  title_path = "level_editor.expertise_rooms.title",
+  name_path = "level_editor.expertise_rooms.name",
+  row_names = expertise_room_row_names,
+  col_values = {expertise_room_col1, expertise_room_col2, expertise_room_col3},
+  col_names = {
+    "level_editor.expertise_rooms.col_names.StartPrice",
+    "level_editor.expertise_rooms.col_names.Known",
+    "level_editor.expertise_rooms.col_names.RschReqd",
+  }
+})
+-- }}}
+-- {{{ Objects
+local objects_col1 = {
+  makeValue({level_cfg_path = "objects[1].StartCost"}),
+  makeValue({level_cfg_path = "objects[2].StartCost"}),
+  makeValue({level_cfg_path = "objects[3].StartCost"}),
+  makeValue({level_cfg_path = "objects[4].StartCost"}),
+  makeValue({level_cfg_path = "objects[5].StartCost"}),
+  makeValue({level_cfg_path = "objects[6].StartCost"}),
+  makeValue({level_cfg_path = "objects[7].StartCost"}),
+  makeValue({level_cfg_path = "objects[8].StartCost"}),
+  makeValue({level_cfg_path = "objects[9].StartCost"}),
+  makeValue({level_cfg_path = "objects[10].StartCost"}),
+  makeValue({level_cfg_path = "objects[11].StartCost"}),
+  makeValue({level_cfg_path = "objects[12].StartCost"}),
+  makeValue({level_cfg_path = "objects[13].StartCost"}),
+  makeValue({level_cfg_path = "objects[14].StartCost"}),
+  makeValue({level_cfg_path = "objects[15].StartCost"}),
+  makeValue({level_cfg_path = "objects[16].StartCost"}),
+  makeValue({level_cfg_path = "objects[17].StartCost"}),
+  makeValue({level_cfg_path = "objects[18].StartCost"}),
+  makeValue({level_cfg_path = "objects[19].StartCost"}),
+  makeValue({level_cfg_path = "objects[20].StartCost"}),
+  makeValue({level_cfg_path = "objects[21].StartCost"}),
+  makeValue({level_cfg_path = "objects[22].StartCost"}),
+  makeValue({level_cfg_path = "objects[23].StartCost"}),
+  makeValue({level_cfg_path = "objects[24].StartCost"}),
+  makeValue({level_cfg_path = "objects[25].StartCost"}),
+  makeValue({level_cfg_path = "objects[26].StartCost"}),
+  makeValue({level_cfg_path = "objects[27].StartCost"}),
+  makeValue({level_cfg_path = "objects[28].StartCost"}),
+  makeValue({level_cfg_path = "objects[29].StartCost"}),
+  makeValue({level_cfg_path = "objects[30].StartCost"}),
+  makeValue({level_cfg_path = "objects[31].StartCost"}),
+  makeValue({level_cfg_path = "objects[32].StartCost"}),
+  makeValue({level_cfg_path = "objects[33].StartCost"}),
+  makeValue({level_cfg_path = "objects[34].StartCost"}),
+  makeValue({level_cfg_path = "objects[35].StartCost"}),
+  makeValue({level_cfg_path = "objects[36].StartCost"}),
+  makeValue({level_cfg_path = "objects[37].StartCost"}),
+  makeValue({level_cfg_path = "objects[38].StartCost"}),
+  makeValue({level_cfg_path = "objects[39].StartCost"}),
+  makeValue({level_cfg_path = "objects[40].StartCost"}),
+  makeValue({level_cfg_path = "objects[41].StartCost"}),
+  makeValue({level_cfg_path = "objects[42].StartCost"}),
+  makeValue({level_cfg_path = "objects[43].StartCost"}),
+  makeValue({level_cfg_path = "objects[44].StartCost"}),
+  makeValue({level_cfg_path = "objects[45].StartCost"}),
+  makeValue({level_cfg_path = "objects[46].StartCost"}),
+  makeValue({level_cfg_path = "objects[47].StartCost"}),
+  makeValue({level_cfg_path = "objects[48].StartCost"}),
+  makeValue({level_cfg_path = "objects[49].StartCost"}),
+  makeValue({level_cfg_path = "objects[50].StartCost"}),
+  makeValue({level_cfg_path = "objects[51].StartCost"}),
+  makeValue({level_cfg_path = "objects[52].StartCost"}),
+  makeValue({level_cfg_path = "objects[53].StartCost"}),
+  makeValue({level_cfg_path = "objects[54].StartCost"}),
+  makeValue({level_cfg_path = "objects[55].StartCost"}),
+  makeValue({level_cfg_path = "objects[56].StartCost"}),
+  makeValue({level_cfg_path = "objects[57].StartCost"}),
+  makeValue({level_cfg_path = "objects[58].StartCost"}),
+  makeValue({level_cfg_path = "objects[59].StartCost"}),
+  makeValue({level_cfg_path = "objects[60].StartCost"}),
+  makeValue({level_cfg_path = "objects[61].StartCost"}),
+}
+local objects_col2 = {
+  makeValue({level_cfg_path = "objects[1].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[2].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[3].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[4].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[5].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[6].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[7].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[8].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[9].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[10].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[11].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[12].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[13].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[14].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[15].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[16].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[17].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[18].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[19].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[20].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[21].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[22].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[23].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[24].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[25].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[26].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[27].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[28].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[29].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[30].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[31].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[32].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[33].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[34].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[35].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[36].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[37].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[38].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[39].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[40].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[41].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[42].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[43].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[44].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[45].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[46].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[47].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[48].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[49].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[50].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[51].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[52].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[53].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[54].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[55].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[56].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[57].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[58].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[59].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[60].StartAvail", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[61].StartAvail", min_value = 0, max_value = 1}),
+}
+local objects_col3 = {
+  makeValue({level_cfg_path = "objects[1].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[2].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[3].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[4].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[5].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[6].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[7].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[8].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[9].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[10].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[11].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[12].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[13].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[14].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[15].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[16].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[17].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[18].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[19].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[20].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[21].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[22].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[23].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[24].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[25].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[26].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[27].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[28].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[29].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[30].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[31].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[32].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[33].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[34].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[35].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[36].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[37].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[38].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[39].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[40].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[41].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[42].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[43].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[44].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[45].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[46].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[47].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[48].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[49].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[50].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[51].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[52].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[53].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[54].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[55].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[56].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[57].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[58].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[59].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[60].WhenAvail", min_value = 0}),
+  makeValue({level_cfg_path = "objects[61].WhenAvail", min_value = 0}),
+}
+local objects_col4 = {
+  makeValue({level_cfg_path = "objects[1].StartStrength"}),
+  makeValue({level_cfg_path = "objects[2].StartStrength"}),
+  makeValue({level_cfg_path = "objects[3].StartStrength"}),
+  makeValue({level_cfg_path = "objects[4].StartStrength"}),
+  makeValue({level_cfg_path = "objects[5].StartStrength"}),
+  makeValue({level_cfg_path = "objects[6].StartStrength"}),
+  makeValue({level_cfg_path = "objects[7].StartStrength"}),
+  makeValue({level_cfg_path = "objects[8].StartStrength"}),
+  makeValue({level_cfg_path = "objects[9].StartStrength"}),
+  makeValue({level_cfg_path = "objects[10].StartStrength"}),
+  makeValue({level_cfg_path = "objects[11].StartStrength"}),
+  makeValue({level_cfg_path = "objects[12].StartStrength"}),
+  makeValue({level_cfg_path = "objects[13].StartStrength"}),
+  makeValue({level_cfg_path = "objects[14].StartStrength"}),
+  makeValue({level_cfg_path = "objects[15].StartStrength"}),
+  makeValue({level_cfg_path = "objects[16].StartStrength"}),
+  makeValue({level_cfg_path = "objects[17].StartStrength"}),
+  makeValue({level_cfg_path = "objects[18].StartStrength"}),
+  makeValue({level_cfg_path = "objects[19].StartStrength"}),
+  makeValue({level_cfg_path = "objects[20].StartStrength"}),
+  makeValue({level_cfg_path = "objects[21].StartStrength"}),
+  makeValue({level_cfg_path = "objects[22].StartStrength"}),
+  makeValue({level_cfg_path = "objects[23].StartStrength"}),
+  makeValue({level_cfg_path = "objects[24].StartStrength"}),
+  makeValue({level_cfg_path = "objects[25].StartStrength"}),
+  makeValue({level_cfg_path = "objects[26].StartStrength"}),
+  makeValue({level_cfg_path = "objects[27].StartStrength"}),
+  makeValue({level_cfg_path = "objects[28].StartStrength"}),
+  makeValue({level_cfg_path = "objects[29].StartStrength"}),
+  makeValue({level_cfg_path = "objects[30].StartStrength"}),
+  makeValue({level_cfg_path = "objects[31].StartStrength"}),
+  makeValue({level_cfg_path = "objects[32].StartStrength"}),
+  makeValue({level_cfg_path = "objects[33].StartStrength"}),
+  makeValue({level_cfg_path = "objects[34].StartStrength"}),
+  makeValue({level_cfg_path = "objects[35].StartStrength"}),
+  makeValue({level_cfg_path = "objects[36].StartStrength"}),
+  makeValue({level_cfg_path = "objects[37].StartStrength"}),
+  makeValue({level_cfg_path = "objects[38].StartStrength"}),
+  makeValue({level_cfg_path = "objects[39].StartStrength"}),
+  makeValue({level_cfg_path = "objects[40].StartStrength"}),
+  makeValue({level_cfg_path = "objects[41].StartStrength"}),
+  makeValue({level_cfg_path = "objects[42].StartStrength"}),
+  makeValue({level_cfg_path = "objects[43].StartStrength"}),
+  makeValue({level_cfg_path = "objects[44].StartStrength"}),
+  makeValue({level_cfg_path = "objects[45].StartStrength"}),
+  makeValue({level_cfg_path = "objects[46].StartStrength"}),
+  makeValue({level_cfg_path = "objects[47].StartStrength"}),
+  makeValue({level_cfg_path = "objects[48].StartStrength"}),
+  makeValue({level_cfg_path = "objects[49].StartStrength"}),
+  makeValue({level_cfg_path = "objects[50].StartStrength"}),
+  makeValue({level_cfg_path = "objects[51].StartStrength"}),
+  makeValue({level_cfg_path = "objects[52].StartStrength"}),
+  makeValue({level_cfg_path = "objects[53].StartStrength"}),
+  makeValue({level_cfg_path = "objects[54].StartStrength"}),
+  makeValue({level_cfg_path = "objects[55].StartStrength"}),
+  makeValue({level_cfg_path = "objects[56].StartStrength"}),
+  makeValue({level_cfg_path = "objects[57].StartStrength"}),
+  makeValue({level_cfg_path = "objects[58].StartStrength"}),
+  makeValue({level_cfg_path = "objects[59].StartStrength"}),
+  makeValue({level_cfg_path = "objects[60].StartStrength"}),
+  makeValue({level_cfg_path = "objects[61].StartStrength"}),
+}
+local objects_col5 = {
+  makeValue({level_cfg_path = "objects[1].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[2].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[3].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[4].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[5].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[6].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[7].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[8].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[9].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[10].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[11].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[12].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[13].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[14].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[15].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[16].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[17].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[18].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[19].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[20].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[21].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[22].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[23].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[24].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[25].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[26].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[27].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[28].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[29].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[30].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[31].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[32].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[33].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[34].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[35].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[36].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[37].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[38].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[39].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[40].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[41].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[42].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[43].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[44].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[45].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[46].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[47].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[48].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[49].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[50].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[51].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[52].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[53].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[54].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[55].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[56].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[57].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[58].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[59].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[60].AvailableForLevel", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "objects[61].AvailableForLevel", min_value = 0, max_value = 1}),
+}
+
+local objects_row_names = {}
+for i = 1, 61 do
+  objects_row_names[#objects_row_names + 1] = "level_editor.objects.row_names.objects[" .. i .. "]"
+end
+
+local objects_col_names = {
+  "level_editor.objects.col_names.AvailableForLevel",
+  "level_editor.objects.col_names.StartStrength",
+  "level_editor.objects.col_names.WhenAvail",
+  "level_editor.objects.col_names.StartAvail",
+  "level_editor.objects.col_names.StartCost",
+}
+local objects_sections = makeMultiTableSections({12, 12, 12, 12, 12}, {
+  title_path = "level_editor.objects.title",
+  row_names = objects_row_names,
+  col_values = {objects_col1, objects_col2, objects_col3,objects_col4, objects_col5},
+  col_names = objects_col_names,
+})
+-- }}}
+
+-- {{{ Room cost
+local rooms_section1 = makeValuesSection({
+  title_path = "level_editor.rooms_cost1.title",
+  name_path = "level_editor.rooms_cost1.name",
+  makeValue({level_cfg_path = "rooms[7].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[8].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[9].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[10].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[11].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[12].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[13].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[14].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[15].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[16].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[17].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[18].Cost", name_path = true}),
+})
+local rooms_section2 = makeValuesSection({
+  title_path = "level_editor.rooms_cost2.title",
+  name_path = "level_editor.rooms_cost2.name",
+  makeValue({level_cfg_path = "rooms[19].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[20].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[21].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[22].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[23].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[24].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[25].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[26].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[27].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[28].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[29].Cost", name_path = true}),
+  makeValue({level_cfg_path = "rooms[30].Cost", name_path = true}),
+})
+-- }}}
+-- {{{ Visuals
+local visuals_col1 = {
+  makeValue({level_cfg_path = "visuals[0]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[1]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[2]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[3]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[4]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[5]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[6]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[7]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[8]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[9]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[10]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[11]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[12]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "visuals[13]", min_value = 0, max_value = 1})
+}
+local visuals_col2 = {
+  makeValue({level_cfg_path = "visuals_available[0]"}),
+  makeValue({level_cfg_path = "visuals_available[1]"}),
+  makeValue({level_cfg_path = "visuals_available[2]"}),
+  makeValue({level_cfg_path = "visuals_available[3]"}),
+  makeValue({level_cfg_path = "visuals_available[4]"}),
+  makeValue({level_cfg_path = "visuals_available[5]"}),
+  makeValue({level_cfg_path = "visuals_available[6]"}),
+  makeValue({level_cfg_path = "visuals_available[7]"}),
+  makeValue({level_cfg_path = "visuals_available[8]"}),
+  makeValue({level_cfg_path = "visuals_available[9]"}),
+  makeValue({level_cfg_path = "visuals_available[10]"}),
+  makeValue({level_cfg_path = "visuals_available[11]"}),
+  makeValue({level_cfg_path = "visuals_available[12]"}),
+  makeValue({level_cfg_path = "visuals_available[13]"})
+}
+
+local visuals_row_names = { }
+for i = 0, 13 do
+  visuals_row_names[#visuals_row_names + 1] = "level_editor.visuals.row_names.visuals_available[" .. i .. "]"
+end
+local visuals_col_names = {
+  "level_editor.visuals.col_names.visuals",
+  "level_editor.visuals.col_names.visuals_available",
+}
+local visuals_section = makeTableSection({
+  title_path = "level_editor.visuals.title",
+  name_path = "level_editor.visuals.name",
+  row_names = visuals_row_names,
+  col_values = {visuals_col1, visuals_col2},
+  col_names = visuals_col_names
+})
+-- }}}
+-- {{{ Non visuals
+local non_visuals_col1 = {
+  makeValue({level_cfg_path = "non_visuals[0]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[1]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[2]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[3]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[4]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[5]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[6]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[7]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[8]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[9]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[10]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[11]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[12]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[13]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[14]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[15]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[16]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[17]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[18]", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "non_visuals[19]", min_value = 0, max_value = 1}),
+}
+local non_visuals_col2 = {
+  makeValue({level_cfg_path = "non_visuals_available[0]"}),
+  makeValue({level_cfg_path = "non_visuals_available[1]"}),
+  makeValue({level_cfg_path = "non_visuals_available[2]"}),
+  makeValue({level_cfg_path = "non_visuals_available[3]"}),
+  makeValue({level_cfg_path = "non_visuals_available[4]"}),
+  makeValue({level_cfg_path = "non_visuals_available[5]"}),
+  makeValue({level_cfg_path = "non_visuals_available[6]"}),
+  makeValue({level_cfg_path = "non_visuals_available[7]"}),
+  makeValue({level_cfg_path = "non_visuals_available[8]"}),
+  makeValue({level_cfg_path = "non_visuals_available[9]"}),
+  makeValue({level_cfg_path = "non_visuals_available[10]"}),
+  makeValue({level_cfg_path = "non_visuals_available[11]"}),
+  makeValue({level_cfg_path = "non_visuals_available[12]"}),
+  makeValue({level_cfg_path = "non_visuals_available[13]"}),
+  makeValue({level_cfg_path = "non_visuals_available[14]"}),
+  makeValue({level_cfg_path = "non_visuals_available[15]"}),
+  makeValue({level_cfg_path = "non_visuals_available[16]"}),
+  makeValue({level_cfg_path = "non_visuals_available[17]"}),
+  makeValue({level_cfg_path = "non_visuals_available[18]"}),
+  makeValue({level_cfg_path = "non_visuals_available[19]"}),
+}
+
+local nonvisuals_row_names = { }
+for i = 0, 19 do
+  nonvisuals_row_names[#nonvisuals_row_names + 1] = "level_editor.nonvisuals.row_names.nonvisuals_available[" .. i .. "]"
+end
+local nonvisuals_col_names = {
+  "level_editor.nonvisuals.col_names.nonvisuals",
+  "level_editor.nonvisuals.col_names.nonvisuals_available",
+}
+local nonvisuals_section = makeMultiTableSections({11, 15}, {
+  title_path = "level_editor.nonvisuals.title",
+  name_path = "level_editor.nonvisuals.name",
+  row_names = nonvisuals_row_names,
+  col_values = {non_visuals_col1, non_visuals_col2},
+  col_names = nonvisuals_col_names
+})
+-- }}}
 -- {{{
---local popn_col1 = {
---  makeValue({level_cfg_path = "gbv.popn[0].Month"}),
---  makeValue({level_cfg_path = "gbc.popn[1].Month"}),
---  makeValue({level_cfg_path = "gbc.popn[2].Month"}),
---}
---local popn_col2 = {
---  makeValue({level_cfg_path = "gbv.popn[0].Change"}),
---  makeValue({level_cfg_path = "gbc.popn[1].Change"}),
---  makeValue({level_cfg_path = "gbc.popn[2].Change"}),
---}
---local popn_row_names = {
---  "level_editor.row_names.gbv.popn[0]",
---  "level_editor.row_names.gbv.popn[1]",
---  "level_editor.row_names.gbv.popn[2]",
---}
---local popn_col_names = {
---  "level_editor.col_names.gbv.popn.month",
---  "level_editor.col_names.gbv.popn.change",
---}
---local popn_sectiom = makeTableSection({
---  title_path = "level_editor.gbv.popn_title",
---  row_names = popn_row_names,
---  col_values = {popn_col1, popn_col2},
---  col_names = popn_col_names
---})
---
---local expertise_diseases_col1 = {
---  makeValue({level_cfg_path = "expertise[2].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[3].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[4].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[5].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[6].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[7].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[8].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[9].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[10].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[11].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[12].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[13].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[14].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[15].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[16].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[17].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[18].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[19].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[20].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[21].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[22].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[23].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[24].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[25].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[26].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[27].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[28].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[29].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[30].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[31].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[32].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[33].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[34].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[35].StartPrice"}),
---}
---local expertise_diseases_col2 = {
---  makeValue({level_cfg_path = "expertise[2].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[3].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[4].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[5].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[6].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[7].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[8].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[9].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[10].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[11].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[12].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[13].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[14].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[15].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[16].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[17].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[18].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[19].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[20].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[21].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[22].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[23].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[24].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[25].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[26].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[27].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[28].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[29].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[30].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[31].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[32].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[33].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[34].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[35].Known", min_value = 0, max_value = 1}),
---}
---local expertise_diseases_col3 = {
---  makeValue({level_cfg_path = "expertise[2].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[3].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[4].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[5].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[6].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[7].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[8].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[9].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[10].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[11].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[12].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[13].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[14].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[15].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[16].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[17].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[18].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[19].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[20].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[21].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[22].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[23].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[24].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[25].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[26].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[27].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[28].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[29].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[30].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[31].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[32].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[33].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[34].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[35].RschReqd"}),
---}
---local expertise_diseases_col4 = {
---  makeValue({level_cfg_path = "expertise[2].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[3].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[4].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[5].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[6].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[7].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[8].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[9].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[10].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[11].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[12].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[13].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[14].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[15].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[16].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[17].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[18].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[19].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[20].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[21].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[22].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[23].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[24].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[25].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[26].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[27].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[28].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[29].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[30].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[31].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[32].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[33].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[34].MaxDiagDiff"}),
---  makeValue({level_cfg_path = "expertise[35].MaxDiagDiff"}),
---}
---local expertise_disease_row_names = {}
---for i = 2, 35 do
---  expertise_disease_row_names[#expertise_disease_row_names + 1] = "level_editor.row_names.expertise_disease[" .. i .. "]"
---end
---
---local expertise_disease_section = makeTableSection({
---  title_path = "level_editor.expertise_disease_title",
---  row_names = expertise_disease_row_names,
---  col_values = {
---    expertise_diseases_col1,
---    expertise_diseases_col2,
---    expertise_diseases_col3,
---    expertise_diseases_col4
---  },
---  col_names = {
---    "level_editor.col_names.expertise_diseases.StartPrice",
---    "level_editor.col_names.expertise_diseases.Known",
---    "level_editor.col_names.expertise_diseases.RschReqd",
---    "level_editor.col_names.expertise_diseases.MaxDiagDiff",
---  }
---})
---
---local expertise_room_col1 = {
---  makeValue({level_cfg_path = "expertise[1].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[36].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[37].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[38].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[39].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[40].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[41].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[42].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[43].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[44].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[45].StartPrice"}),
---  makeValue({level_cfg_path = "expertise[46].StartPrice"}),
---}
---local expertise_room_col2 = {
---  makeValue({level_cfg_path = "expertise[1].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[36].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[37].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[38].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[39].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[40].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[41].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[42].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[43].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[44].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[45].Known", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "expertise[46].Known", min_value = 0, max_value = 1}),
---}
---local expertise_room_col3 = {
---  makeValue({level_cfg_path = "expertise[1].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[36].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[37].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[38].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[39].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[40].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[41].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[42].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[43].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[44].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[45].RschReqd"}),
---  makeValue({level_cfg_path = "expertise[46].RschReqd"}),
---}
---local expertise_room_row_names = {
---  "level_editor.expertise_room[1]",
---}
---for i = 36, 46 do
---  expertise_room_row_names[#expertise_room_row_names + 1] = "level_editor.expertise_room[" .. i .. "]"
---end
---
---local expertise_room_section = makeTableSection({
---  title_path = "level_editor.expertise_title",
---  row_names = expertise_room_row_names,
---  col_values = {expertise_room_col1, expertise_room_col2, expertise_room_col3},
---  col_names = {
---    "level_editor.col_names.expertise.StartPrice",
---    "level_editor.col_names.expertise.Known",
---    "level_editor.col_names.expertise.RschReqd",
---  }
---})
---
---local objects_col1 = {
---  makeValue({level_cfg_path = "objects[1].StartCost"}),
---  makeValue({level_cfg_path = "objects[2].StartCost"}),
---  makeValue({level_cfg_path = "objects[3].StartCost"}),
---  makeValue({level_cfg_path = "objects[4].StartCost"}),
---  makeValue({level_cfg_path = "objects[5].StartCost"}),
---  makeValue({level_cfg_path = "objects[6].StartCost"}),
---  makeValue({level_cfg_path = "objects[7].StartCost"}),
---  makeValue({level_cfg_path = "objects[8].StartCost"}),
---  makeValue({level_cfg_path = "objects[9].StartCost"}),
---  makeValue({level_cfg_path = "objects[10].StartCost"}),
---  makeValue({level_cfg_path = "objects[11].StartCost"}),
---  makeValue({level_cfg_path = "objects[12].StartCost"}),
---  makeValue({level_cfg_path = "objects[13].StartCost"}),
---  makeValue({level_cfg_path = "objects[14].StartCost"}),
---  makeValue({level_cfg_path = "objects[15].StartCost"}),
---  makeValue({level_cfg_path = "objects[16].StartCost"}),
---  makeValue({level_cfg_path = "objects[17].StartCost"}),
---  makeValue({level_cfg_path = "objects[18].StartCost"}),
---  makeValue({level_cfg_path = "objects[19].StartCost"}),
---  makeValue({level_cfg_path = "objects[20].StartCost"}),
---  makeValue({level_cfg_path = "objects[21].StartCost"}),
---  makeValue({level_cfg_path = "objects[22].StartCost"}),
---  makeValue({level_cfg_path = "objects[23].StartCost"}),
---  makeValue({level_cfg_path = "objects[24].StartCost"}),
---  makeValue({level_cfg_path = "objects[25].StartCost"}),
---  makeValue({level_cfg_path = "objects[26].StartCost"}),
---  makeValue({level_cfg_path = "objects[27].StartCost"}),
---  makeValue({level_cfg_path = "objects[28].StartCost"}),
---  makeValue({level_cfg_path = "objects[29].StartCost"}),
---  makeValue({level_cfg_path = "objects[30].StartCost"}),
---  makeValue({level_cfg_path = "objects[31].StartCost"}),
---  makeValue({level_cfg_path = "objects[32].StartCost"}),
---  makeValue({level_cfg_path = "objects[33].StartCost"}),
---  makeValue({level_cfg_path = "objects[34].StartCost"}),
---  makeValue({level_cfg_path = "objects[35].StartCost"}),
---  makeValue({level_cfg_path = "objects[36].StartCost"}),
---  makeValue({level_cfg_path = "objects[37].StartCost"}),
---  makeValue({level_cfg_path = "objects[38].StartCost"}),
---  makeValue({level_cfg_path = "objects[39].StartCost"}),
---  makeValue({level_cfg_path = "objects[40].StartCost"}),
---  makeValue({level_cfg_path = "objects[41].StartCost"}),
---  makeValue({level_cfg_path = "objects[42].StartCost"}),
---  makeValue({level_cfg_path = "objects[43].StartCost"}),
---  makeValue({level_cfg_path = "objects[44].StartCost"}),
---  makeValue({level_cfg_path = "objects[45].StartCost"}),
---  makeValue({level_cfg_path = "objects[46].StartCost"}),
---  makeValue({level_cfg_path = "objects[47].StartCost"}),
---  makeValue({level_cfg_path = "objects[48].StartCost"}),
---  makeValue({level_cfg_path = "objects[49].StartCost"}),
---  makeValue({level_cfg_path = "objects[50].StartCost"}),
---  makeValue({level_cfg_path = "objects[51].StartCost"}),
---  makeValue({level_cfg_path = "objects[52].StartCost"}),
---  makeValue({level_cfg_path = "objects[53].StartCost"}),
---  makeValue({level_cfg_path = "objects[54].StartCost"}),
---  makeValue({level_cfg_path = "objects[55].StartCost"}),
---  makeValue({level_cfg_path = "objects[56].StartCost"}),
---  makeValue({level_cfg_path = "objects[57].StartCost"}),
---  makeValue({level_cfg_path = "objects[58].StartCost"}),
---  makeValue({level_cfg_path = "objects[59].StartCost"}),
---  makeValue({level_cfg_path = "objects[60].StartCost"}),
---  makeValue({level_cfg_path = "objects[61].StartCost"}),
---}
---local objects_col2 = {
---  makeValue({level_cfg_path = "objects[1].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[2].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[3].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[4].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[5].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[6].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[7].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[8].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[9].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[10].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[11].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[12].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[13].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[14].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[15].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[16].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[17].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[18].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[19].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[20].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[21].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[22].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[23].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[24].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[25].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[26].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[27].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[28].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[29].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[30].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[31].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[32].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[33].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[34].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[35].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[36].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[37].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[38].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[39].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[40].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[41].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[42].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[43].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[44].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[45].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[46].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[47].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[48].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[49].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[50].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[51].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[52].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[53].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[54].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[55].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[56].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[57].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[58].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[59].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[60].StartAvail", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[61].StartAvail", min_value = 0, max_value = 1}),
---}
---local objects_col3 = {
---  makeValue({level_cfg_path = "objects[1].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[2].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[3].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[4].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[5].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[6].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[7].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[8].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[9].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[10].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[11].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[12].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[13].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[14].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[15].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[16].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[17].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[18].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[19].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[20].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[21].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[22].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[23].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[24].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[25].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[26].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[27].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[28].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[29].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[30].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[31].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[32].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[33].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[34].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[35].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[36].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[37].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[38].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[39].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[40].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[41].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[42].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[43].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[44].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[45].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[46].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[47].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[48].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[49].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[50].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[51].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[52].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[53].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[54].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[55].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[56].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[57].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[58].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[59].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[60].WhenAvail", min_value = 0}),
---  makeValue({level_cfg_path = "objects[61].WhenAvail", min_value = 0}),
---}
---local objects_col4 = {
---  makeValue({level_cfg_path = "objects[1].StartStrength"}),
---  makeValue({level_cfg_path = "objects[2].StartStrength"}),
---  makeValue({level_cfg_path = "objects[3].StartStrength"}),
---  makeValue({level_cfg_path = "objects[4].StartStrength"}),
---  makeValue({level_cfg_path = "objects[5].StartStrength"}),
---  makeValue({level_cfg_path = "objects[6].StartStrength"}),
---  makeValue({level_cfg_path = "objects[7].StartStrength"}),
---  makeValue({level_cfg_path = "objects[8].StartStrength"}),
---  makeValue({level_cfg_path = "objects[9].StartStrength"}),
---  makeValue({level_cfg_path = "objects[10].StartStrength"}),
---  makeValue({level_cfg_path = "objects[11].StartStrength"}),
---  makeValue({level_cfg_path = "objects[12].StartStrength"}),
---  makeValue({level_cfg_path = "objects[13].StartStrength"}),
---  makeValue({level_cfg_path = "objects[14].StartStrength"}),
---  makeValue({level_cfg_path = "objects[15].StartStrength"}),
---  makeValue({level_cfg_path = "objects[16].StartStrength"}),
---  makeValue({level_cfg_path = "objects[17].StartStrength"}),
---  makeValue({level_cfg_path = "objects[18].StartStrength"}),
---  makeValue({level_cfg_path = "objects[19].StartStrength"}),
---  makeValue({level_cfg_path = "objects[20].StartStrength"}),
---  makeValue({level_cfg_path = "objects[21].StartStrength"}),
---  makeValue({level_cfg_path = "objects[22].StartStrength"}),
---  makeValue({level_cfg_path = "objects[23].StartStrength"}),
---  makeValue({level_cfg_path = "objects[24].StartStrength"}),
---  makeValue({level_cfg_path = "objects[25].StartStrength"}),
---  makeValue({level_cfg_path = "objects[26].StartStrength"}),
---  makeValue({level_cfg_path = "objects[27].StartStrength"}),
---  makeValue({level_cfg_path = "objects[28].StartStrength"}),
---  makeValue({level_cfg_path = "objects[29].StartStrength"}),
---  makeValue({level_cfg_path = "objects[30].StartStrength"}),
---  makeValue({level_cfg_path = "objects[31].StartStrength"}),
---  makeValue({level_cfg_path = "objects[32].StartStrength"}),
---  makeValue({level_cfg_path = "objects[33].StartStrength"}),
---  makeValue({level_cfg_path = "objects[34].StartStrength"}),
---  makeValue({level_cfg_path = "objects[35].StartStrength"}),
---  makeValue({level_cfg_path = "objects[36].StartStrength"}),
---  makeValue({level_cfg_path = "objects[37].StartStrength"}),
---  makeValue({level_cfg_path = "objects[38].StartStrength"}),
---  makeValue({level_cfg_path = "objects[39].StartStrength"}),
---  makeValue({level_cfg_path = "objects[40].StartStrength"}),
---  makeValue({level_cfg_path = "objects[41].StartStrength"}),
---  makeValue({level_cfg_path = "objects[42].StartStrength"}),
---  makeValue({level_cfg_path = "objects[43].StartStrength"}),
---  makeValue({level_cfg_path = "objects[44].StartStrength"}),
---  makeValue({level_cfg_path = "objects[45].StartStrength"}),
---  makeValue({level_cfg_path = "objects[46].StartStrength"}),
---  makeValue({level_cfg_path = "objects[47].StartStrength"}),
---  makeValue({level_cfg_path = "objects[48].StartStrength"}),
---  makeValue({level_cfg_path = "objects[49].StartStrength"}),
---  makeValue({level_cfg_path = "objects[50].StartStrength"}),
---  makeValue({level_cfg_path = "objects[51].StartStrength"}),
---  makeValue({level_cfg_path = "objects[52].StartStrength"}),
---  makeValue({level_cfg_path = "objects[53].StartStrength"}),
---  makeValue({level_cfg_path = "objects[54].StartStrength"}),
---  makeValue({level_cfg_path = "objects[55].StartStrength"}),
---  makeValue({level_cfg_path = "objects[56].StartStrength"}),
---  makeValue({level_cfg_path = "objects[57].StartStrength"}),
---  makeValue({level_cfg_path = "objects[58].StartStrength"}),
---  makeValue({level_cfg_path = "objects[59].StartStrength"}),
---  makeValue({level_cfg_path = "objects[60].StartStrength"}),
---  makeValue({level_cfg_path = "objects[61].StartStrength"}),
---}
---local objects_col5 = {
---  makeValue({level_cfg_path = "objects[1].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[2].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[3].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[4].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[5].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[6].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[7].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[8].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[9].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[10].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[11].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[12].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[13].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[14].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[15].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[16].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[17].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[18].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[19].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[20].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[21].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[22].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[23].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[24].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[25].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[26].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[27].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[28].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[29].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[30].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[31].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[32].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[33].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[34].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[35].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[36].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[37].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[38].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[39].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[40].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[41].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[42].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[43].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[44].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[45].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[46].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[47].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[48].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[49].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[50].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[51].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[52].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[53].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[54].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[55].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[56].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[57].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[58].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[59].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[60].AvailableForLevel", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "objects[61].AvailableForLevel", min_value = 0, max_value = 1}),
---}
---
---local objects_row_names = {}
---for i = 1, 61 do
---  objects_row_names[#objects_row_names + 1] = "level_editor.row_names.objects[" .. i .. "]"
---end
---
---local objects_col_names = {
---  "level_editor.col_names.AvailableForLevel",
---  "level_editor.col_names.StartStrength",
---  "level_editor.col_names.WhenAvail",
---  "level_editor.col_names.StartAvail",
---  "level_editor.col_names.StartCost",
---}
---local objects_section = makeTableSection({
---  title_path = "level_editor.titles.objects",
---  row_names = objects_row_names,
---  col_values = {objects_col1, objects_col2, objects_col3,objects_col4, objects_col5},
---  col_names = objects_col_names,
---})
---
---local rooms_section = makeValuesSection({
---  title_path = "level_editor.rooms_cost_section_title",
---  makeValue({level_cfg_path = "gbv.rooms[7].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[8].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[9].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[10].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[11].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[12].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[13].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[14].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[15].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[16].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[17].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[18].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[19].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[20].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[21].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[22].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[23].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[24].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[25].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[26].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[27].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[28].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[29].Cost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.rooms[30].Cost", name_path = true}),
---})
---
---local visuals_col1 = {
---  makeValue({level_cfg_path = "visuals[0]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[1]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[2]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[3]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[4]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[5]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[6]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[7]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[8]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[9]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[10]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[11]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[12]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "visuals[13]", min_value = 0, max_value = 1})
---}
---local visuals_col2 = {
---  makeValue({level_cfg_path = "visuals_available[0]"}),
---  makeValue({level_cfg_path = "visuals_available[1]"}),
---  makeValue({level_cfg_path = "visuals_available[2]"}),
---  makeValue({level_cfg_path = "visuals_available[3]"}),
---  makeValue({level_cfg_path = "visuals_available[4]"}),
---  makeValue({level_cfg_path = "visuals_available[5]"}),
---  makeValue({level_cfg_path = "visuals_available[6]"}),
---  makeValue({level_cfg_path = "visuals_available[7]"}),
---  makeValue({level_cfg_path = "visuals_available[8]"}),
---  makeValue({level_cfg_path = "visuals_available[9]"}),
---  makeValue({level_cfg_path = "visuals_available[10]"}),
---  makeValue({level_cfg_path = "visuals_available[11]"}),
---  makeValue({level_cfg_path = "visuals_available[12]"}),
---  makeValue({level_cfg_path = "visuals_available[13]"})
---}
---
---local visuals_row_names = { }
---for i = 0, 13 do
---  visuals_row_names[#visuals_row_names + 1] = "level_editor.row_names.visuals_available[" .. i .. "]"
---end
---local visuals_col_names = {
---  "level_editor.col_names.visuals",
---  "level_editor.col_names.visuals_available",
---}
---local visuals_section = makeTableSection({
---  title_path = "level_editor.visuals_title",
---  row_names = visuals_row_names,
---  col_values = {visuals_col1, visuals_col2},
---  col_names = visuals_col_names
---})
---
---local non_visuals_col1 = {
---  makeValue({level_cfg_path = "non_visuals[0]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[1]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[2]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[3]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[4]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[5]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[6]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[7]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[8]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[9]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[10]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[11]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[12]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[13]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[14]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[15]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[16]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[17]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[18]", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "non_visuals[19]", min_value = 0, max_value = 1}),
---}
---local non_visuals_col2 = {
---  makeValue({level_cfg_path = "non_visuals_available[0]"}),
---  makeValue({level_cfg_path = "non_visuals_available[1]"}),
---  makeValue({level_cfg_path = "non_visuals_available[2]"}),
---  makeValue({level_cfg_path = "non_visuals_available[3]"}),
---  makeValue({level_cfg_path = "non_visuals_available[4]"}),
---  makeValue({level_cfg_path = "non_visuals_available[5]"}),
---  makeValue({level_cfg_path = "non_visuals_available[6]"}),
---  makeValue({level_cfg_path = "non_visuals_available[7]"}),
---  makeValue({level_cfg_path = "non_visuals_available[8]"}),
---  makeValue({level_cfg_path = "non_visuals_available[9]"}),
---  makeValue({level_cfg_path = "non_visuals_available[10]"}),
---  makeValue({level_cfg_path = "non_visuals_available[11]"}),
---  makeValue({level_cfg_path = "non_visuals_available[12]"}),
---  makeValue({level_cfg_path = "non_visuals_available[13]"}),
---  makeValue({level_cfg_path = "non_visuals_available[14]"}),
---  makeValue({level_cfg_path = "non_visuals_available[15]"}),
---  makeValue({level_cfg_path = "non_visuals_available[16]"}),
---  makeValue({level_cfg_path = "non_visuals_available[17]"}),
---  makeValue({level_cfg_path = "non_visuals_available[18]"}),
---  makeValue({level_cfg_path = "non_visuals_available[19]"}),
---}
---
---local nonvisuals_row_names = { }
---for i = 0, 19 do
---  nonvisuals_row_names[#nonvisuals_row_names + 1] = "level_editor.row_names.nonvisuals_available[" .. i .. "]"
---end
---local nonvisuals_col_names = {
---  "level_editor.col_names.nonvisuals",
---  "level_editor.col_names.nonvisuals_available",
---}
---local nonvisuals_section = makeTableSection({
---  title_path = "level_editor.nonvisuals_title",
---  row_names = nonvisuals_row_names,
---  col_values = {non_visuals_col1, non_visuals_col2},
---  col_names = nonvisuals_col_names
---})
 --
 --local win_conditions_col1 = {
 --  makeValue({level_cfg_path = "win_criteria[0].Criteria"}),
@@ -1129,24 +1224,7 @@ local town_levels_section = makeTableSection({
 --  col_values = {lose_conditions_col1, lose_conditions_col2, lose_conditions_col3, lose_conditions_col4, lose_conditions_col5}
 --})
 --
---local staff_levels = makeValuesSection({
---  title_path = "level_editor.staff_levels_section_title",
---  -- label_size
---  -- value_size
---  -- unit_size
---  -- TODO title_sep, value_sep
---  makeValue({level_cfg_path = "staff_levels[0].Month", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Nurses", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Doctors", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Handymen", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Receptionists", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].ShrkRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].SurgRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].RschRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].ConsRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].JrRate", name_path = true}),
---})
---
+
 --local emergency_control  = makeValuesSection({
 --  title_path = "level_editor.titles.emergency_control",
 --  makeValue({level_cfg_path = "emergency_control[0].StartMonth", name_path = true}),
@@ -1293,7 +1371,7 @@ local town_page = makeEditPageSection({
   title_path = "level_editor.edit_pages.town_page.title",
   name_path = "level_editor.edit_pages.town_page.name",
   town_values,
---  popn_sectiom
+  popn_sectiom
 })
 
 local town_levels_page = makeEditPageSection({
@@ -1302,14 +1380,14 @@ local town_levels_page = makeEditPageSection({
   town_levels_section,
 })
 
---local staff_page = makeEditPageSection({
---  title_path = "level_editor.edit_pages.staff_page",
---  name_path = "level_editor.tab_page.staff_page",
---  staff_min_salaries,
---  doctor_additional_salaries,
+local staff_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.staff_page.title",
+  name_path = "level_editor.edit_pages.staff_page.name",
+  staff_min_salaries,
+  doctor_additional_salaries,
 --  staff_levels,
---})
---
+})
+
 --local hospital_page = makeEditPageSection({
 --  name_path = "level_editor.edit_page.hospital_page",
 --  research_section,
@@ -1317,20 +1395,82 @@ local town_levels_page = makeEditPageSection({
 --  epidemic_settings,
 --  trainings_settings,
 --})
---
---local diseases_page = makeEditPageSection({
---  name_path = "level_editor.edit_page.diseases_page",
---  expertise_disease_section,
---  visuals_section,
---  nonvisuals_section,
---})
---
---local rooms_page = makeEditPageSection({
---  name_path = "level_editor.edit_page.rooms_page",
---  expertise_room_section,
---  objects_section,
---  rooms_section,
---})
+
+assert(#expertise_disease_section == 3, "found " .. #expertise_disease_section .. " diseas expertise sections.")
+local diseases_expertise_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_expertise_page1.title",
+  name_path = "level_editor.edit_pages.diseases_expertise_page1.name",
+  expertise_disease_section[1],
+})
+local diseases_expertise_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_expertise_page2.title",
+  name_path = "level_editor.edit_pages.diseases_expertise_page2.name",
+  expertise_disease_section[2],
+})
+local diseases_expertise_page3 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_expertise_page3.title",
+  name_path = "level_editor.edit_pages.diseases_expertise_page3.name",
+  expertise_disease_section[3],
+})
+local diseases_available_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_available_page1.title",
+  name_path = "level_editor.edit_pages.diseases_available_page1.name",
+  visuals_section,
+})
+assert(#nonvisuals_section == 2)
+local diseases_available_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_available_page2.title",
+  name_path = "level_editor.edit_pages.diseases_available_page2.name",
+  nonvisuals_section[1],
+})
+local diseases_available_page3 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.diseases_available_page3.title",
+  name_path = "level_editor.edit_pages.diseases_available_page3.name",
+  nonvisuals_section[2],
+})
+
+local rooms_expertise_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.rooms_expertise_page.title",
+  name_path = "level_editor.edit_pages.rooms_expertise_page.name",
+  expertise_room_section,
+})
+local rooms_cost_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.rooms_cost_page1.title",
+  name_path = "level_editor.edit_pages.rooms_cost_page1.name",
+  rooms_section1,
+})
+local rooms_cost_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.rooms_cost_page2.title",
+  name_path = "level_editor.edit_pages.rooms_cost_page2.name",
+  rooms_section2,
+})
+
+assert(#objects_sections == 5, "found " .. #objects_sections .. " object sections.")
+local objects_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.objects_page1.title",
+  name_path = "level_editor.edit_pages.objects_page1.name",
+  objects_sections[1],
+})
+local objects_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.objects_page2.title",
+  name_path = "level_editor.edit_pages.objects_page2.name",
+  objects_sections[2],
+})
+local objects_page3 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.objects_page3.title",
+  name_path = "level_editor.edit_pages.objects_page3.name",
+  objects_sections[3],
+})
+local objects_page4 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.objects_page4.title",
+  name_path = "level_editor.edit_pages.objects_page4.name",
+  objects_sections[4],
+})
+local objects_page5 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.objects_page5.title",
+  name_path = "level_editor.edit_pages.objects_page5.name",
+  objects_sections[5],
+})
 --
 --local players_page = makeEditPageSection({
 --  name_path = "level_editor.edit_page.game_page",
@@ -1349,9 +1489,12 @@ return makeTabPageSection({
   -- page_tab_size = Size(50, 20),
   town_page,
   town_levels_page,
---  staff_page,
+  staff_page,
 --  hospital_page,
---  diseases_page,
---  rooms_page,
+  diseases_expertise_page1, diseases_expertise_page2, diseases_expertise_page3,
+  diseases_available_page1, diseases_available_page2, diseases_available_page3,
+  rooms_expertise_page,
+  rooms_cost_page1, rooms_cost_page2,
+  objects_page1, objects_page2, objects_page3, objects_page4, objects_page5,
 --  players_page
 })
