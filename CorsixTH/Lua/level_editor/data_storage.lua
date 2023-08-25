@@ -570,7 +570,7 @@ local LevelEditPage = _G["LevelEditPage"]
 function LevelEditPage:LevelEditPage(title_path, name_path, sections)
   LevelPage.LevelPage(self)
 
-  assert(name_path, "String " .. title_path .. " also needs a name") -- Needed by a tab page.
+  assert(name_path, "String " .. tostring(title_path) .. " also needs a name") -- Needed by a tab page.
 
   self.name_path = name_path -- Name of the page in a tab of a tab-page.
   self.title_path = title_path -- title of the edit page, may be nil.

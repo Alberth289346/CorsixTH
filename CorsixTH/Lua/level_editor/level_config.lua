@@ -185,59 +185,66 @@ local town_values = makeValuesSection({
   makeValue({level_cfg_path = "town.OverdraftDiff", name_path = true, unit_path=UNIT_PERCENT, tooltip_path = true}),
 })
 -- }}}
--- {{{
---local research_section = makeValuesSection({
---  title_path = "level_editor.sections.titles.various_section_title",
---  makeValue({level_cfg_path = "gbv.ResearchPointsDivisor", name_path = true, tooltip_path = true}),
---  makeValue({level_cfg_path = "gbv.ResearchIncrement", name_path = true}),
---  makeValue({level_cfg_path = "gbv.StartRating", name_path = true}),
---  makeValue({level_cfg_path = "gbv.StartCost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.MinDrugCost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.DrugImproveRate", name_path = true}),
---  makeValue({level_cfg_path = "gbv.MaxObjectStrength", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AutopsyRschPercent", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AutopsyRepHitPercent", name_path = true}),
---})
---
---local epidemic_settings = makeValuesSection({
---  title_path = "level_editor.sections.titles.various_section_title",
---  makeValue({level_cfg_path = "gbv.HowContagious", name_path = true}),
---  makeValue({level_cfg_path = "gbv.ContagiousSpreadFactor", name_path = true}),
---  makeValue({level_cfg_path = "gbv.ReduceContMonths", name_path = true}),
---  makeValue({level_cfg_path = "gbv.ReduceContPeepCount", name_path = true}),
---  makeValue({level_cfg_path = "gbv.ReduceContRate", name_path = true}),
---  makeValue({level_cfg_path = "gbv.HoldVisualMonths", name_path = true, unit_path = "level_editor.units.months"}),
---  makeValue({level_cfg_path = "gbv.HoldVisualPeepCount", name_path = true, unit_path = "level_editor.units.patients"}),
---  makeValue({level_cfg_path = "gbv.Vaccost", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicFine", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicCompLo", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicCompHi", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicRepLossMinimum", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicEvacMinimum", name_path = true}),
---  makeValue({level_cfg_path = "gbv.EpidemicConcurrentLimit", name_path = true}),
---})
---
---local various_settings = makeValuesSection({
---  title_path = "level_editor.sections.titles.various_section_title",
---  makeValue({level_cfg_path = "gbv.ScoreMaxInc", name_path = true}),
---  makeValue({level_cfg_path = "gbv.MayorLaunch", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AllocDelay", name_path = true})
---})
---
---local trainings_settings = makeValuesSection({
---  title_path = "level_editor.sections.titles.training_section_title",
---  makeValue({level_cfg_path = "gbv.TrainingRate", name_path = true}),
---  makeValue({level_cfg_path = "gbv.TrainingValue[0]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.TrainingValue[1]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.TrainingValue[2]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AbilityThreshold[0]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AbilityThreshold[1]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.AbilityThreshold[2]", name_path = true}),
---  makeValue({level_cfg_path = "gbv.DoctorThreshold", name_path = true}),
---  makeValue({level_cfg_path = "gbv.ConsultantThreshold", name_path = true}),
---  makeValue({level_cfg_path = "gbv.RschImproveCostPercent", name_path = true, unit_path = "level_editor.units.percent"}),
---  makeValue({level_cfg_path = "gbv.RschImproveIncrementPercent", name_path = true, unit_path = "level_editor.units.percent"})
---})
+-- {{{ Research
+local research_section = makeValuesSection({
+  title_path = "level_editor.research.title",
+  name_path = "level_editor.research.name",
+  makeValue({level_cfg_path = "gbv.ResearchPointsDivisor", name_path = true, tooltip_path = true}),
+  makeValue({level_cfg_path = "gbv.ResearchIncrement", name_path = true}),
+  makeValue({level_cfg_path = "gbv.StartRating", name_path = true}),
+  makeValue({level_cfg_path = "gbv.StartCost", name_path = true}),
+  makeValue({level_cfg_path = "gbv.MinDrugCost", name_path = true}),
+  makeValue({level_cfg_path = "gbv.DrugImproveRate", name_path = true}),
+  makeValue({level_cfg_path = "gbv.MaxObjectStrength", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AutopsyRschPercent", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AutopsyRepHitPercent", name_path = true}),
+})
+-- }}}
+-- {{{ Epidemic
+local epidemic_settings = makeValuesSection({
+  title_path = "level_editor.epidemic.title",
+  name_path = "level_editor.epidemic.name",
+  makeValue({level_cfg_path = "gbv.HowContagious", name_path = true}),
+  makeValue({level_cfg_path = "gbv.ContagiousSpreadFactor", name_path = true}),
+  makeValue({level_cfg_path = "gbv.ReduceContMonths", name_path = true}),
+  makeValue({level_cfg_path = "gbv.ReduceContPeepCount", name_path = true}),
+  makeValue({level_cfg_path = "gbv.ReduceContRate", name_path = true}),
+  makeValue({level_cfg_path = "gbv.HoldVisualMonths", name_path = true, unit_path = "level_editor.units.months"}),
+  makeValue({level_cfg_path = "gbv.HoldVisualPeepCount", name_path = true, unit_path = "level_editor.units.patients"}),
+  makeValue({level_cfg_path = "gbv.Vaccost", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicFine", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicCompLo", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicCompHi", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicRepLossMinimum", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicEvacMinimum", name_path = true}),
+  makeValue({level_cfg_path = "gbv.EpidemicConcurrentLimit", name_path = true}),
+})
+-- }}}
+-- {{{ Various
+local various_settings = makeValuesSection({
+  title_path = "level_editor.various.title",
+  name_path = "level_editor.various.name",
+  makeValue({level_cfg_path = "gbv.ScoreMaxInc", name_path = true}),
+  makeValue({level_cfg_path = "gbv.MayorLaunch", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AllocDelay", name_path = true})
+})
+-- }}}
+-- {{{ Training
+local trainings_settings = makeValuesSection({
+  title_path = "level_editor.trainings.title",
+  name_path = "level_editor.trainings.name",
+  makeValue({level_cfg_path = "gbv.TrainingRate", name_path = true}),
+  makeValue({level_cfg_path = "gbv.TrainingValue[0]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.TrainingValue[1]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.TrainingValue[2]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AbilityThreshold[0]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AbilityThreshold[1]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.AbilityThreshold[2]", name_path = true}),
+  makeValue({level_cfg_path = "gbv.DoctorThreshold", name_path = true}),
+  makeValue({level_cfg_path = "gbv.ConsultantThreshold", name_path = true}),
+  makeValue({level_cfg_path = "gbv.RschImproveCostPercent", name_path = true, unit_path = "level_editor.units.percent"}),
+ makeValue({level_cfg_path = "gbv.RschImproveIncrementPercent", name_path = true, unit_path = "level_editor.units.percent"})
+})
 -- }}}
 -- {{{ Town levels
 local towns_col1 = {
@@ -372,7 +379,7 @@ local doctor_additional_salaries = makeValuesSection({
   makeValue({level_cfg_path = "gbv.SalaryAdd[8]", name_path = true}),
 })
 -- }}}
--- XXX Shuold become a table
+-- XXX Should become a table
 --local staff_levels = makeValuesSection({
 --  title_path = "level_editor.staff_levels_section_title",
 --  -- label_size
@@ -1104,182 +1111,187 @@ local nonvisuals_section = makeMultiTableSections({11, 15}, {
   col_names = nonvisuals_col_names
 })
 -- }}}
--- {{{
---
---local win_conditions_col1 = {
---  makeValue({level_cfg_path = "win_criteria[0].Criteria"}),
---  makeValue({level_cfg_path = "win_criteria[1].Criteria"}),
---  makeValue({level_cfg_path = "win_criteria[2].Criteria"}),
---  makeValue({level_cfg_path = "win_criteria[3].Criteria"}),
---  makeValue({level_cfg_path = "win_criteria[4].Criteria"}),
---  makeValue({level_cfg_path = "win_criteria[5].Criteria"}),
---}
---local win_conditions_col2 = {
---  makeValue({level_cfg_path = "win_criteria[0].MaxMin"}),
---  makeValue({level_cfg_path = "win_criteria[1].MaxMin"}),
---  makeValue({level_cfg_path = "win_criteria[2].MaxMin"}),
---  makeValue({level_cfg_path = "win_criteria[3].MaxMin"}),
---  makeValue({level_cfg_path = "win_criteria[4].MaxMin"}),
---  makeValue({level_cfg_path = "win_criteria[5].MaxMin"}),
---}
---local win_conditions_col3 = {
---  makeValue({level_cfg_path = "win_criteria[0].Value"}),
---  makeValue({level_cfg_path = "win_criteria[1].Value"}),
---  makeValue({level_cfg_path = "win_criteria[2].Value"}),
---  makeValue({level_cfg_path = "win_criteria[3].Value"}),
---  makeValue({level_cfg_path = "win_criteria[4].Value"}),
---  makeValue({level_cfg_path = "win_criteria[5].Value"}),
---}
---local win_conditions_col4 = {
---  makeValue({level_cfg_path = "win_criteria[0].Group"}),
---  makeValue({level_cfg_path = "win_criteria[1].Group"}),
---  makeValue({level_cfg_path = "win_criteria[2].Group"}),
---  makeValue({level_cfg_path = "win_criteria[3].Group"}),
---  makeValue({level_cfg_path = "win_criteria[4].Group"}),
---  makeValue({level_cfg_path = "win_criteria[5].Group"}),
---}
---local win_conditions_col5 = {
---  makeValue({level_cfg_path = "win_criteria[0].Bound"}),
---  makeValue({level_cfg_path = "win_criteria[1].Bound"}),
---  makeValue({level_cfg_path = "win_criteria[2].Bound"}),
---  makeValue({level_cfg_path = "win_criteria[3].Bound"}),
---  makeValue({level_cfg_path = "win_criteria[4].Bound"}),
---  makeValue({level_cfg_path = "win_criteria[5].Bound"}),
---}
---
---local win_criteria_row_names = {}
---for i = 0, 5 do
---  win_criteria_row_names[#win_criteria_row_names + 1] = "level_editor.row_names.win_criteria[" .. i .. "]"
---end
---local win_criteria_col_names = {
---  "level_editor.col_names.Criteria",
---  "level_editor.col_names.MaxMin",
---  "level_editor.col_names.Value",
---  "level_editor.col_names.Group",
---  "level_editor.col_names.Bound",
---}
---local win_criteria_section = makeTableSection({
---  title_path = "level_editor.titles.win_criteria",
---  row_names = win_criteria_row_names,
---  col_names = win_criteria_col_names,
---  col_values = {win_conditions_col1, win_conditions_col2, win_conditions_col3, win_conditions_col4, win_conditions_col5}
---})
---
---local lose_conditions_col1 = {
---  makeValue({level_cfg_path = "lose_criteria[0].Criteria"}),
---  makeValue({level_cfg_path = "lose_criteria[1].Criteria"}),
---  makeValue({level_cfg_path = "lose_criteria[2].Criteria"}),
---  makeValue({level_cfg_path = "lose_criteria[3].Criteria"}),
---  makeValue({level_cfg_path = "lose_criteria[4].Criteria"}),
---  makeValue({level_cfg_path = "lose_criteria[5].Criteria"}),
---}
---local lose_conditions_col2 = {
---  makeValue({level_cfg_path = "lose_criteria[0].MaxMin"}),
---  makeValue({level_cfg_path = "lose_criteria[1].MaxMin"}),
---  makeValue({level_cfg_path = "lose_criteria[2].MaxMin"}),
---  makeValue({level_cfg_path = "lose_criteria[3].MaxMin"}),
---  makeValue({level_cfg_path = "lose_criteria[4].MaxMin"}),
---  makeValue({level_cfg_path = "lose_criteria[5].MaxMin"}),
---}
---local lose_conditions_col3 = {
---  makeValue({level_cfg_path = "lose_criteria[0].Value"}),
---  makeValue({level_cfg_path = "lose_criteria[1].Value"}),
---  makeValue({level_cfg_path = "lose_criteria[2].Value"}),
---  makeValue({level_cfg_path = "lose_criteria[3].Value"}),
---  makeValue({level_cfg_path = "lose_criteria[4].Value"}),
---  makeValue({level_cfg_path = "lose_criteria[5].Value"}),
---}
---local lose_conditions_col4 = {
---  makeValue({level_cfg_path = "lose_criteria[0].Group"}),
---  makeValue({level_cfg_path = "lose_criteria[1].Group"}),
---  makeValue({level_cfg_path = "lose_criteria[2].Group"}),
---  makeValue({level_cfg_path = "lose_criteria[3].Group"}),
---  makeValue({level_cfg_path = "lose_criteria[4].Group"}),
---  makeValue({level_cfg_path = "lose_criteria[5].Group"}),
---}
---local lose_conditions_col5 = {
---  makeValue({level_cfg_path = "lose_criteria[0].Bound"}),
---  makeValue({level_cfg_path = "lose_criteria[1].Bound"}),
---  makeValue({level_cfg_path = "lose_criteria[2].Bound"}),
---  makeValue({level_cfg_path = "lose_criteria[3].Bound"}),
---  makeValue({level_cfg_path = "lose_criteria[4].Bound"}),
---  makeValue({level_cfg_path = "lose_criteria[5].Bound"}),
---}
---
---local lose_criteria_row_names = {}
---for i = 0, 5 do
---  lose_criteria_row_names[#lose_criteria_row_names + 1] = "level_editor.row_names.lose_criteria[" .. i .. "]"
---end
---local lose_criteria_col_names = {
---  "level_editor.col_names.Criteria",
---  "level_editor.col_names.MaxMin",
---  "level_editor.col_names.Value",
---  "level_editor.col_names.Group",
---  "level_editor.col_names.Bound",
---}
---local lose_criteria_section = makeTableSection({
---  title_path = "level_editor.titles.lose_criteria",
---  row_names = lose_criteria_row_names,
---  col_names = lose_criteria_col_names,
---  col_values = {lose_conditions_col1, lose_conditions_col2, lose_conditions_col3, lose_conditions_col4, lose_conditions_col5}
---})
---
+-- {{{ Win criteria
+local win_conditions_col1 = {
+  makeValue({level_cfg_path = "win_criteria[0].Criteria"}),
+  makeValue({level_cfg_path = "win_criteria[1].Criteria"}),
+  makeValue({level_cfg_path = "win_criteria[2].Criteria"}),
+  makeValue({level_cfg_path = "win_criteria[3].Criteria"}),
+  makeValue({level_cfg_path = "win_criteria[4].Criteria"}),
+  makeValue({level_cfg_path = "win_criteria[5].Criteria"}),
+}
+local win_conditions_col2 = {
+  makeValue({level_cfg_path = "win_criteria[0].MaxMin"}),
+  makeValue({level_cfg_path = "win_criteria[1].MaxMin"}),
+  makeValue({level_cfg_path = "win_criteria[2].MaxMin"}),
+  makeValue({level_cfg_path = "win_criteria[3].MaxMin"}),
+  makeValue({level_cfg_path = "win_criteria[4].MaxMin"}),
+  makeValue({level_cfg_path = "win_criteria[5].MaxMin"}),
+}
+local win_conditions_col3 = {
+  makeValue({level_cfg_path = "win_criteria[0].Value"}),
+  makeValue({level_cfg_path = "win_criteria[1].Value"}),
+  makeValue({level_cfg_path = "win_criteria[2].Value"}),
+  makeValue({level_cfg_path = "win_criteria[3].Value"}),
+  makeValue({level_cfg_path = "win_criteria[4].Value"}),
+  makeValue({level_cfg_path = "win_criteria[5].Value"}),
+}
+local win_conditions_col4 = {
+  makeValue({level_cfg_path = "win_criteria[0].Group"}),
+  makeValue({level_cfg_path = "win_criteria[1].Group"}),
+  makeValue({level_cfg_path = "win_criteria[2].Group"}),
+  makeValue({level_cfg_path = "win_criteria[3].Group"}),
+  makeValue({level_cfg_path = "win_criteria[4].Group"}),
+  makeValue({level_cfg_path = "win_criteria[5].Group"}),
+}
+local win_conditions_col5 = {
+  makeValue({level_cfg_path = "win_criteria[0].Bound"}),
+  makeValue({level_cfg_path = "win_criteria[1].Bound"}),
+  makeValue({level_cfg_path = "win_criteria[2].Bound"}),
+  makeValue({level_cfg_path = "win_criteria[3].Bound"}),
+  makeValue({level_cfg_path = "win_criteria[4].Bound"}),
+  makeValue({level_cfg_path = "win_criteria[5].Bound"}),
+}
+
+local win_criteria_row_names = {}
+for i = 0, 5 do
+  win_criteria_row_names[#win_criteria_row_names + 1] = "level_editor.row_names.win_criteria[" .. i .. "]"
+end
+local win_criteria_col_names = {
+  "level_editor.win_criteria.col_names.Criteria",
+  "level_editor.win_criteria.col_names.MaxMin",
+  "level_editor.win_criteria.col_names.Value",
+  "level_editor.win_criteria.col_names.Group",
+  "level_editor.win_criteria.col_names.Bound",
+}
+local win_criteria_section = makeTableSection({
+  title_path = "level_editor.win_criteria.title",
+  name_path = "level_editor.win_criteria.name",
+  row_names = win_criteria_row_names,
+  col_names = win_criteria_col_names,
+  col_values = {win_conditions_col1, win_conditions_col2, win_conditions_col3, win_conditions_col4, win_conditions_col5}
+})
+-- }}}
+-- {{{ Lose criteria
+local lose_conditions_col1 = {
+  makeValue({level_cfg_path = "lose_criteria[0].Criteria"}),
+  makeValue({level_cfg_path = "lose_criteria[1].Criteria"}),
+  makeValue({level_cfg_path = "lose_criteria[2].Criteria"}),
+  makeValue({level_cfg_path = "lose_criteria[3].Criteria"}),
+  makeValue({level_cfg_path = "lose_criteria[4].Criteria"}),
+  makeValue({level_cfg_path = "lose_criteria[5].Criteria"}),
+}
+local lose_conditions_col2 = {
+  makeValue({level_cfg_path = "lose_criteria[0].MaxMin"}),
+  makeValue({level_cfg_path = "lose_criteria[1].MaxMin"}),
+  makeValue({level_cfg_path = "lose_criteria[2].MaxMin"}),
+  makeValue({level_cfg_path = "lose_criteria[3].MaxMin"}),
+  makeValue({level_cfg_path = "lose_criteria[4].MaxMin"}),
+  makeValue({level_cfg_path = "lose_criteria[5].MaxMin"}),
+}
+local lose_conditions_col3 = {
+  makeValue({level_cfg_path = "lose_criteria[0].Value"}),
+  makeValue({level_cfg_path = "lose_criteria[1].Value"}),
+  makeValue({level_cfg_path = "lose_criteria[2].Value"}),
+  makeValue({level_cfg_path = "lose_criteria[3].Value"}),
+  makeValue({level_cfg_path = "lose_criteria[4].Value"}),
+  makeValue({level_cfg_path = "lose_criteria[5].Value"}),
+}
+local lose_conditions_col4 = {
+  makeValue({level_cfg_path = "lose_criteria[0].Group"}),
+  makeValue({level_cfg_path = "lose_criteria[1].Group"}),
+  makeValue({level_cfg_path = "lose_criteria[2].Group"}),
+  makeValue({level_cfg_path = "lose_criteria[3].Group"}),
+  makeValue({level_cfg_path = "lose_criteria[4].Group"}),
+  makeValue({level_cfg_path = "lose_criteria[5].Group"}),
+}
+local lose_conditions_col5 = {
+  makeValue({level_cfg_path = "lose_criteria[0].Bound"}),
+  makeValue({level_cfg_path = "lose_criteria[1].Bound"}),
+  makeValue({level_cfg_path = "lose_criteria[2].Bound"}),
+  makeValue({level_cfg_path = "lose_criteria[3].Bound"}),
+  makeValue({level_cfg_path = "lose_criteria[4].Bound"}),
+  makeValue({level_cfg_path = "lose_criteria[5].Bound"}),
+}
+
+local lose_criteria_row_names = {}
+for i = 0, 5 do
+  lose_criteria_row_names[#lose_criteria_row_names + 1] = "level_editor.lose_criteria.row_names.lose_criteria[" .. i .. "]"
+end
+local lose_criteria_col_names = {
+  "level_editor.lose_criteria.col_names.Criteria",
+  "level_editor.lose_criteria.col_names.MaxMin",
+  "level_editor.lose_criteria.col_names.Value",
+  "level_editor.lose_criteria.col_names.Group",
+  "level_editor.lose_criteria.col_names.Bound",
+}
+local lose_criteria_section = makeTableSection({
+  title_path = "level_editor.lose_criteria.title",
+  name_path = "level_editor.lose_criteria.name",
+  row_names = lose_criteria_row_names,
+  col_names = lose_criteria_col_names,
+  col_values = {lose_conditions_col1, lose_conditions_col2, lose_conditions_col3, lose_conditions_col4, lose_conditions_col5}
+})
+-- }}}
 
 --local emergency_control  = makeValuesSection({
 --  title_path = "level_editor.titles.emergency_control",
 --  makeValue({level_cfg_path = "emergency_control[0].StartMonth", name_path = true}),
 --  makeValue({level_cfg_path = "emergency_control[0].EndMonth", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].Min", name_path = true}),
+--  makeValue({level_cfg_path = "wemergency_control[0].Min", name_path = true}),
 --  makeValue({level_cfg_path = "emergency_control[0].Max", name_path = true}),
 --  makeValue({level_cfg_path = "emergency_control[0].Illness", name_path = true}),
 --  makeValue({level_cfg_path = "emergency_control[0].PercWin", name_path = true}),
 --  makeValue({level_cfg_path = "emergency_control[0].Bonus", name_path = true}),
 --})
---
---local computer_playing_col = {
---  makeValue({level_cfg_path = "computer[0].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[1].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[2].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[3].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[4].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[5].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[6].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[7].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[8].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[9].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[10].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[11].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[12].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[13].Playing", min_value = 0, max_value = 1}),
---  makeValue({level_cfg_path = "computer[14].Playing", min_value = 0, max_value = 1}),
---}
---local computer_name_col = {
---  makeValue({level_cfg_path = "computer[0].Name"}),
---  makeValue({level_cfg_path = "computer[1].Name"}),
---  makeValue({level_cfg_path = "computer[2].Name"}),
---  makeValue({level_cfg_path = "computer[3].Name"}),
---  makeValue({level_cfg_path = "computer[4].Name"}),
---  makeValue({level_cfg_path = "computer[5].Name"}),
---  makeValue({level_cfg_path = "computer[6].Name"}),
---  makeValue({level_cfg_path = "computer[7].Name"}),
---  makeValue({level_cfg_path = "computer[8].Name"}),
---  makeValue({level_cfg_path = "computer[9].Name"}),
---  makeValue({level_cfg_path = "computer[10].Name"}),
---  makeValue({level_cfg_path = "computer[11].Name"}),
---  makeValue({level_cfg_path = "computer[12].Name"}),
---  makeValue({level_cfg_path = "computer[13].Name"}),
---  makeValue({level_cfg_path = "computer[14].Name"}),
---}
---local computerplayers_row_names = {}
---for i = 0, 14 do
---  computerplayers_row_names[#computerplayers_row_names + 1] = "level_editor.row_names.computer[" .. i .. "]"
---end
---local computer_players = makeTableSection({
---  title_path = "level_editor.computer_title",
---  row_names = computerplayers_row_names,
---  col_values = {computer_playing_col, computer_name_col},
---  col_names = {"level_editor.col_names.computer.playing", "level_editor.col_names.computer.name"}
---})
+
+-- {{{ Computer players
+local computer_playing_col = {
+  makeValue({level_cfg_path = "computer[0].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[1].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[2].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[3].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[4].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[5].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[6].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[7].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[8].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[9].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[10].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[11].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[12].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[13].Playing", min_value = 0, max_value = 1}),
+  makeValue({level_cfg_path = "computer[14].Playing", min_value = 0, max_value = 1}),
+}
+local computer_name_col = {
+  makeValue({level_cfg_path = "computer[0].Name"}),
+  makeValue({level_cfg_path = "computer[1].Name"}),
+  makeValue({level_cfg_path = "computer[2].Name"}),
+  makeValue({level_cfg_path = "computer[3].Name"}),
+  makeValue({level_cfg_path = "computer[4].Name"}),
+  makeValue({level_cfg_path = "computer[5].Name"}),
+  makeValue({level_cfg_path = "computer[6].Name"}),
+  makeValue({level_cfg_path = "computer[7].Name"}),
+  makeValue({level_cfg_path = "computer[8].Name"}),
+  makeValue({level_cfg_path = "computer[9].Name"}),
+  makeValue({level_cfg_path = "computer[10].Name"}),
+  makeValue({level_cfg_path = "computer[11].Name"}),
+  makeValue({level_cfg_path = "computer[12].Name"}),
+  makeValue({level_cfg_path = "computer[13].Name"}),
+  makeValue({level_cfg_path = "computer[14].Name"}),
+}
+local computerplayers_row_names = {}
+for i = 0, 14 do
+  computerplayers_row_names[#computerplayers_row_names + 1] = "level_editor.computerplayers.row_names.computer[" .. i .. "]"
+end
+local computerplayers = makeTableSection({
+  title_path = "level_editor.computerplayers.title",
+  name_path = "level_editor.computerplayers.name",
+  row_names = computerplayers_row_names,
+  col_values = {computer_playing_col, computer_name_col},
+  col_names = {"level_editor.computerplayers.col_names.computer.playing", "level_editor.computerplayers.col_names.computer.name"}
+})
+-- }}}
 --
 --local trophy_criteria_section = makeValuesSection({
 --  title_path = "level_editor.titles.trophies_sections.criteria",
@@ -1388,13 +1400,14 @@ local staff_page = makeEditPageSection({
 --  staff_levels,
 })
 
---local hospital_page = makeEditPageSection({
---  name_path = "level_editor.edit_page.hospital_page",
---  research_section,
---  various_settings,
---  epidemic_settings,
---  trainings_settings,
---})
+local hospital_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.hospital.title",
+  name_path = "level_editor.edit_pages.hospital.name",
+  research_section,
+  various_settings,
+  epidemic_settings,
+  trainings_settings,
+})
 
 assert(#expertise_disease_section == 3, "found " .. #expertise_disease_section .. " diseas expertise sections.")
 local diseases_expertise_page1 = makeEditPageSection({
@@ -1471,18 +1484,29 @@ local objects_page5 = makeEditPageSection({
   name_path = "level_editor.edit_pages.objects_page5.name",
   objects_sections[5],
 })
---
---local players_page = makeEditPageSection({
---  name_path = "level_editor.edit_page.game_page",
---  win_criteria_section,
---  lose_criteria_section,
+
+local win_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.win_page.title",
+  name_path = "level_editor.edit_pages.win_page.name",
+  win_criteria_section
+})
+
+local lose_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.lose_page.title",
+  name_path = "level_editor.edit_pages.lose_page.name",
+  lose_criteria_section,
+})
 --  emergency_control,
---  computer_players,
 --  trophy_criteria_section,
 --  trophy_bonuses_section,
 --  award_criteria_section,
 --  award_bonuses,
---})
+
+local ai_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.ai_page.title",
+  name_path = "level_editor.edit_pages.ai_page.name",
+  computerplayers,
+})
 
 return makeTabPageSection({
   title_path = "level_editor.tab_page.title",
@@ -1490,11 +1514,13 @@ return makeTabPageSection({
   town_page,
   town_levels_page,
   staff_page,
---  hospital_page,
+  hospital_page,
   diseases_expertise_page1, diseases_expertise_page2, diseases_expertise_page3,
   diseases_available_page1, diseases_available_page2, diseases_available_page3,
   rooms_expertise_page,
   rooms_cost_page1, rooms_cost_page2,
   objects_page1, objects_page2, objects_page3, objects_page4, objects_page5,
---  players_page
+  win_page,
+  lose_page,
+  ai_page
 })

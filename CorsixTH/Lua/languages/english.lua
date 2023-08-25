@@ -921,11 +921,52 @@ map_editor_window = {
 --
 
 -- Generate with  python merge_strings_in_table.py level_editor_strings2.txt
+
 level_editor = {
+  computerplayers = {
+    col_names = {
+      computer = {
+        name = "Name of the AI opponent",
+        playing = "Is AI opponent playing"
+      }
+    },
+    row_names = {
+      computer = {
+        [0] = "Opponent 1",
+        [1] = "Opponent 2",
+        [2] = "Opponent 3",
+        [3] = "Opponent 4",
+        [4] = "Opponent 5",
+        [5] = "Opponent 6",
+        [6] = "Opponent 7",
+        [7] = "Opponent 8",
+        [8] = "Opponent 9",
+        [9] = "Opponent 10",
+        [10] = "Opponent 11",
+        [11] = "Opponent 12",
+        [12] = "Opponent 13",
+        [13] = "Opponent 14",
+        [14] = "Opponent 15"
+      }
+    },
+    title = "AI opponents"
+  },
   doctor_add_salaries = {
     title = "Doctor bonuses"
   },
   edit_pages = {
+    ai_page = {
+      name = "AI players",
+      title = "AI players"
+    },
+    win_page = {
+      name = "Winning",
+      title = "Win the level"
+    },
+    lose_page = {
+      name = "Losing",
+      title = "Lose the level"
+    },
     diseases_available_page1 = {
       name = "Av dis. 1",
       title = "Availability of diseases - 1"
@@ -935,7 +976,7 @@ level_editor = {
       title = "Availability of diseases - 2"
     },
     diseases_available_page3 = {
-      name = "Av dis. 3s",
+      name = "Av dis. 3",
       title = "Availability of diseases - 3"
     },
     diseases_expertise_page1 = {
@@ -949,6 +990,10 @@ level_editor = {
     diseases_expertise_page3 = {
       name = "Dis. expertise 3",
       title = "Diseases expertise - 3"
+    },
+    hospital = {
+      name = "Hospital",
+      title = "Hospital configuration"
     },
     objects_page1 = {
       name = "Objects 1",
@@ -969,6 +1014,10 @@ level_editor = {
     objects_page5 = {
       name = "Objects 5",
       title = "Objects - 5"
+    },
+    players_page = {
+      name = "Players",
+      title = "Players"
     },
     rooms_cost_page1 = {
       name = "Rooms cost 1",
@@ -994,6 +1043,9 @@ level_editor = {
       name = "Towns",
       title = "Towns setup"
     }
+  },
+  epidemic = {
+    title = "Epidemic settings"
   },
   expertise_diseases = {
     col_names = {
@@ -1061,6 +1113,26 @@ level_editor = {
       [46] = "Research"
     },
     title = "Rooms expertise"
+  },
+  lose_criteria = {
+    col_names = {
+      Bound = "Warn boundary",
+      Criteria = "Used criteria",
+      Group = "Group",
+      MaxMin = "Max or Min",
+      Value = "Bound value"
+    },
+    row_names = {
+      lose_criteria = {
+        [0] = "Entry 1",
+        [1] = "Entry 2",
+        [2] = "Entry 3",
+        [3] = "Entry 4",
+        [4] = "Entry 5",
+        [5] = "Entry 6"
+      }
+    },
+    title = "Lose criteria"
   },
   nonvisuals = {
     col_names = {
@@ -1188,11 +1260,24 @@ level_editor = {
     },
     title = "Population changes"
   },
+  research = {
+    title = "Research settings"
+  },
   rooms_cost1 = {
     title = "Cost of rooms"
   },
   rooms_cost2 = {
     title = "Cost of rooms"
+  },
+  row_names = {
+    win_criteria = {
+      [0] = "Entry 1",
+      [1] = "Entry 2",
+      [2] = "Entry 3",
+      [3] = "Entry 4",
+      [4] = "Entry 5",
+      [5] = "Entry 6"
+    }
   },
   staff_min_salaries = {
     title = "Min staff salaries"
@@ -1224,11 +1309,106 @@ level_editor = {
   town_section = {
     title = "Town section"
   },
+  trainings = {
+    title = "Training settings"
+  },
   units = {
+    months = "Months",
+    patients = "patients",
     percent = "percentage"
   },
   values = {
     gbv = {
+      AbilityThreshold = {
+        [0] = {
+          name = "Threshold for becoming a surgeon"
+        },
+        [1] = {
+          name = "Threshold for becoming a psychiatrist"
+        },
+        [2] = {
+          name = "Threshold for becoming a researcher"
+        }
+      },
+      AllocDelay = {
+        name = "Delay before allocating population"
+      },
+      AutopsyRepHitPercent = {
+        name = "Reputation loss for detected autopsies"
+      },
+      AutopsyRschPercent = {
+        name = "Amount of improved research for an autopsy"
+      },
+      ConsultantThreshold = {
+        name = "Threshold for becoming a consultant"
+      },
+      ContagiousSpreadFactor = {
+        name = "Chance of spreading"
+      },
+      DoctorThreshold = {
+        name = "Threshold for becoming a doctor"
+      },
+      DrugImproveRate = {
+        name = "Rate of drug improvement"
+      },
+      EpidemicCompHi = {
+        name = "Highest coverup compensation"
+      },
+      EpidemicCompLo = {
+        name = "Lowest coverup compensation"
+      },
+      EpidemicConcurrentLimit = {
+        name = "Maximum number of epidemics that happen"
+      },
+      EpidemicEvacMinimum = {
+        name = "Minimum evacuated"
+      },
+      EpidemicFine = {
+        name = "Fine for failed coverup"
+      },
+      EpidemicRepLossMinimum = {
+        name = "Minimum reputation loss"
+      },
+      HoldVisualMonths = {
+        name = "Time before visual diseases"
+      },
+      HoldVisualPeepCount = {
+        name = "Patient count before visual diseases"
+      },
+      HowContagious = {
+        name = "Contagiousness"
+      },
+      MaxObjectStrength = {
+        name = "Maximum strength of an object"
+      },
+      MayorLaunch = {
+        name = "Frequency of mayor visits"
+      },
+      MinDrugCost = {
+        name = "Minimum cost of a drug"
+      },
+      ReduceContMonths = {
+        name = "Delay reduction by time"
+      },
+      ReduceContPeepCount = {
+        name = "Delay reduction by patient arrivals"
+      },
+      ReduceContRate = {
+        name = "Rate of reducing contagiousness"
+      },
+      ResearchIncrement = {
+        name = "Object strength increase by research"
+      },
+      ResearchPointsDivisor = {
+        name = "Resarch input divider",
+        tooltip = "Amount of research input for one point"
+      },
+      RschImproveCostPercent = {
+        name = "Cost of an improvement in research"
+      },
+      RschImproveIncrementPercent = {
+        name = "Amount of improvement in research"
+      },
       SalaryAbilityDivisor = {
         name = "Speed of raise",
         tooltip = "Ability increase to get a raise"
@@ -1252,6 +1432,32 @@ level_editor = {
         [8] = {
           name = "Researcher"
         }
+      },
+      ScoreMaxInc = {
+        name = "Factor for maximum score"
+      },
+      StartCost = {
+        name = "Initial cost of a drug"
+      },
+      StartRating = {
+        name = "Initial rating of a drug"
+      },
+      TrainingRate = {
+        name = "Rate of training"
+      },
+      TrainingValue = {
+        [0] = {
+          name = "Training value of a projector"
+        },
+        [1] = {
+          name = "Training value of a skeleton"
+        },
+        [2] = {
+          name = "Training value of a book case"
+        }
+      },
+      Vaccost = {
+        name = "Cost of a vaccination"
       }
     },
     payroll = {
@@ -1419,6 +1625,9 @@ level_editor = {
       }
     }
   },
+  various = {
+    title = "Various sttings"
+  },
   visuals = {
     col_names = {
       visuals = "Month",
@@ -1443,6 +1652,16 @@ level_editor = {
       }
     },
     title = "Visual illnesses"
+  },
+  win_criteria = {
+    col_names = {
+      Bound = "Warn boundary",
+      Criteria = "Used criteria",
+      Group = "Group",
+      MaxMin = "Max or Min",
+      Value = "Bound value"
+    },
+    title = "Win criteria"
   }
 }
 -- XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
