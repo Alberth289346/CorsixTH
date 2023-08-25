@@ -919,10 +919,50 @@ map_editor_window = {
 -- =========================================
 -- Level editor strings
 --
-
 -- Generate with  python merge_strings_in_table.py level_editor_strings2.txt
 
 level_editor = {
+  automatic_awards = {
+    title = "Global awards"
+  },
+  automatic_trophies = {
+    title = "Global trophies"
+  },
+  awards = {
+    col_names = {
+      bonuses = "Bonuses",
+      criteria = "Criteria"
+    },
+    row_names = {
+      awards_trophies = {
+        AwardReputationBonus = "Limit for good reputation",
+        AwardReputationPenalty = "Limit for bad reputation",
+        AwardStaffHappinessBonus = "Limit for good staff happiness",
+        AwardStaffHappinessPenalty = "Limit for bad staff happiness",
+        CleanlinessBonus = "Limit for good cleanliness",
+        CleanlinessPenalty = "Limit for bad cleanliness",
+        CuresBonus = "Limit for good curing",
+        CuresPenalty = "Limit for bad curing",
+        CuresVDeathsBonus = "Limit for good cures / deaths",
+        CuresVDeathsPenalty = "Limit for bad cures / deaths",
+        DeathsBonus = "Limit for few deaths",
+        DeathsPenalty = "Limit for many deaths",
+        EmergencyBonus = "Limit for good emergency handling",
+        EmergencyPenalty = "Limit for bad emergency handling",
+        HospValueBonus = "Limit for good hospital value",
+        HospValuePenalty = "Limit for bad hospital value",
+        PeepHappinessBonus = "Limit for good patients happiness",
+        PeepHappinessPenalty = "Limit for bad patients happiness",
+        PopulationPercentageBonus = "Limit for good popn help",
+        PopulationPercentagePenalty = "Limit for bad popn help",
+        WaitingTimesBonus = "Limit for good queues",
+        WaitingTimesPenalty = "Limit for bad queues",
+        WellKeptTechBonus = "Limit for good maintenance",
+        WellKeptTechPenalty = "Limit for bad maintenance"
+      }
+    },
+    title = "Awards"
+  },
   computerplayers = {
     col_names = {
       computer = {
@@ -959,13 +999,17 @@ level_editor = {
       name = "AI players",
       title = "AI players"
     },
-    win_page = {
-      name = "Winning",
-      title = "Win the level"
+    automatic_awards_trophies = {
+      name = "Global awards and trophies",
+      title = "Global awards and trophies"
     },
-    lose_page = {
-      name = "Losing",
-      title = "Lose the level"
+    awards_page1 = {
+      name = "Awards 1",
+      title = "Awards - 1"
+    },
+    awards_page2 = {
+      name = "Awards 2",
+      title = "Awards - 2"
     },
     diseases_available_page1 = {
       name = "Av dis. 1",
@@ -991,9 +1035,17 @@ level_editor = {
       name = "Dis. expertise 3",
       title = "Diseases expertise - 3"
     },
+    emergencies = {
+      name = "Emergencies",
+      title = "Emergencies"
+    },
     hospital = {
       name = "Hospital",
       title = "Hospital configuration"
+    },
+    lose_page = {
+      name = "Losing",
+      title = "Losing the level"
     },
     objects_page1 = {
       name = "Objects 1",
@@ -1031,6 +1083,14 @@ level_editor = {
       name = "Rooms expertise",
       title = "Room expertise setup"
     },
+    staff_level_page1 = {
+      name = "Staff levels",
+      title = "Staff levels"
+    },
+    staff_level_page2 = {
+      name = "Specialist rates",
+      title = "Rates of specialists"
+    },
     staff_page = {
       name = "Staff",
       title = "Staff setup"
@@ -1042,7 +1102,35 @@ level_editor = {
     town_page = {
       name = "Towns",
       title = "Towns setup"
+    },
+    trophies_page = {
+      name = "Trophies",
+      title = "Trophies"
+    },
+    win_page = {
+      name = "Winning",
+      title = "Winning the level"
     }
+  },
+  emergency_control = {
+    col_names = {
+      Bonus = "Success bonus",
+      EndMonth = "Last month",
+      Illness = "Illness",
+      Max = "Maximum patients",
+      Min = "Minimum patients",
+      PercWin = "Nr patients to cure",
+      StartMonth = "First month"
+    },
+    row_names = {
+      [0] = "Period 1",
+      [1] = "Period 2",
+      [2] = "Period 3",
+      [3] = "Period 4",
+      [4] = "Period 5",
+      [5] = "Period 6"
+    },
+    title = "Emergencies"
   },
   epidemic = {
     title = "Epidemic settings"
@@ -1279,6 +1367,33 @@ level_editor = {
       [5] = "Entry 6"
     }
   },
+  staff_levels = {
+    col_names = {
+      ConsRate = "Rate of consultants",
+      Doctors = "Nr doctors",
+      Handymen = "Nr handymen",
+      JrRate = "Rate of juniors",
+      Month = "Month",
+      Nurses = "Nr nurses",
+      Receptionists = "Nr receptionists",
+      RschRate = "Rate of researchers",
+      ShrkRate = "Rate of psychiatrists",
+      SurgRate = "Rate of surgeons"
+    },
+    row_names = {
+      [0] = "Period 1",
+      [1] = "Period 2",
+      [2] = "Period 3",
+      [3] = "Period 4",
+      [4] = "Period 5",
+      [5] = "Period 6",
+      [6] = "Period 7",
+      [7] = "Period 8",
+      [8] = "Period 9"
+    },
+    title1 = "Staff levels",
+    title2 = "Specialist rates"
+  },
   staff_min_salaries = {
     title = "Min staff salaries"
   },
@@ -1312,12 +1427,56 @@ level_editor = {
   trainings = {
     title = "Training settings"
   },
+  trophies = {
+    col_names = {
+      bonuses = "Bonuses",
+      criteria = "Criteria"
+    },
+    row_names = {
+      CansofCoke = "Sold cokes",
+      Plant = "Plants",
+      RatKillsAbsolute = "Number of killed rats",
+      RatKillsPercentage = "Percentage of killed rats",
+      Reputation = "Reputation",
+      TrophyStaffHappiness = "Staff happiness"
+    },
+    title = "Trophies"
+  },
   units = {
     months = "Months",
     patients = "patients",
     percent = "percentage"
   },
   values = {
+    awards_trophies = {
+      AllCuresBonus = {
+        name = "Everybody cured"
+      },
+      NewTechAward = {
+        name = "Limit for good tech use"
+      },
+      NewTechPoor = {
+        name = "Limit for bad tech use"
+      },
+      ResearchBonus = {
+        name = "Limit for good research"
+      },
+      ResearchPenalty = {
+        name = "Limit for bad research"
+      },
+      TrophyAllCuredBonus = {
+        name = "All cured"
+      },
+      TrophyCuresBonus = {
+        name = "Almost nobody died"
+      },
+      TrophyDeathBonus = {
+        name = "Nobody died"
+      },
+      TrophyMayorBonus = {
+        name = "Good VIP visits"
+      }
+    },
     gbv = {
       AbilityThreshold = {
         [0] = {
@@ -1664,7 +1823,7 @@ level_editor = {
     title = "Win criteria"
   }
 }
--- XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
+-- End of level_editor
 
 
 hotkeys_file_err = {

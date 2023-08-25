@@ -379,26 +379,67 @@ local doctor_additional_salaries = makeValuesSection({
   makeValue({level_cfg_path = "gbv.SalaryAdd[8]", name_path = true}),
 })
 -- }}}
--- XXX Should become a table
---local staff_levels = makeValuesSection({
---  title_path = "level_editor.staff_levels_section_title",
---  -- label_size
---  -- value_size
---  -- unit_size
---  -- TODO title_sep, value_sep
---  makeValue({level_cfg_path = "staff_levels[0].Month", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Nurses", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Doctors", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Handymen", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].Receptionists", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].ShrkRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].SurgRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].RschRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].ConsRate", name_path = true}),
---  makeValue({level_cfg_path = "staff_levels[0].JrRate", name_path = true}),
---})
+-- {{{ Staff levels
+local staff_levels_row_names = {}
+local staff_levels_col_month = {}
+local staff_levels_col_nurses = {}
+local staff_levels_col_doctors = {}
+local staff_levels_col_handymen = {}
+local staff_levels_col_receptionist = {}
+local staff_levels_col_psychs_rate = {}
+local staff_levels_col_surgs_rate = {}
+local staff_levels_col_researchs_rate = {}
+local staff_levels_col_consults_rate = {}
+local staff_levels_col_juniors_rate = {}
 
--- {{{ Expertise dideases
+for i = 0, 8 do
+  staff_levels_row_names[i + 1] = "level_editor.staff_levels.row_names[" .. i .. "]"
+  staff_levels_col_month[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].Month"})
+  staff_levels_col_nurses[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].Nurses"})
+  staff_levels_col_doctors[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].Doctors"})
+  staff_levels_col_handymen[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].Handymen"})
+  staff_levels_col_receptionist[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].Receptionists"})
+  staff_levels_col_psychs_rate[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].ShrkRate"})
+  staff_levels_col_surgs_rate[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].SurgRate"})
+  staff_levels_col_researchs_rate[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].RschRate"})
+  staff_levels_col_consults_rate[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].ConsRate"})
+  staff_levels_col_juniors_rate[i + 1] = makeValue({level_cfg_path = "staff_levels[" .. i .. "].JrRate"})
+end
+
+local staff_levels1 = makeTableSection({
+  title_path = "level_editor.staff_levels.title1",
+  name_path = "level_editor.staff_levels.name1",
+  col_names = {
+    "level_editor.staff_levels.col_names.Month",
+    "level_editor.staff_levels.col_names.Nurses",
+    "level_editor.staff_levels.col_names.Doctors",
+    "level_editor.staff_levels.col_names.Handymen",
+    "level_editor.staff_levels.col_names.Receptionists"
+  },
+  row_names = staff_levels_row_names,
+  col_values = {staff_levels_col_month, staff_levels_col_nurses,
+      staff_levels_col_doctors, staff_levels_col_handymen,
+      staff_levels_col_receptionist}
+})
+
+local staff_levels2 = makeTableSection({
+  title_path = "level_editor.staff_levels.title2",
+  name_path = "level_editor.staff_levels.name2",
+  col_names = {
+    "level_editor.staff_levels.col_names.ShrkRate",
+    "level_editor.staff_levels.col_names.SurgRate",
+    "level_editor.staff_levels.col_names.RschRate",
+    "level_editor.staff_levels.col_names.ConsRate",
+    "level_editor.staff_levels.col_names.JrRate"
+  },
+  row_names = staff_levels_row_names,
+  col_values = {staff_levels_col_psychs_rate, staff_levels_col_surgs_rate,
+      staff_levels_col_researchs_rate, staff_levels_col_consults_rate,
+      staff_levels_col_juniors_rate}
+})
+
+-- }}}
+-- {{{ Expertise diseases
 local expertise_diseases_col1 = {
   makeValue({level_cfg_path = "expertise[2].StartPrice"}),
   makeValue({level_cfg_path = "expertise[3].StartPrice"}),
@@ -1233,18 +1274,47 @@ local lose_criteria_section = makeTableSection({
   col_values = {lose_conditions_col1, lose_conditions_col2, lose_conditions_col3, lose_conditions_col4, lose_conditions_col5}
 })
 -- }}}
+-- {{{ Emergencies
+local emergency_control_row_names = {}
+local emergency_control_col1 = {}
+local emergency_control_col2 = {}
+local emergency_control_col3 = {}
+local emergency_control_col4 = {}
+local emergency_control_col5 = {}
+local emergency_control_col6 = {}
+local emergency_control_col7 = {}
 
---local emergency_control  = makeValuesSection({
---  title_path = "level_editor.titles.emergency_control",
---  makeValue({level_cfg_path = "emergency_control[0].StartMonth", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].EndMonth", name_path = true}),
---  makeValue({level_cfg_path = "wemergency_control[0].Min", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].Max", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].Illness", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].PercWin", name_path = true}),
---  makeValue({level_cfg_path = "emergency_control[0].Bonus", name_path = true}),
---})
+for i = 0, 5 do
+  emergency_control_row_names[i + 1] = "level_editor.emergency_control.row_names[" .. i .. "]"
+  emergency_control_col1[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].StartMonth"})
+  emergency_control_col2[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].EndMonth"})
+  emergency_control_col3[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].Min"})
+  emergency_control_col4[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].Max"})
+  emergency_control_col5[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].Illness"})
+  emergency_control_col6[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].PercWin"})
+  emergency_control_col7[i + 1] = makeValue({level_cfg_path = "emergency_control[" .. i .. "].Bonus"})
+end
 
+local emergency_control_col_names = {
+  "level_editor.emergency_control.col_names.StartMonth",
+  "level_editor.emergency_control.col_names.EndMonth",
+  "level_editor.emergency_control.col_names.Min",
+  "level_editor.emergency_control.col_names.Max",
+  "level_editor.emergency_control.col_names.Illness",
+  "level_editor.emergency_control.col_names.PercWin",
+  "level_editor.emergency_control.col_names.Bonus"
+}
+
+local emergency_control = makeTableSection({
+  title_path = "level_editor.emergency_control.title",
+  name_path = "level_editor.emergency_control.name",
+  row_names = emergency_control_row_names,
+  col_names = emergency_control_col_names,
+  col_values = {emergency_control_col1, emergency_control_col2,
+      emergency_control_col3, emergency_control_col4, emergency_control_col5,
+      emergency_control_col6, emergency_control_col7}
+})
+-- }}}
 -- {{{ Computer players
 local computer_playing_col = {
   makeValue({level_cfg_path = "computer[0].Playing", min_value = 0, max_value = 1}),
@@ -1292,90 +1362,152 @@ local computerplayers = makeTableSection({
   col_names = {"level_editor.computerplayers.col_names.computer.playing", "level_editor.computerplayers.col_names.computer.name"}
 })
 -- }}}
---
---local trophy_criteria_section = makeValuesSection({
---  title_path = "level_editor.titles.trophies_sections.criteria",
---  makeValue({level_cfg_path = "awards_trophies.RatKillsAbsolute", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CansofCoke", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.Reputation", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.Plant", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyStaffHappiness", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.RatKillsPercentage", name_path = true}),
---})
---local trophy_bonuses_section = makeValuesSection({
---  title_path = "level_editor.titles.trophies_sections.bonuses",
---  makeValue({level_cfg_path = "awards_trophies.RatKillsAbsoluteBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.RatKillsPercentageBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CansofCokeBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyReputationBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PlantBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyStaffHappinessBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyAllCuredBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyDeathBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyCuresBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.TrophyMayorBonus", name_path = true}),
---})
---
---local award_criteria_section = makeValuesSection({
---  title_path = "level_editor.titles.award_section.criteria",
---  makeValue({level_cfg_path = "awards_trophies.CuresAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.DeathsAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.DeathsPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PopulationPercentageAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PopulationPercentagePoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.ReputationAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.ReputationPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.HospValueAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.HospValuePoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CleanlinessAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CleanlinessPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.EmergencyAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.EmergencyPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.StaffHappinessAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.StaffHappinessPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PeepHappinessAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PeepHappinessPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WaitingTimesAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WaitingTimesPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WellKeptTechAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WellKeptTechPoor", name_path = true}),
---})
---
---local award_bonuses = makeValuesSection({
---  title_path = "level_editor.titles.award_section.bonuses",
---  makeValue({level_cfg_path = "awards_trophies.CuresBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.AllCuresBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.DeathsBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.DeathsPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PopulationPercentageBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PopulationPercentagePenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.AwardReputationBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.AwardReputationPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.HospValueBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.HospValuePenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CleanlinessBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.CleanlinessPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.EmergencyBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.EmergencyPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.AwardStaffHappinessBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.AwardStaffHappinessPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PeepHappinessBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.PeepHappinessPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WaitingTimesBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WaitingTimesPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WellKeptTechBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.WellKeptTechPenalty", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.NewTechAward", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.NewTechPoor", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.ResearchBonus", name_path = true}),
---  makeValue({level_cfg_path = "awards_trophies.ResearchPenalty", name_path = true}),
---})
+-- {{{ Trophies
+local trophy_criteria = {
+  makeValue({level_cfg_path = "awards_trophies.RatKillsAbsolute"}),
+  makeValue({level_cfg_path = "awards_trophies.RatKillsPercentage"}),
+  makeValue({level_cfg_path = "awards_trophies.CansofCoke"}),
+  makeValue({level_cfg_path = "awards_trophies.Reputation"}),
+  makeValue({level_cfg_path = "awards_trophies.Plant"}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyStaffHappiness"}),
+}
+local trophy_bonuses = {
+  makeValue({level_cfg_path = "awards_trophies.RatKillsAbsoluteBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.RatKillsPercentageBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.CansofCokeBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyReputationBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.PlantBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyStaffHappinessBonus"}),
+}
+
+local automatic_trophies_bonuses = makeValuesSection({
+  title = "level_editor.automatic_trophies.title",
+  makeValue({level_cfg_path = "awards_trophies.TrophyAllCuredBonus", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyDeathBonus", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyCuresBonus", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.TrophyMayorBonus", name_path = true}),
+})
+
+local trophies_table = makeTableSection({
+  title_path = "level_editor.trophies.title",
+  name_path = "level_editor.trophies,name",
+  row_names = {
+    "level_editor.trophies.row_names.RatKillsAbsolute",
+    "level_editor.trophies.row_names.RatKillsPercentage",
+    "level_editor.trophies.row_names.CansofCoke",
+    "level_editor.trophies.row_names.Reputation",
+    "level_editor.trophies.row_names.Plant",
+    "level_editor.trophies.row_names.TrophyStaffHappiness"
+  },
+  col_names = {
+    "level_editor.trophies.col_names.criteria",
+    "level_editor.trophies.col_names.bonuses"
+  },
+  col_values = {trophy_criteria, trophy_bonuses}
+})
+-- }}}
+-- {{{ Awards
+local award_criteria = {
+  makeValue({level_cfg_path = "awards_trophies.CuresAward"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.DeathsAward"}),
+  makeValue({level_cfg_path = "awards_trophies.DeathsPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.PopulationPercentageAward"}),
+  makeValue({level_cfg_path = "awards_trophies.PopulationPercentagePoor"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsAward"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.ReputationAward"}),
+  makeValue({level_cfg_path = "awards_trophies.ReputationPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.HospValueAward"}),
+  makeValue({level_cfg_path = "awards_trophies.HospValuePoor"}),
+  makeValue({level_cfg_path = "awards_trophies.CleanlinessAward"}),
+  makeValue({level_cfg_path = "awards_trophies.CleanlinessPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.EmergencyAward"}),
+  makeValue({level_cfg_path = "awards_trophies.EmergencyPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.StaffHappinessAward"}),
+  makeValue({level_cfg_path = "awards_trophies.StaffHappinessPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.PeepHappinessAward"}),
+  makeValue({level_cfg_path = "awards_trophies.PeepHappinessPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.WaitingTimesAward"}),
+  makeValue({level_cfg_path = "awards_trophies.WaitingTimesPoor"}),
+  makeValue({level_cfg_path = "awards_trophies.WellKeptTechAward"}),
+  makeValue({level_cfg_path = "awards_trophies.WellKeptTechPoor"}),
+}
+
+local award_bonuses = {
+  makeValue({level_cfg_path = "awards_trophies.CuresBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.DeathsBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.DeathsPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.PopulationPercentageBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.PopulationPercentagePenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.CuresVDeathsPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.AwardReputationBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.AwardReputationPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.HospValueBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.HospValuePenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.CleanlinessBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.CleanlinessPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.EmergencyBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.EmergencyPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.AwardStaffHappinessBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.AwardStaffHappinessPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.PeepHappinessBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.PeepHappinessPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.WaitingTimesBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.WaitingTimesPenalty"}),
+  makeValue({level_cfg_path = "awards_trophies.WellKeptTechBonus"}),
+  makeValue({level_cfg_path = "awards_trophies.WellKeptTechPenalty"}),
+}
+
+local automatic_award_bonuses = makeValuesSection({
+  title = "level_editor.automatic_awards.title",
+  makeValue({level_cfg_path = "awards_trophies.AllCuresBonus", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.NewTechAward", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.NewTechPoor", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.ResearchBonus", name_path = true}),
+  makeValue({level_cfg_path = "awards_trophies.ResearchPenalty", name_path = true}),
+})
+
+local awards_row_names = {
+  "level_editor.awards.row_names.awards_trophies.CuresBonus",
+  "level_editor.awards.row_names.awards_trophies.CuresPenalty",
+  "level_editor.awards.row_names.awards_trophies.DeathsBonus",
+  "level_editor.awards.row_names.awards_trophies.DeathsPenalty",
+  "level_editor.awards.row_names.awards_trophies.PopulationPercentageBonus",
+  "level_editor.awards.row_names.awards_trophies.PopulationPercentagePenalty",
+  "level_editor.awards.row_names.awards_trophies.CuresVDeathsBonus",
+  "level_editor.awards.row_names.awards_trophies.CuresVDeathsPenalty",
+  "level_editor.awards.row_names.awards_trophies.AwardReputationBonus",
+  "level_editor.awards.row_names.awards_trophies.AwardReputationPenalty",
+  "level_editor.awards.row_names.awards_trophies.HospValueBonus",
+  "level_editor.awards.row_names.awards_trophies.HospValuePenalty",
+  "level_editor.awards.row_names.awards_trophies.CleanlinessBonus",
+  "level_editor.awards.row_names.awards_trophies.CleanlinessPenalty",
+  "level_editor.awards.row_names.awards_trophies.EmergencyBonus",
+  "level_editor.awards.row_names.awards_trophies.EmergencyPenalty",
+  "level_editor.awards.row_names.awards_trophies.AwardStaffHappinessBonus",
+  "level_editor.awards.row_names.awards_trophies.AwardStaffHappinessPenalty",
+  "level_editor.awards.row_names.awards_trophies.PeepHappinessBonus",
+  "level_editor.awards.row_names.awards_trophies.PeepHappinessPenalty",
+  "level_editor.awards.row_names.awards_trophies.WaitingTimesBonus",
+  "level_editor.awards.row_names.awards_trophies.WaitingTimesPenalty",
+  "level_editor.awards.row_names.awards_trophies.WellKeptTechBonus",
+  "level_editor.awards.row_names.awards_trophies.WellKeptTechPenalty",
+}
+
+local awards_tables = makeMultiTableSections({14, 14}, {
+  title_path = "level_editor.awards.title",
+  name_path = "level_editor.awards.name",
+  row_names = awards_row_names,
+  col_names = {
+    "level_editor.awards.col_names.criteria",
+    "level_editor.awards.col_names.bonuses",
+  },
+  col_values = {award_criteria, award_bonuses}
+})
+-- }}}
 
 -- }}}
 
@@ -1397,7 +1529,16 @@ local staff_page = makeEditPageSection({
   name_path = "level_editor.edit_pages.staff_page.name",
   staff_min_salaries,
   doctor_additional_salaries,
---  staff_levels,
+})
+local staff_level_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.staff_level_page1.title",
+  name_path = "level_editor.edit_pages.staff_level_page1.name",
+  staff_levels1
+})
+local staff_level_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.staff_level_page2.title",
+  name_path = "level_editor.edit_pages.staff_level_page2.name",
+  staff_levels2
 })
 
 local hospital_page = makeEditPageSection({
@@ -1496,11 +1637,6 @@ local lose_page = makeEditPageSection({
   name_path = "level_editor.edit_pages.lose_page.name",
   lose_criteria_section,
 })
---  emergency_control,
---  trophy_criteria_section,
---  trophy_bonuses_section,
---  award_criteria_section,
---  award_bonuses,
 
 local ai_page = makeEditPageSection({
   title_path = "level_editor.edit_pages.ai_page.title",
@@ -1508,13 +1644,46 @@ local ai_page = makeEditPageSection({
   computerplayers,
 })
 
+local emergencies_page = makeEditPageSection({
+  col_width = 30, -- XXX Does not seem to work for some reason.
+  title_path = "level_editor.edit_pages.emergencies.title",
+  name_path = "level_editor.edit_pages.emergencies.name",
+  emergency_control
+})
+
+local trophies_page = makeEditPageSection({
+  title_path = "level_editor.edit_pages.trophies_page.title",
+  name_path = "level_editor.edit_pages.trophies_page.name",
+  trophies_table,
+})
+
+local awards_page1 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.awards_page1.title",
+  name_path = "level_editor.edit_pages.awards_page1.name",
+  awards_tables[1]
+})
+
+local awards_page2 = makeEditPageSection({
+  title_path = "level_editor.edit_pages.awards_page2.title",
+  name_path = "level_editor.edit_pages.awards_page2.name",
+  awards_tables[2],
+})
+
+local automatic_award_trophies = makeEditPageSection({
+  title_path = "level_editor.edit_pages.automatic_awards_trophies.title",
+  name_path = "level_editor.edit_pages.automatic_awards_trophies.name",
+  automatic_trophies_bonuses,
+  automatic_award_bonuses
+})
+
 return makeTabPageSection({
   title_path = "level_editor.tab_page.title",
-  -- page_tab_size = Size(50, 20),
   town_page,
   town_levels_page,
   staff_page,
+  staff_level_page1, staff_level_page2,
   hospital_page,
+  emergencies_page,
   diseases_expertise_page1, diseases_expertise_page2, diseases_expertise_page3,
   diseases_available_page1, diseases_available_page2, diseases_available_page3,
   rooms_expertise_page,
@@ -1522,5 +1691,8 @@ return makeTabPageSection({
   objects_page1, objects_page2, objects_page3, objects_page4, objects_page5,
   win_page,
   lose_page,
+  trophies_page,
+  awards_page1, awards_page2,
+  automatic_award_trophies,
   ai_page
 })

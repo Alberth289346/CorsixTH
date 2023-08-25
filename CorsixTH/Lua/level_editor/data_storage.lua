@@ -411,14 +411,15 @@ function LevelTableSection:LevelTableSection(title_path, row_name_paths,
   self.values = values -- Array of column arrays.
 
   assert(values)
+  print("Building table section for title string " .. tostring(title_path))
 
   local table_rows_cols = self:_getTableColsRows()
   -- Verify dimensions (hor, vert).
-  assert(#row_name_paths == table_rows_cols.h,
-      "Unequal number of rows: names = " .. #row_name_paths
+  assert(#self.row_name_paths == table_rows_cols.h,
+      "Unequal number of rows: names = " .. #self.row_name_paths
       .. ", values height = " .. table_rows_cols.h)
-  assert(#col_name_paths == table_rows_cols.w,
-      "Unequal number of columns: names = " .. #col_name_paths
+  assert(#self.col_name_paths == table_rows_cols.w,
+      "Unequal number of columns: names = " .. #self.col_name_paths
       .. ", values width = " .. table_rows_cols.w)
 
   for i, c in ipairs(values) do
