@@ -169,7 +169,7 @@ function Graphics:loadFontFile()
   end
 
   -- Adjust unicode font in the configuration if needed.
-  if self.ttf_font_data and self.app.config.unicode_font ~= loaded_font_file then
+  if self.ttf_font_data and self.app.config.unicode_font ~= loaded_font_path then
     self.app.config.unicode_font = loaded_font_file
     self.app:saveConfig()
   end
@@ -429,7 +429,8 @@ function Graphics:loadLanguageFont(name, sprite_table, ...)
     local cache = self.cache.language_fonts[name]
     font = cache and cache[sprite_table]
     if not font then
-      font = Graphics.lf:_constructTtfFont(self.ttf_font_data, sprite_table)
+
+      font = Graphics:_constructTtfFont(self.ttf_font_data, sprite_table)
       self.reload_functions_last[font] = font_reloader
 
       if not cache then
@@ -443,11 +444,16 @@ function Graphics:loadLanguageFont(name, sprite_table, ...)
   return font
 end
 
-function Graphics._constructTtfFont(font_data, sprite_table)
+-- Prepare a TTF font for use in the UI
+-- font_data is the loaded font file
+-- sprite_table gives the structural layout, but isn't actually used for TTF so we use
+-- builtin_font instead
+function Graphics:_constructTtfFont(font_data, sprite_table, direct_load)
   local font = TH.freetype_font()
   -- TODO: Choose face based on "name" rather than always using same face.
-  font:setFace(self.ttf_font_data)
+  font:setFace(font_data)
   font:setSheet(sprite_table)
+  -- Not sure if self.load_info or something similar is needed for persistence
   return font
 end
 

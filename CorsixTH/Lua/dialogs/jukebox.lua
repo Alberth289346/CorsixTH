@@ -21,6 +21,8 @@ SOFTWARE. --]]
 local ipairs
     = ipairs
 
+local TH = require("TH")
+
 class "UIJukebox" (Window)
 
 ---@type UIJukebox
@@ -41,13 +43,14 @@ function UIJukebox:UIJukebox(app)
   self.blue_font = app.gfx:loadFont("QData", "Font02V")
 
   if TH.freetype_font then
+    -- Temporarily set the complete path to the font for debugging
     local font_data = self.app.gfx:_loadFontData("/usr/share/fonts/truetype/material-design-icons-iconfont/MaterialIcons-Regular.ttf")
-
+    if not font_data then error("Can't load the Material Icons font!") end
     -- Boldly copied from app.lua, lines 197..200, but it makes little sense to me.
-    local builtin_font = self.gfx:loadBuiltinFont()
-    self.materials = Graphics._constructTtfFont(font_data, builtin_font:getSheet())
+    local builtin_font = app.gfx:loadBuiltinFont()
+    self.materials = app.gfx:_constructTtfFont(font_data, builtin_font:getSheet())
   else
-    print("no font available")
+    error("Can't load this UI, Freetype2 missing")
   end
 
   -- Dialog head (current track title & exit button)
@@ -168,6 +171,9 @@ function UIJukebox:draw(canvas, x, y)
   end
   Window.draw(self, canvas, x, y)
   x, y = self.x + x, self.y + y
+  -- draw a material icon character in the top corner of the window
+  -- Currently using "Link" icon
+  self.materials:draw(canvas, "\u{e157}", x + 10, y + 10)
 
   local playing = self.audio.background_music or ""
   for i, info in ipairs(self.audio.background_playlist) do
