@@ -20,14 +20,14 @@ We provide installable versions for Windows and macOS at [releases](https://gith
 
 Alternatively, other groups are also providing the software.
 
-- For Linux and BSD systems, the program is often available as `corsixth` or `corsix-th` package in your distribution. If you have trouble finding it, you may want to take a look at a site that provides an overview for packaged versions, such as [repology.org](https://repology.org/metapackage/corsixth).
+- For Linux and BSD systems, the program is often available as _corsixth_ or _corsix-th_ package in your distribution. If you have trouble finding it, you may want to take a look at a site that provides an overview for packaged versions, such as [repology.org](https://repology.org/metapackage/corsixth).
 
-- A Flatpak for Linux users is available on `Flathub`
-  - [Download](https://flathub.org/apps/details/com.corsixth.corsixth)
+- A Flatpak for Linux users is available on _Flathub_
+  - Download: https://flathub.org/apps/details/com.corsixth.corsixth
 
-- A Snap for Linux users is available on Snapcraft
-  - [Download](https://snapcraft.io/corsixth)
-  - [Support](https://github.com/snapcrafters/corsixth)
+- A Snap for Linux users is available on _Snapcraft_
+  - Download: https://snapcraft.io/corsixth
+  - Support: https://github.com/snapcrafters/corsixth
 
 If you prefer one of these releases, please also use their services for reporting or fixing problems.
 
