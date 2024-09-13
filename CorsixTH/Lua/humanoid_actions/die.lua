@@ -109,8 +109,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         grim_hole_offset_x = 1,
         grim_hole_offset_y = 0,
         "west",
-        -1,
-        0,
+        hum_hole_offset_x = -1,
+        hum_hole_offset_y = 0,
         {
           {after_spawn_idle_direction = "east", hole_x_offset = -5, hole_y_offset = 2},
           {hole_x_offset = 0, hole_y_offset = 3}
@@ -123,8 +123,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         grim_hole_offset_x = 0,
         grim_hole_offset_y = 1,
         "north",
-        0,
-        -1,
+        hum_hole_offset_x = 0,
+        hum_hole_offset_y = -1,
         {
           {hole_x_offset = 3, hole_y_offset = 0}
         }
@@ -144,8 +144,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         end
         grim_use_tile_x = hole_x + spawn_scenario.grim_hole_offset_x
         grim_use_tile_y = hole_y + spawn_scenario.grim_hole_offset_y
-        humanoid.hole_use_tile_x = hole_x + spawn_scenario[7]
-        humanoid.hole_use_tile_y = hole_y + spawn_scenario[8]
+        humanoid.hole_use_tile_x = hole_x + spawn_scenario.hum_hole_offset_x
+        humanoid.hole_use_tile_y = hole_y + spawn_scenario.hum_hole_offset_y
         -- tile can't be in a room and must be accessible by the patient
         if not humanoid.world:getPathDistance(humanoid.tile_x, humanoid.tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y)
             or humanoid.world:getRoom(humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) then
