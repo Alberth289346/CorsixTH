@@ -94,8 +94,6 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
 
   --2: Spawn the grim reaper and the lava hole, if no suitable spawn points are found a heaven death will be started:
   elseif phase == 2 then
-    local mirror_grim = 0
-
     local spawn_scenarios = {
       {
         holes_orientation = "south",
@@ -134,9 +132,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
       local hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
 
       if hole_x and humanoid.world:canNonSideObjectBeSpawnedAt(hole_x, hole_y, "gates_to_hell", holes_orientation, 0, 0) then
-        if holes_orientation == "south" then
-          mirror_grim = 1
-        end
+        local mirror_grim = (holes_orientation == "south") and 1 or 0
 
         local grim_use_tile_x, grim_use_tile_y
         grim_use_tile_x = hole_x + spawn_scenario.grim_hole_offset_x
@@ -180,6 +176,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           grim_y = grim_use_tile_y
         end
 
+        -- Construct scenario data table.
         return {
           holes_orientation = holes_orientation,
           hole_x = hole_x,
@@ -188,7 +185,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           grim_y = grim_y,
           grim_use_tile_x = grim_use_tile_x
           grim_use_tile_y = grim_use_tile_y,
-          grim_spawn_idle_direction = grim_spawn_idle_direction
+          grim_spawn_idle_direction = grim_spawn_idle_direction,
+          mirror_grim = mirror_grim
         }
       end
 
