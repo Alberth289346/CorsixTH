@@ -104,8 +104,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     local spawn_scenarios = {
       {
         holes_orientation = "south",
-        humanoid.tile_x,
-        humanoid.tile_y + 4,
+        hole_search_x = humanoid.tile_x,
+        hole_search_y = humanoid.tile_y + 4,
         1,
         0,
         "west",
@@ -118,8 +118,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
       },
       {
         holes_orientation = "east",
-        humanoid.tile_x + 4,
-        humanoid.tile_y,
+        hole_search_x = humanoid.tile_x + 4,
+        hole_search_y = humanoid.tile_y,
         0,
         1,
         "north",
@@ -136,7 +136,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     ---
     local function tryToUseHellDeathSpawnScenario(spawn_scenario)
       holes_orientation = spawn_scenario.holes_orientation
-      hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario[2], spawn_scenario[3], 0)
+      hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
 
       if hole_x and humanoid.world:canNonSideObjectBeSpawnedAt(hole_x, hole_y, "gates_to_hell", holes_orientation, 0, 0) then
         if holes_orientation == "south" then
