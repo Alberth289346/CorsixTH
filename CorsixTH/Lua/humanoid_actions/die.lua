@@ -108,7 +108,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         hole_search_y = humanoid.tile_y + 4,
         grim_hole_offset_x = 1,
         grim_hole_offset_y = 0,
-        "west",
+        grim_spawn_dir = "west",
         hum_hole_offset_x = -1,
         hum_hole_offset_y = 0,
         {
@@ -122,7 +122,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         hole_search_y = humanoid.tile_y,
         grim_hole_offset_x = 0,
         grim_hole_offset_y = 1,
-        "north",
+        grim_spawn_dir = "north",
         hum_hole_offset_x = 0,
         hum_hole_offset_y = -1,
         {
@@ -165,7 +165,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         --Try to find grim a spawn point which will allow him to walk to his lava hole use tile:
         local grim_cant_walk_to_use_tile = true
         for _, find_grim_spawn_attempt in ipairs(spawn_scenario[9]) do
-          grim_spawn_idle_direction = find_grim_spawn_attempt.after_spawn_idle_direction or spawn_scenario[6]
+          grim_spawn_idle_direction = find_grim_spawn_attempt.after_spawn_idle_direction or spawn_scenario.grim_spawn_dir
           grim_x, grim_y = humanoid.world.pathfinder:findIdleTile(hole_x + find_grim_spawn_attempt.hole_x_offset, hole_y + find_grim_spawn_attempt.hole_y_offset, 0)
           if grim_x and not humanoid.world:getRoom(grim_x, grim_y)
               and humanoid.world:getPathDistance(grim_x, grim_y, grim_use_tile_x, grim_use_tile_y) then
@@ -175,7 +175,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         end
         -- Else spawn him on it:
         if grim_cant_walk_to_use_tile then
-          grim_spawn_idle_direction = spawn_scenario[6]
+          grim_spawn_idle_direction = spawn_scenario.grim_spawn_dir
           grim_x = grim_use_tile_x
           grim_y = grim_use_tile_y
         end
