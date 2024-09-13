@@ -94,7 +94,6 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
 
   --2: Spawn the grim reaper and the lava hole, if no suitable spawn points are found a heaven death will be started:
   elseif phase == 2 then
-    local grim_use_tile_x, grim_use_tile_y
     local grim_spawn_idle_direction
     local mirror_grim = 0
 
@@ -139,6 +138,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         if holes_orientation == "south" then
           mirror_grim = 1
         end
+
+        local grim_use_tile_x, grim_use_tile_y
         grim_use_tile_x = hole_x + spawn_scenario.grim_hole_offset_x
         grim_use_tile_y = hole_y + spawn_scenario.grim_hole_offset_y
         humanoid.hole_use_tile_x = hole_x + spawn_scenario.hum_hole_offset_x
@@ -185,8 +186,11 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           hole_y = hole_y,
           grim_x = grim_x,
           grim_y = grim_y,
+          grim_use_tile_x = grim_use_tile_x
+          grim_use_tile_y = grim_use_tile_y,
         }
       end
+
       return nil
     end
 
@@ -213,8 +217,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     grim_reaper:setHospital(humanoid.world:getLocalPlayerHospital())
     grim_reaper.lava_hole = lava_hole
     grim_reaper.lava_hole.orientation = scenario_data.holes_orientation
-    grim_reaper.use_tile_x = grim_use_tile_x
-    grim_reaper.use_tile_y = grim_use_tile_y
+    grim_reaper.use_tile_x = scenario_data.grim_use_tile_x
+    grim_reaper.use_tile_y = scenario_data.grim_use_tile_y
     grim_reaper.mirror = mirror_grim
     grim_reaper.patient = humanoid
     humanoid.grim_reaper = grim_reaper
