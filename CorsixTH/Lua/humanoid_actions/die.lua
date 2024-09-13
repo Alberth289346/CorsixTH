@@ -94,7 +94,6 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
 
   --2: Spawn the grim reaper and the lava hole, if no suitable spawn points are found a heaven death will be started:
   elseif phase == 2 then
-    local grim_x, grim_y
     local grim_use_tile_x, grim_use_tile_y
     local grim_spawn_idle_direction
     local mirror_grim = 0
@@ -160,7 +159,9 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         if not hole_has_passable_side then
           return nil
         end
+
         --Try to find grim a spawn point which will allow him to walk to his lava hole use tile:
+        local grim_x, grim_y
         local grim_cant_walk_to_use_tile = true
         for _, find_grim_spawn_attempt in ipairs(spawn_scenario.grim_spawn_positions) do
           grim_spawn_idle_direction = find_grim_spawn_attempt.after_spawn_idle_direction or spawn_scenario.grim_spawn_dir
@@ -177,10 +178,13 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           grim_x = grim_use_tile_x
           grim_y = grim_use_tile_y
         end
+
         return {
           holes_orientation = holes_orientation,
           hole_x = hole_x,
           hole_y = hole_y,
+          grim_x = grim_x,
+          grim_y = grim_y,
         }
       end
       return nil
@@ -202,7 +206,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     local lava_hole = humanoid.world:newObject("gates_to_hell", scenario_data.hole_x, scenario_data.hole_y, scenario_data.holes_orientation)
     local grim_reaper = humanoid.world:newEntity("GrimReaper", 1660)
 
-    local point_dir = {x = grim_x, y = grim_y, direction = grim_spawn_idle_direction}
+    local point_dir = {x = scenario_data.grim_x, y = scenario_data.grim_y, direction = grim_spawn_idle_direction}
     grim_reaper:setNextAction(IdleSpawnAction(1660, point_dir):setCount(40))
 
     --Initialise the grim reaper:
