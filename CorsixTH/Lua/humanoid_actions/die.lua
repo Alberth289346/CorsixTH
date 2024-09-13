@@ -131,9 +131,9 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
       }
     }
 
-    ---
-    -- @param spawn_scenario {holes_orientation, find_hole_spawn_x, find_hole_spawn_y, g_use_x_offset, g_use_y_offset, grim_face_hole_dir, mirror_grim, p_use_x_offset, p_use_y_offset, find_grim_spawn_attempts}
-    ---
+    --! Check whether a grim reaper scenario can be used.
+    --!param spawn_scenario Scenario to check.
+    --!return Computed positions and directions for the scenario, else nil.
     local function tryToUseHellDeathSpawnScenario(spawn_scenario)
       holes_orientation = spawn_scenario.holes_orientation
       hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
@@ -149,18 +149,18 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         -- tile can't be in a room and must be accessible by the patient
         if not humanoid.world:getPathDistance(humanoid.tile_x, humanoid.tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y)
             or humanoid.world:getRoom(humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) then
-          return false
+          return nil
         end
         -- ensure grim won't be in a room
         if humanoid.world:getRoom(grim_use_tile_x, grim_use_tile_y) then
-          return false
+          return nil
         end
         --Ensure that the lava hole is passable on at least one of its sides to prevent it from blocking 1 tile wide corridors:
         humanoid.world.map:setCellFlags(hole_x, hole_y, {passable = false})
         local hole_has_passable_side = humanoid.world:getPathDistance(grim_use_tile_x, grim_use_tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) == 4
         humanoid.world.map:setCellFlags(hole_x, hole_y, {passable = true})
         if not hole_has_passable_side then
-          return false
+          return nil
         end
         --Try to find grim a spawn point which will allow him to walk to his lava hole use tile:
         local grim_cant_walk_to_use_tile = true
@@ -179,18 +179,20 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           grim_x = grim_use_tile_x
           grim_y = grim_use_tile_y
         end
-        return true
+        return {
+        }
       end
-      return false
+      return nil
     end
 
-    local usable_scenario_found = false
+    local scenario_data = nil
     for _, spawn_scenario in ipairs(spawn_scenarios) do
-      if not usable_scenario_found then
-        usable_scenario_found = tryToUseHellDeathSpawnScenario(spawn_scenario)
-      end
+      scenario_data = tryToUseHellDeathSpawnScenario(spawn_scenario)
+      if scenario_data then break end
     end
-    if not usable_scenario_found then
+
+    -- None of the scenarios can be used, fallback to a normal death.
+    if not scenario_data then
       action_die_tick(humanoid)
       return
     end
