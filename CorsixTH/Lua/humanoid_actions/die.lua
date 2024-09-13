@@ -102,8 +102,33 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     local mirror_grim = 0
 
     local spawn_scenarios = {
-      {"south", humanoid.tile_x, humanoid.tile_y + 4, 1, 0, "west", -1, 0, {{after_spawn_idle_direction = "east", hole_x_offset = -5, hole_y_offset = 2}, {hole_x_offset = 0, hole_y_offset = 3}} },
-      {"east", humanoid.tile_x + 4, humanoid.tile_y, 0, 1, "north", 0, -1, {{hole_x_offset = 3, hole_y_offset = 0}} }
+      {
+        "south",
+        humanoid.tile_x,
+        humanoid.tile_y + 4,
+        1,
+        0,
+        "west",
+        -1,
+        0,
+        {
+          {after_spawn_idle_direction = "east", hole_x_offset = -5, hole_y_offset = 2},
+          {hole_x_offset = 0, hole_y_offset = 3}
+        }
+      },
+      {
+        "east",
+        humanoid.tile_x + 4,
+        humanoid.tile_y,
+        0,
+        1,
+        "north",
+        0,
+        -1,
+        {
+          {hole_x_offset = 3, hole_y_offset = 0}
+        }
+      }
     }
 
     ---
