@@ -106,8 +106,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         holes_orientation = "south",
         hole_search_x = humanoid.tile_x,
         hole_search_y = humanoid.tile_y + 4,
-        1,
-        0,
+        grim_hole_offset_x = 1,
+        grim_hole_offset_y = 0,
         "west",
         -1,
         0,
@@ -120,8 +120,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         holes_orientation = "east",
         hole_search_x = humanoid.tile_x + 4,
         hole_search_y = humanoid.tile_y,
-        0,
-        1,
+        grim_hole_offset_x = 0,
+        grim_hole_offset_y = 1,
         "north",
         0,
         -1,
@@ -142,8 +142,8 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         if holes_orientation == "south" then
           mirror_grim = 1
         end
-        grim_use_tile_x = hole_x + spawn_scenario[4]
-        grim_use_tile_y = hole_y + spawn_scenario[5]
+        grim_use_tile_x = hole_x + spawn_scenario.grim_hole_offset_x
+        grim_use_tile_y = hole_y + spawn_scenario.grim_hole_offset_y
         humanoid.hole_use_tile_x = hole_x + spawn_scenario[7]
         humanoid.hole_use_tile_y = hole_y + spawn_scenario[8]
         -- tile can't be in a room and must be accessible by the patient
