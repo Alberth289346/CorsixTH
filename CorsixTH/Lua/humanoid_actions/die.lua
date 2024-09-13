@@ -94,7 +94,6 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
 
   --2: Spawn the grim reaper and the lava hole, if no suitable spawn points are found a heaven death will be started:
   elseif phase == 2 then
-    local holes_orientation
     local hole_x, hole_y
     local grim_x, grim_y
     local grim_use_tile_x, grim_use_tile_y
@@ -135,7 +134,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     --!param spawn_scenario Scenario to check.
     --!return Computed positions and directions for the scenario, else nil.
     local function tryToUseHellDeathSpawnScenario(spawn_scenario)
-      holes_orientation = spawn_scenario.holes_orientation
+      local holes_orientation = spawn_scenario.holes_orientation
       hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
 
       if hole_x and humanoid.world:canNonSideObjectBeSpawnedAt(hole_x, hole_y, "gates_to_hell", holes_orientation, 0, 0) then
@@ -180,6 +179,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
           grim_y = grim_use_tile_y
         end
         return {
+          holes_orientation = holes_orientation,
         }
       end
       return nil
@@ -198,7 +198,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     end
 
     --Spawn the grim reaper and the lava hole:
-    local lava_hole = humanoid.world:newObject("gates_to_hell", hole_x, hole_y, holes_orientation)
+    local lava_hole = humanoid.world:newObject("gates_to_hell", hole_x, hole_y, scenario_data.holes_orientation)
     local grim_reaper = humanoid.world:newEntity("GrimReaper", 1660)
 
     local point_dir = {x = grim_x, y = grim_y, direction = grim_spawn_idle_direction}
@@ -207,7 +207,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     --Initialise the grim reaper:
     grim_reaper:setHospital(humanoid.world:getLocalPlayerHospital())
     grim_reaper.lava_hole = lava_hole
-    grim_reaper.lava_hole.orientation = holes_orientation
+    grim_reaper.lava_hole.orientation = scenario_data.holes_orientation
     grim_reaper.use_tile_x = grim_use_tile_x
     grim_reaper.use_tile_y = grim_use_tile_y
     grim_reaper.mirror = mirror_grim
