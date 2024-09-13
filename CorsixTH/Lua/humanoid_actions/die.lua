@@ -125,13 +125,16 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
     }
 
     --! Check whether a grim reaper scenario can be used.
+    --!param humanoid Humanoid that is about to die.
     --!param spawn_scenario Scenario to check.
     --!return Computed positions and directions for the scenario, else nil.
-    local function tryToUseHellDeathSpawnScenario(spawn_scenario)
-      local holes_orientation = spawn_scenario.holes_orientation
-      local hole_x, hole_y = humanoid.world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
+    local function tryToUseHellDeathSpawnScenario(humanoid, spawn_scenario)
+      local world = humanoid.world
 
-      if hole_x and humanoid.world:canNonSideObjectBeSpawnedAt(hole_x, hole_y, "gates_to_hell", holes_orientation, 0, 0) then
+      local holes_orientation = spawn_scenario.holes_orientation
+      local hole_x, hole_y = world.pathfinder:findIdleTile(spawn_scenario.hole_search_x, spawn_scenario.hole_search_y, 0)
+
+      if hole_x and world:canNonSideObjectBeSpawnedAt(hole_x, hole_y, "gates_to_hell", holes_orientation, 0, 0) then
         local mirror_grim = (holes_orientation == "south") and 1 or 0
 
         local grim_use_tile_x, grim_use_tile_y
@@ -140,18 +143,18 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         humanoid.hole_use_tile_x = hole_x + spawn_scenario.hum_hole_offset_x
         humanoid.hole_use_tile_y = hole_y + spawn_scenario.hum_hole_offset_y
         -- tile can't be in a room and must be accessible by the patient
-        if not humanoid.world:getPathDistance(humanoid.tile_x, humanoid.tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y)
-            or humanoid.world:getRoom(humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) then
+        if not world:getPathDistance(humanoid.tile_x, humanoid.tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y)
+            or world:getRoom(humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) then
           return nil
         end
         -- ensure grim won't be in a room
-        if humanoid.world:getRoom(grim_use_tile_x, grim_use_tile_y) then
+        if world:getRoom(grim_use_tile_x, grim_use_tile_y) then
           return nil
         end
         --Ensure that the lava hole is passable on at least one of its sides to prevent it from blocking 1 tile wide corridors:
-        humanoid.world.map:setCellFlags(hole_x, hole_y, {passable = false})
-        local hole_has_passable_side = humanoid.world:getPathDistance(grim_use_tile_x, grim_use_tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) == 4
-        humanoid.world.map:setCellFlags(hole_x, hole_y, {passable = true})
+        world.map:setCellFlags(hole_x, hole_y, {passable = false})
+        local hole_has_passable_side = world:getPathDistance(grim_use_tile_x, grim_use_tile_y, humanoid.hole_use_tile_x, humanoid.hole_use_tile_y) == 4
+        world.map:setCellFlags(hole_x, hole_y, {passable = true})
         if not hole_has_passable_side then
           return nil
         end
@@ -162,9 +165,9 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
         local grim_cant_walk_to_use_tile = true
         for _, find_grim_spawn_attempt in ipairs(spawn_scenario.grim_spawn_positions) do
           grim_spawn_idle_direction = find_grim_spawn_attempt.after_spawn_idle_direction or spawn_scenario.grim_spawn_dir
-          grim_x, grim_y = humanoid.world.pathfinder:findIdleTile(hole_x + find_grim_spawn_attempt.hole_x_offset, hole_y + find_grim_spawn_attempt.hole_y_offset, 0)
-          if grim_x and not humanoid.world:getRoom(grim_x, grim_y)
-              and humanoid.world:getPathDistance(grim_x, grim_y, grim_use_tile_x, grim_use_tile_y) then
+          grim_x, grim_y = world.pathfinder:findIdleTile(hole_x + find_grim_spawn_attempt.hole_x_offset, hole_y + find_grim_spawn_attempt.hole_y_offset, 0)
+          if grim_x and not world:getRoom(grim_x, grim_y)
+              and world:getPathDistance(grim_x, grim_y, grim_use_tile_x, grim_use_tile_y) then
             grim_cant_walk_to_use_tile = false
             break
           end
@@ -195,7 +198,7 @@ local action_die_tick_reaper; action_die_tick_reaper = permanent"action_die_tick
 
     local scenario_data = nil
     for _, spawn_scenario in ipairs(spawn_scenarios) do
-      scenario_data = tryToUseHellDeathSpawnScenario(spawn_scenario)
+      scenario_data = tryToUseHellDeathSpawnScenario(humanoid, spawn_scenario)
       if scenario_data then break end
     end
 
