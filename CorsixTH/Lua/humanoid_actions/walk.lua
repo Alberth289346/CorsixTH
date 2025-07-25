@@ -77,6 +77,30 @@ function WalkAction.getTileDirection(x1, y1, x2, y2)
   end
 end
 
+--! Detect a door while crossing the edge between tile (x1, y1) and tile (x2, y2).
+--!param map The map being used.
+--!param x1 (integer) X coordinate of the current tile.
+--!param y1 (integer) Y coordinate of the current tile.
+--!param x2 (integer) X coordinate of the neighbouring tile.
+--!param y2 (integer) Y coordinate of the neighbouring tile.
+--!param direction (string) Direction of movement. See WalkAction.getTileDirection
+--!return Whether a door is detected between the tiles.
+function WalkAction.detectDoor(map, x1, y1, x2, y2, direction)
+  if not map then return false end -- Without map, there are no doors at all.
+
+  if direction == "east" then
+    return map:getCellFlags(x2, y2).doorWest
+  elseif direction == "west" then
+    return map:getCellFlags(x1, y1).doorWest
+  elseif direction == "south" then
+    return map:getCellFlags(x2, y2).doorNorth
+  else
+    assert(direction == "north")
+    return map:getCellFlags(x1, y1).doorNorth
+  end
+  return false
+end
+
 local action_walk_interrupt
 action_walk_interrupt = permanent"action_walk_interrupt"( function(action, humanoid, high_priority)
   if action.truncate_only_on_high_priority and not high_priority then
@@ -142,44 +166,35 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
   humanoid.world:callOnOccupantChange(x2, y2, 1)
   humanoid.world:callOnOccupantChange(x1, y1, -1)
 
+  -- Decide the direction of movement to the next tile.
   local move_direction = WalkAction.getTileDirection(x1, y1, x2, y2)
+
+  -- Handle the door if running into one.
+  if WalkAction.detectDoor(x1, y1, x2, y2, move_direction) then
+    return navigateDoor(humanoid, x1, y1, move_direction)
+  end
+
   if move_direction == "east" then
-      if map and map:getCellFlags(x2, y2).doorWest then
-        return navigateDoor(humanoid, x1, y1, "east")
-      else
         humanoid.last_move_direction = "east"
         humanoid:setAnimation(anims.walk_east)
         humanoid:setTilePositionSpeed(x2, y2, -32, -16, 4*factor, 2*factor)
-      end
 
   elseif move_direction == "west" then
-      if map and map:getCellFlags(x1, y1).doorWest then
-        return navigateDoor(humanoid, x1, y1, "west")
-      else
         humanoid.last_move_direction = "west"
         humanoid:setAnimation(anims.walk_north, DrawFlags.FlipHorizontal)
         humanoid:setTilePositionSpeed(x1, y1, 0, 0, -4*factor, -2*factor)
-      end
 
   elseif move_direction == "south" then
-      if map and map:getCellFlags(x2, y2).doorNorth then
-        return navigateDoor(humanoid, x1, y1, "south")
-      else
         humanoid.last_move_direction = "south"
         humanoid:setAnimation(anims.walk_east, DrawFlags.FlipHorizontal)
         humanoid:setTilePositionSpeed(x2, y2, 32, -16, -4*factor, 2*factor)
-      end
 
   else
     assert(move_direction == "north")
 
-      if map and map:getCellFlags(x1, y1).doorNorth then
-        return navigateDoor(humanoid, x1, y1, "north")
-      else
         humanoid.last_move_direction = "north"
         humanoid:setAnimation(anims.walk_north)
         humanoid:setTilePositionSpeed(x1, y1, 0, 0, 4*factor, -2*factor)
-      end
   end
   humanoid:setTimer(quantity, timer_fn)
 end
