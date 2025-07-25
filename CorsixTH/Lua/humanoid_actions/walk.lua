@@ -62,6 +62,21 @@ function WalkAction:setIsEntering(entering)
   return self
 end
 
+--! Decide the direction to walk when moving from tile (x1, y1) to its adjacent
+--! tile (x2, y2).
+--!param x1 (integer) X coordinate of the current tile.
+--!param y1 (integer) Y coordinate of the current tile.
+--!param x2 (integer) X coordinate of the adjacent tile.
+--!param y2 (integer) Y coordinate of the adjacent tile.
+--!return (string) Compass direction of walking.
+function WalkAction.getTileDirection(x1, y1, x2, y2)
+  if x1 ~= x2 then
+    return x1 < x2 and "east" or "west"
+  else
+    return y1 < y2 and "south" or "north"
+  end
+end
+
 local action_walk_interrupt
 action_walk_interrupt = permanent"action_walk_interrupt"( function(action, humanoid, high_priority)
   if action.truncate_only_on_high_priority and not high_priority then
@@ -127,8 +142,8 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
   humanoid.world:callOnOccupantChange(x2, y2, 1)
   humanoid.world:callOnOccupantChange(x1, y1, -1)
 
-  if x1 ~= x2 then
-    if x1 < x2 then
+  local move_direction = WalkAction.getTileDirection(x1, y1, x2, y2)
+  if move_direction == "east" then
       if map and map:getCellFlags(x2, y2).doorWest then
         return navigateDoor(humanoid, x1, y1, "east")
       else
@@ -136,7 +151,8 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
         humanoid:setAnimation(anims.walk_east)
         humanoid:setTilePositionSpeed(x2, y2, -32, -16, 4*factor, 2*factor)
       end
-    else
+
+  elseif move_direction == "west" then
       if map and map:getCellFlags(x1, y1).doorWest then
         return navigateDoor(humanoid, x1, y1, "west")
       else
@@ -144,9 +160,8 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
         humanoid:setAnimation(anims.walk_north, DrawFlags.FlipHorizontal)
         humanoid:setTilePositionSpeed(x1, y1, 0, 0, -4*factor, -2*factor)
       end
-    end
-  else
-    if y1 < y2 then
+
+  elseif move_direction == "south" then
       if map and map:getCellFlags(x2, y2).doorNorth then
         return navigateDoor(humanoid, x1, y1, "south")
       else
@@ -154,7 +169,10 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
         humanoid:setAnimation(anims.walk_east, DrawFlags.FlipHorizontal)
         humanoid:setTilePositionSpeed(x2, y2, 32, -16, -4*factor, 2*factor)
       end
-    else
+
+  else
+    assert(move_direction == "north")
+
       if map and map:getCellFlags(x1, y1).doorNorth then
         return navigateDoor(humanoid, x1, y1, "north")
       else
@@ -162,7 +180,6 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
         humanoid:setAnimation(anims.walk_north)
         humanoid:setTilePositionSpeed(x1, y1, 0, 0, 4*factor, -2*factor)
       end
-    end
   end
   humanoid:setTimer(quantity, timer_fn)
 end
