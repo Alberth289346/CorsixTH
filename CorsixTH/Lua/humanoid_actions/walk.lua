@@ -101,6 +101,52 @@ function WalkAction.detectDoor(map, x1, y1, x2, y2, direction)
   return false
 end
 
+--! Humanoid walks to the next tile.
+--!param humanoid The walking humanoid.
+--!param x1 (integer) X coordinate of the current tile.
+--!param y1 (integer) Y coordinate of the current tile.
+--!param x2 (integer) X coordinate of the neighbouring tile.
+--!param y2 (integer) Y coordinate of the neighbouring tile.
+--!param direction (string) Direction of movement. See WalkAction.getTileDirection
+--!param timer_fn Callback when the next tile is reached, may be nil.
+function WalkAction.walkTile(humanoid, x1, y1, x2, y2, direction, timer_fn)
+  -- Decide speed of walking.
+  local factor, quantity
+  -- The multiplication 'factor * quantity' must be 8 or the animation glitches.
+  -- The 'quantity' value must always be an integer. The 'factor' value must
+  -- become an integer after multiplying by 2.
+  if humanoid.speed == "fast" then
+    factor, quantity = 2, 4
+  else
+    factor, quantity = 1, 8
+  end
+
+  local anims = humanoid.walk_anims
+  if move_direction == "east" then
+    humanoid.last_move_direction = "east"
+    humanoid:setAnimation(anims.walk_east)
+    humanoid:setTilePositionSpeed(x2, y2, -32, -16, 4 * factor, 2 * factor)
+
+  elseif move_direction == "west" then
+    humanoid.last_move_direction = "west"
+    humanoid:setAnimation(anims.walk_north, DrawFlags.FlipHorizontal)
+    humanoid:setTilePositionSpeed(x1, y1, 0, 0, -4 * factor, -2 * factor)
+
+  elseif move_direction == "south" then
+    humanoid.last_move_direction = "south"
+    humanoid:setAnimation(anims.walk_east, DrawFlags.FlipHorizontal)
+    humanoid:setTilePositionSpeed(x2, y2, 32, -16, -4 * factor, 2 * factor)
+
+  else
+    assert(move_direction == "north")
+
+    humanoid.last_move_direction = "north"
+    humanoid:setAnimation(anims.walk_north)
+    humanoid:setTilePositionSpeed(x1, y1, 0, 0, 4 * factor, -2 * factor)
+  end
+  humanoid:setTimer(quantity, timer_fn)
+end
+
 local action_walk_interrupt
 action_walk_interrupt = permanent"action_walk_interrupt"( function(action, humanoid, high_priority)
   if action.truncate_only_on_high_priority and not high_priority then
@@ -149,19 +195,6 @@ end)
 local navigateDoor
 
 local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
-  -- The variables below must always make up factor*quantity = 8 or the
-  -- animation glitches
-  -- Factor must also be able to multiply by 2 to become an integer
-  -- Quantity must always be an integer
-  local factor = 1
-  local quantity = 8
-  if humanoid.speed and humanoid.speed == "fast" then
-    factor = 2
-    quantity = 4
-  end
-
-  local anims = humanoid.walk_anims
-
   -- Tell the world about the humanoid moving to the next tile.
   humanoid.world:callOnOccupantChange(x2, y2, 1)
   humanoid.world:callOnOccupantChange(x1, y1, -1)
@@ -174,29 +207,8 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
     return navigateDoor(humanoid, x1, y1, move_direction)
   end
 
-  if move_direction == "east" then
-        humanoid.last_move_direction = "east"
-        humanoid:setAnimation(anims.walk_east)
-        humanoid:setTilePositionSpeed(x2, y2, -32, -16, 4*factor, 2*factor)
-
-  elseif move_direction == "west" then
-        humanoid.last_move_direction = "west"
-        humanoid:setAnimation(anims.walk_north, DrawFlags.FlipHorizontal)
-        humanoid:setTilePositionSpeed(x1, y1, 0, 0, -4*factor, -2*factor)
-
-  elseif move_direction == "south" then
-        humanoid.last_move_direction = "south"
-        humanoid:setAnimation(anims.walk_east, DrawFlags.FlipHorizontal)
-        humanoid:setTilePositionSpeed(x2, y2, 32, -16, -4*factor, 2*factor)
-
-  else
-    assert(move_direction == "north")
-
-        humanoid.last_move_direction = "north"
-        humanoid:setAnimation(anims.walk_north)
-        humanoid:setTilePositionSpeed(x1, y1, 0, 0, 4*factor, -2*factor)
-  end
-  humanoid:setTimer(quantity, timer_fn)
+  -- Humanoid walks to the next tile.
+  WalkAction.walkTile(humanoid, x1, y1, x2, y2, direction, timer_fn)
 end
 
 local flags_here, flags_there = {}, {}
