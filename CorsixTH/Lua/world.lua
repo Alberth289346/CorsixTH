@@ -539,6 +539,18 @@ function World:getObjectToNotifyOfOccupants(x, y)
   return self.objects_notify_occupants[idx]
 end
 
+--! State that a humanoid is entering (adjust_count == 1) or leaving
+--  (adjust_count == -1) a tile. An object that monitors the tile is notified
+--  of the change.
+--!param x (integer) The 1-based X coordinate of the tile to monitor.
+--!param y (integer) The 1-based Y coordinate of the tile to monitor.
+--!param adjust_count (integer) +1 for entering, -1 for leaving a tile.
+function World:callOnOccupantChange(x, y, adjust_count)
+  assert(adjust_count == 1 or adjust_count == -1)
+  local notify_object = world:getObjectToNotifyOfOccupants(x, y)
+  if notify_object then notify_object:onOccupantChange(adjust_count) end
+end
+
 --! Place objects from a map file onto the map.
 --!param objects Objects to place.
 function World:createMapObjects(objects)

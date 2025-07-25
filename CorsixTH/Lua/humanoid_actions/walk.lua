@@ -125,15 +125,11 @@ local function action_walk_raw(humanoid, x1, y1, x2, y2, map, timer_fn)
   end
 
   local anims = humanoid.walk_anims
-  local world = humanoid.world
-  local notify_object = world:getObjectToNotifyOfOccupants(x2, y2)
-  if notify_object then
-    notify_object:onOccupantChange(1)
-  end
-  notify_object = world:getObjectToNotifyOfOccupants(x1, y1)
-  if notify_object then
-    notify_object:onOccupantChange(-1)
-  end
+
+  -- Tell the world about the humanoid moving to the next tile.
+  humanoid.world:callOnOccupantChange(x2, y2, 1)
+  humanoid.world:callOnOccupantChange(x1, y1, -1)
+
   if x1 ~= x2 then
     if x1 < x2 then
       if map and map:getCellFlags(x2, y2).doorWest then

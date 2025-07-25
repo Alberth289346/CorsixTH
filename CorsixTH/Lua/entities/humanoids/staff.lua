@@ -465,11 +465,9 @@ function Staff:onPickup()
 end
 
 function Staff:onPlaceInCorridor()
-  local world = self.world
-  local notify_object = world:getObjectToNotifyOfOccupants(self.tile_x, self.tile_y)
-  if notify_object then
-    notify_object:onOccupantChange(1)
-  end
+  -- Tell the tile it has a new occupant.
+  self.world:callOnOccupantChange(self.tile_x, self.tile_y, 1)
+
   -- Assume that if the player puts someone in the corridor they don't want the
   -- staff member to primarily return to his/her old room.
   self.last_room = nil

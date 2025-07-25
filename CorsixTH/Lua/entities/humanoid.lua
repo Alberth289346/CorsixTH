@@ -437,13 +437,10 @@ end
 
 -- Called when the humanoid is about to be removed from the world.
 function Humanoid:onDestroy()
+  -- The humanoid does not occupy its current tile any more.
   local x, y = self.tile_x, self.tile_y
-  if x and y then
-    local notify_object = self.world:getObjectToNotifyOfOccupants(x, y)
-    if notify_object then
-      notify_object:onOccupantChange(-1)
-    end
-  end
+  if x and y then self.world:callOnOccupantChange(x, y, -1) end
+
   -- Make absolutely sure there are no callbacks left on the humanoid.
   self:unregisterCallbacks()
   return Entity.onDestroy(self)
