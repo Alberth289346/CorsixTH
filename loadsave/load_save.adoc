@@ -1,0 +1,136 @@
+= Load-save
+
+Game loading and saving of specified versioned data.
+
+== Introduction
+
+Saving a game should store the minimal amount of information to allow
+restoring the game again after loading the data.
+As the stored information changes in time due to development effort, the
+stored information should have a version number, and be upgradable to newer
+version, in order to allow restoring it into a newer version of the game.
+
+== The data format
+
+The information to store is described in _blocks_. A block has a name and a
+number of fields. Each field in a block has a name within the block.
+It also has a type, and a minimum and maximum version number.
+
+For example, a block represented as Lua tables:
+
+[source,lua]
+----
+blocks = {
+  world = {
+    {name="time", type="date"},
+    {name="num_players", type="int", min=1, max=4},
+    {name="player_data", type="list player"},
+  },
+  date = {
+    {name="year", type="int", min=2},
+    {name="months", type="int", min=1, max=1},
+    {name="month_of_year", type="int", min=2},
+    {name="day_of_month", type="int", min=2},
+  }
+  player = {
+    {name="hosp_name", type="string", min=5},
+  }
+}
+----
+
+The `blocks` table contains all blocks that exist or existed. This only needs
+to go back in time until the point where saved games are still supported for
+playing. Each block in the `blocks` table is a collection of closely related
+data that should stay together.
+In the example there are three such blocks.
+
+Each block is a list of fields. Each field has a name to differentiate it from
+other fields. It states the expected type of the data (`bool`, `int`, and any
+block name). If several data items are expected to saved, the type must be
+prefixed with `list`. For example, the `player_data` field in  the `world`
+block allows to store several `player` blocks.
+
+The `min` and `max` version numbers are integers. They are assumed to increase
+in time. That can be done by simply incrementing to the next number each
+update, but a number like `yyyymmdd` (four digits year, two digits month and
+two digits day) can be used too.
+A field exists in a block if the version number used for saving the data is
+within the inclusive bounds of the values of the `min` and `max` members of
+the field. If the `max` field is missing it is assumed to be infinite.
+Fields in a block are saved (and loaded) in the listed order. One of the
+blocks defines the content of the file.
+
+A block exists in the saved data if it has at least one field that needs to be
+saved.
+
+=== Example
+
+Below is an example of saved data for save version `1` shown as a Lua table,
+where the `world` block defines the content.
+
+[source,lua]
+----
+save = { -- Data of 'world'.
+    time = { -- Data of 'date'.
+        months = 3
+    },
+}
+----
+
+For save version `5` or higher it looks like:
+
+[source,lua]
+----
+save = { -- Data of 'world'.
+    time = { -- Data of 'date'.
+        year = 1,
+        month_of_year = 3,
+        day_of_month = 17,
+    },
+    player_data = { -- List of 'player' data.
+        { hosp_name = "hosp-1" },
+        { hosp_name = "hosp-2" },
+    }
+}
+----
+
+== Saving and loading
+
+The program should know about what needs to be saved for a given save version.
+Since typically a program supports one save version for writing, this
+knowledge can be hard-coded.
+
+When a save file must be created, the program should produce a tree of nested
+Lua tables that match with description of the save version, like the examples
+above. The code that actually saves the data to a file first checks the tree
+against the format description. If all is well, the data in the tree of tables
+is then stored in a file.
+
+The format of the data in the file is not part of this document, but it should
+store the save version used to construct the tables, as well as all data in
+the tables themselves.
+
+Loading is just the other way around. First the file is loaded and converted
+back to a tree of tables. Then the save version obtained from the file, and
+the tree of tables is handed over to the program to restore the game.
+
+== Version upgrade
+
+Sometimes, a file with an older save version is to be loaded. There are two
+ways to deal with this. The first way to do it is by supporting files to be
+loaded from a range of save versions by extending the code that restores the
+game. Basically this merges upgrading and loading as a single step. Depending
+on the stored data and the changes that must be done, this can be complicated.
+
+The second way to do it is by (possibly repeatedly) upgrading the tree of
+nested tables to the next version by changing some fields in the tables, and
+update to the next version number at the same time. When a save version is
+reached that is supported by the program, the tree of tables can be used to
+restore the game again.
+This separates upgrading the version of the data from restoring the game.
+
+Between changes of the tables, it is possible to verify the contents against
+the format description in the blocks. Several different policies exist here.
+The fastest is to never check, the slowest is to check after every upgrade.
+In-between is checking after the last upgrade or checking when a problem has
+been found.
