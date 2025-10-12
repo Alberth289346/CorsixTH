@@ -25,19 +25,59 @@ SOFTWARE. --]]
 class "ConfigStore"
 
 function ConfigStore::ConfigStore(template_path)
-  local stored_lines, settings = self:_extractConfigSettings(template_path)
+  local stored_lines, settings = self:_extractTemplateSettings(template_path)
   self:_checkDefaultEncodedValues(settings)
   self.stored_lines = stored_lines
-  self.settings = settings
+  self._template_settings = settings
+
+  self.user_settings = nil -- Set while loading the user configuration file.
 end
 
---! Load the template file and store the lines such that they are easy to use.
-function ConfigStore:_extractConfigSettings(template_path)
+function ConfigStore:loadUserConfig(user_config_path)
+  local loaded_user_settings = self:_extractConfigSettings(user_config_path)
+
+  -- Build a table with settings of the user. Add missing entries.
+  self.user_settings = {}
+
+  -- First sweep, get all valid settings of the user.
+  for _, entry in pairs(loaded_user_settings) do
+    local templ_entry = self._template_settings[entry.key_name]
+    if templ_entry then
+      local ok, val = ConfigStore._decode(templ_entry.val_type, entry.enc_val)
+      if ok then
+        self.user_settings[entry.key_name] = {
+          key_name = entry.key_name,
+          val_type = templ_entry.val_type,
+          enc_val = entry.enc_val,
+          value = val -- Decoded Lua value.
+        }
+      end
+    end
+  end
+  -- Second sweep, add missing entries.
+  for _, templ_setting in pairs(self.templ_settings) do
+    if not user_settings[templ_setting.key_name] then
+      local ok, val = ConfigStore._decode(templ_entry.val_type, templ_entry.def_enc_val)
+      assert(ok) -- Is already checked while loading the template config.
+      self.user_settings[templ_entry.key_name] = {
+        key_name = templ_entry.key_name,
+        val_type = templ_entry.val_type,
+        enc_val = templ_entry.enc_val,
+        value = val -- Decoded Lua value.
+      }
+    end
+  end
+end
+
+--! Load the template file, extract the information, and store the data.
+--!param template_path (string) Path to the template file.
+--!return The stored lines, and the found settings.
+function ConfigStore:_extractTemplateSettings(template_path)
   -- The template file can have empty lines, comment lines, and settings lines
-  -- of the form "@key_name#val_type#enc_val@" where
+  -- of the form "@key_name#val_type#enc_def_val@" where
   -- 'key_name' is the name of the setting,
   -- 'val_type' is the type name of the value of the setting.
-  -- 'enc_val' is the default value, encoded as a string. For example:
+  -- 'enc_def_val' is the default value, encoded as a string. For example:
   --
   -- -- Example comment line.
   -- @zoom_speed#zoom_integer#80@
@@ -95,6 +135,52 @@ function ConfigStore:_extractConfigSettings(template_path)
 
   return stored_lines, templ_settings
 end
+
+--! Read the configuration file of the user.
+--!param user_config_path (str) Path to the user configuration file.
+--!return (array { {key_name = <string>, enc_value = <string>} })
+--   The read settings of the file.
+function ConfigStore:_extractConfigSettings(user_config_path)
+  --! Remove white space from left and right of the string.
+  local function trim(text)
+    -- Find first non-whitespace character at the left.
+    local left = 1
+    while left <= #text and text:sub(left, left):find("[%s]") do
+      left = left + 1
+    end
+
+    -- Find first non-whitespace character at the right.
+    local right = #text
+    while right > left and text:sub(right, right):find("[%s]") do
+      right = right - 1
+    end
+
+    if left == 1 and right == #text then return text end
+    return text:sub(left, right)
+  end
+
+  -- MAIN CODE.
+  --
+  -- Array { {key_name = <string>, enc_value = <string>} }
+  local settings = {}
+
+  local handle = io.open(user_config_path, "r")
+  while true do
+    local line = handle:read()
+    -- If not an empty line and not a comment line, match the 'key_name = enc_val' text.
+    if not line:find("^[%s]*$") and not line:find("^[%s]*[%-][%-]") then
+      local f, _e, key_name, enc_val = line:find("^[%s]*([A-Z0-9a-z_]+)[%s]*=(.*)$")
+      if f then
+        settings[#settings + 1] = {key_name=key_name, enc_value=trim(enc_val)}
+      end
+      -- else: Unexpected line, skip.
+    end
+  end
+  handle:close()
+
+  return settings
+end
+
 
 --! Check that the encoded default values of the settings can be decoded.
 function ConfigStore:_checkDefaultEncodedValues(templ_settings)
