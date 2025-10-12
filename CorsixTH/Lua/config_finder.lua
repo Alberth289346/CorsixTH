@@ -18,6 +18,85 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+--! Data of a configuration file.
+--! The coonfiguration file may have empty lines, full comment lines, and lines
+--  of the form "keyword = value".
+--! The data to store is defined in the template configuration file.
+class "ConfigStore"
+
+function ConfigStore::ConfigStore(template_path)
+  local stored_lines, settings = self:_extractConfigSettings(template_path)
+  self.stored_lines = stored_lines
+  self.settings = settings
+end
+
+--! Load the template file and store the lines such that they are easy to use.
+function ConfigStore:_extractConfigSettings(template_path)
+  -- The template file can have empty lines, comment lines, and settings lines
+  -- of the form "@key_name#val_type#enc_val@" where
+  -- 'key_name' is the name of the setting,
+  -- 'val_type' is the type name of the value of the setting.
+  -- 'enc_val' is the default value, encoded as a string. For example:
+  --
+  -- -- Example comment line.
+  -- @zoom_speed#zoom_integer#80@
+  --
+  -- 'zoom_speed' is the name of the setting,
+  -- 'zoom_integer' is the name of the type of the setting.
+  -- '80' is the encode default value.
+
+  -- Array of tables {key_name:str = .., text:str = ...}, where the
+  -- 'key_name' field only exists at a line with a setting.
+  local stored_lines = {}
+
+  -- Table {key_name = {
+  --     key_name = <string>,
+  --     val_type = <string>,
+  --     enc_def_val = <string>} }
+  local templ_settings = {}
+
+  local handle = io.open(template_path, "r")
+  local lnum = 0
+  while true do
+    local line = handle:read()
+    if line == nil then break end
+    lnum = lnum + 1
+
+    if line:find("^[%s]*$") then
+      -- Empty line.
+      stored_lines[lnum] = {text = line}
+
+    elseif line:find("^[%s]*[%-][%-]") then
+      -- Comment line.
+      stored_lines[lnum] = {text = line}
+    else
+      -- Must be a setting line.
+      local f, _e, key_name, val_type, enc_def_val = line:find(
+          "@([A-Z0-9a-z_]+)#([A-Z0-9a-z_]+)#(.*)@")
+
+      -- Pattern must be found.
+      assert(f, "Template setting pattern '@...#...#...@' at line " .. i
+          .. " of file \"" .. template_path .. "\" does not match.")
+
+      -- Name of the setting must be unique.
+      assert(not templ_settings[key_name], "Template setting \"" ..
+          name .. "\" at line " .. lnum .. " was already defined earlier.")
+
+      templ_settings[key_name] = {
+        key_name = key_name,
+        val_type = val_type,
+        enc_def_val = enc_def_val
+      }
+      stored_lines[lnum] = {text = line, key_name = key_name}
+    end
+  end
+  handle:close()
+
+  return stored_lines, templ_settings
+end
+
+
+
 local config_path, config_name, config_data
 local pathsep = package.config:sub(1, 1)
 local ourpath = debug.getinfo(1, "S").source:sub(2, -22)
