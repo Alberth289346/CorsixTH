@@ -26,6 +26,7 @@ class "ConfigStore"
 
 function ConfigStore::ConfigStore(template_path)
   local stored_lines, settings = self:_extractConfigSettings(template_path)
+  self:_checkDefaultEncodedValues(settings)
   self.stored_lines = stored_lines
   self.settings = settings
 end
@@ -95,7 +96,112 @@ function ConfigStore:_extractConfigSettings(template_path)
   return stored_lines, templ_settings
 end
 
+--! Check that the encoded default values of the settings can be decoded.
+function ConfigStore:_checkDefaultEncodedValues(templ_settings)
+  for _, setting in pairs(templ_settings) do
+    local ok = ConfigStore._decode(setting.val_type, setting.enc_def_val)
+    assert(ok, "Value \"" .. setting.enc_def_val ..
+        "\" of setting \"" .. setting.key_name ..
+        "\" of type \"" .. setting.val_type .. "\" is not valid.")
+  end
+end
 
+--! Decode the encoded value to a Lua value.
+--!param val_type Kind of the value.
+--!param enc_val The encoded value to decode to a Lua value.
+--!return (bool, any) Whether the input was valid and if so, the decoded value.
+function ConfigStore:_decode(val_type, enc_val)
+  -- Check a boolean literal.
+  local function chkBool(enc_val)
+    if enc_val == "true" then return true, true end
+    if enc_val == "false" then return true, false end
+    return nil
+  end
+  -- Check an integer, possibly with bounds.
+  local function chkInt(enc_val, low, high)
+    local n = tonumber(enc_val)
+    if not n or math.floor(n) ~= n then return nil end
+    if low and n < low then return nil end
+    if high and n > high then return nil end
+    return true, n
+  end
+  -- Remove 'pre' and 'post' if they start and end the text.
+  local function removeEscape(text, pre, post)
+    if #text >= #pre + #post then
+      if text:sub(1, #pre) == pre and text:sub(-#post, -1) == post then
+        if #text == #pre + #post then return true, "" end
+        return true, text:sub(1 + #pre, -(1 + #post))
+      end
+    end
+    return false, text
+  end
+  -- Check a string.
+  local function chkStr(enc_val, can_be_empty)
+    if type(enc_val) ~= "string" then return nil end
+
+    -- Unwrap a possible Lua escape sequence from the string.
+    local removed, enc_val = removeEscape(enc_val, "[[", "]]")
+    if not removed then
+      removed, enc_val = removeEscape(enc_val, "[=[", "]=]")
+    end
+
+    -- Decide correctness of the string.
+    if enc_val:find("[%c]") then return nil end -- No control characters allowed.
+    if enc_val == "" and not can_be_empty then return nil end
+    return true, enc_val
+  end
+
+  -- MAIN CODE.
+  if val_type == "opt_boolean" then
+    if enc_val == "" then return true, nil end
+    return chkBool(enc_val)
+
+  elseif val_type == "boolean" then
+    return chkBool(enc_val)
+
+  elseif val_type == "integer" then
+    return chkInt(enc_val, nil, nil)
+
+  elseif val_type == "positive_integer" then
+    return chkInt(enc_val, 1, nil)
+
+  elseif val_type == "warmth_colour" then
+    -- TODO Get true lower and upper bounds from elsewhere.
+    return chkInt(enc_val, 1, 3)
+
+  elseif val_type == "zoom_speed" then
+    -- TODO Get true lower and upper bounds from elsewhere.
+    return chkInt(enc_val, 10, 1000)
+
+  elseif val_type == "scrolling_speed" then
+    -- TODO Get true lower and upper bounds from elsewhere.
+    return chkInt(enc_val, 1, 10)
+
+  elseif val_type == "fraction" then
+    local n = tonumber(enc_val)
+    if n and n >= 0 and n <= 1 then return true, n end
+    return nil
+
+  elseif val_type == "opt_string" then
+    return chkStr(enc_val, true)
+
+  elseif val_type == "string" then
+    return chkStr(enc_val, false)
+
+  elseif val_type == "language_name" then
+    -- TODO Do proper name checking.
+    return chkStr(enc_val, false)
+
+  elseif val_type == "file_path" then
+    return chkStr(enc_val, true)
+
+  elseif val_type == "folder_path" then
+    return chkStr(enc_val, true)
+  end
+
+  error("Unknown value type \"" .. val_type
+      .. " for decoding \"" .. enc_val .. "\".")
+end
 
 local config_path, config_name, config_data
 local pathsep = package.config:sub(1, 1)
