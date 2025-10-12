@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 --! Data of a configuration file.
---! The coonfiguration file may have empty lines, full comment lines, and lines
+--! The configuration file may have empty lines, full comment lines, and lines
 --  of the form "keyword = value".
 --! The data to store is defined in the template configuration file.
 class "ConfigStore"
@@ -88,6 +88,33 @@ function ConfigStore:setSetting(key_name, enc_val)
   -- Update the user configuration.
   entry.enc_val = enc_val
   entry.value = val
+end
+
+--! Store the user configuration.
+--!param needs_rewrite 
+function ConfigStore:writeUserConfig(needs_rewrite, user_config_path)
+  if not needs_rewrite then
+    return
+  end
+
+  -- Construct the file data.
+  config_data = ""
+  for _, stored in ipairs(self.stored_lines) do
+    if stored.key_name then
+      local entry = self.user_settings[stored.key_name]
+
+      config_data = config_data .. stored.key_name .. " = " .. entry.enc_val .. "\n"
+    else
+      config_data = config_data .. stored.text .. "\n"
+    end
+  end
+
+  -- Write the file data.
+  if TheApp then
+    local fi = TheApp:writeToFileOrTmp(user_config_path)
+    fi:write(config_data)
+    fi:close()
+  end
 end
 
 --! Load the template file, extract the information, and store the data.
