@@ -69,6 +69,27 @@ function ConfigStore:loadUserConfig(user_config_path)
   end
 end
 
+function ConfigStore:getSetting(key_name)
+  local entry = self.user_settings[key_name]
+  assert(entry) -- Ensure the program asks for keys that exist.
+  return entry.value
+end
+
+function ConfigStore:setSetting(key_name, enc_val)
+  assert(type(enc_val) == "string", "Encoded value is not a string.")
+
+  -- Check the given data for sanity.
+  local entry = self.user_settings[key_name]
+  assert(entry) -- Ensure the program only changes keys that exist.
+  local ok, val = ConfigStore._decode(entry.val_type, enc_val)
+  assert(ok, "Value \"" .. enc_val
+      .. "\" is not valid for the setting with key \"" .. key_name .. "\".")
+
+  -- Update the user configuration.
+  entry.enc_val = enc_val
+  entry.value = val
+end
+
 --! Load the template file, extract the information, and store the data.
 --!param template_path (string) Path to the template file.
 --!return The stored lines, and the found settings.
