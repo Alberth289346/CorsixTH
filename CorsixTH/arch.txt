@@ -1,0 +1,27 @@
+The bottom part of the program is written in C++, using SDL3. It loads and
+plays animations, handles sounds and music, and perform compute-intensive
+tasks such as path finding. Last but not least, it provides access to the
+implemented facilities for Lua. SDL3 events are passed up to Lua as well.
+
+On top of the C++ layer is the code that implements the game logic. This layer
+is completely written in Lua.
+The 'app.lua' file is the high level controller, where game levels, scenarios,
+or the map editor are created and started. It also passes game ticks and SDL3
+events to other Lua code.
+In playing game levels and scenarios, 'world.lua' creates the hospitals and
+handles the general services such as providing access to the path-finding
+algorithms, data/time tracking, patient spawning, parcels where hospital
+expansions can be built, and triggering disasters like earth quakes and
+epidemics.
+The hospital of the player is implemented in the PlayerHospital class. The AI
+is implemented in the AIHospital. Properties of rooms are in the 'rooms'
+directory. The NPC classes are in the 'entities' directory. Machines and
+object are also entities.
+The activities performed by humanoids are captured in actions. Actions are
+stored in a queue (the action queue), representing a sequence of activities.
+An activity is shown as an animation. Note that 'sequence' is an
+over-simplification. Actions have lots of extensions to suspend an action,
+insert an action in front of it, or interrupt actions,
+Gui windows are in the 'dialogs' directory. The UI manager is available in the
+'game_ui.lua' file, while the widget classes of the gui windows are defined in
+'window.lua'.
