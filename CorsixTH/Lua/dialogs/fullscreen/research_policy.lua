@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 class "UIResearch" (UIFullscreen)
 
 ---@type UIResearch
@@ -199,6 +201,7 @@ function UIResearch:onTick()
 end
 
 function UIResearch:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -242,6 +245,7 @@ end
 function UIResearch:close()
   self.ui:stopSound(self.bg_sound)
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -257,6 +261,7 @@ function UIResearch:afterLoad(old, new)
     end
   end
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     self.background = gfx:loadRaw("Res01V", 640, 480, "QData", "QData", "Res01V.pal", true)
     local palette = gfx:getPalette("Res01V.pal")

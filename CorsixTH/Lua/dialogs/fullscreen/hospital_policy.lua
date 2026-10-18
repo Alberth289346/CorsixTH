@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Hospital policy fullscreen window (set staff tiredness and patient cure thresholds, etc.).
 class "UIPolicy" (UIFullscreen)
 
@@ -34,6 +36,7 @@ function UIPolicy:UIPolicy(ui)
     self.label_font = gfx:loadFontAndSpriteTable("QData", "Font74V", false, palette, { apply_ui_scale = true })
     self.text_font = gfx:loadFontAndSpriteTable("QData", "Font105V", false, palette, { apply_ui_scale = true })
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -119,6 +122,7 @@ function UIPolicy:UIPolicy(ui)
 end
 
 function UIPolicy:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -157,6 +161,7 @@ end
 function UIPolicy:onMouseMove(x, y, dx, dy)
   local repaint = UIFullscreen.onMouseMove(self, x, y, dx, dy)
   if self.moving_panel then -- A slider is being moved.
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local p = self.moving_panel
     self.moved_x = self.moved_x + dx / s
@@ -209,6 +214,7 @@ end
 --!param y (int) Y position of the mouse.
 --!return Slider that was detected at the given position, or nil
 function UIPolicy:panelHit(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x = x / s
   y = y / s
@@ -229,6 +235,7 @@ function UIPolicy:close()
     self.hospital.policies[key] = number + (s.x - (s.total_min_x or s.min_x))/divider
   end
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -238,6 +245,7 @@ function UIPolicy:afterLoad(old, new)
         self.sliders["stop_procedure"], self.sliders["goto_staffroom"]}
   end
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
 
     self.background = gfx:loadRaw("Pol01V", 640, 480, "QData", "QData", "Pol01V.pal", true)

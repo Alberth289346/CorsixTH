@@ -18,12 +18,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Customise window used in the main menu and ingame.
 class "UIFolder" (UIResizable)
 
 ---@type UIFolder
 local UIFolder = _G["UIFolder"]
 
+local Colours = _G["Colours"] ---@type Colours
 local col = {
    bg = Colours.PanelDefault,
    setting = Colours.Setting,
@@ -162,6 +165,7 @@ function UIFolder:UIFolder(ui, mode)
 end
 
 function UIFolder:resetSavegameDir()
+  local TheApp = _G["TheApp"] ---@type App
   local app = TheApp
   local default_savegame_dir = app:getDefaultSavegameDir()
   local tooltip_saves = _S.tooltip.folders_window.browse_saves:format(default_savegame_dir)
@@ -173,6 +177,7 @@ function UIFolder:resetSavegameDir()
 end
 
 function UIFolder:resetScreenshotDir()
+  local TheApp = _G["TheApp"] ---@type App
   local app = TheApp
   local default_screenshots_dir = app:getDefaultScreenshotsDir()
   local tooltip_screenshots = _S.tooltip.folders_window.browse_screenshots:format(default_screenshots_dir)
@@ -184,6 +189,7 @@ function UIFolder:resetScreenshotDir()
 end
 
 function UIFolder:resetMusicDir()
+  local TheApp = _G["TheApp"] ---@type App
   local app = TheApp
   local label_music = _S.tooltip.folders_window.not_specified
   local tooltip_music = _S.tooltip.folders_window.not_specified
@@ -195,11 +201,15 @@ function UIFolder:resetMusicDir()
 end
 
 function UIFolder:buttonBrowseForFont()
+  local UIChooseFont = _G["UIChooseFont"] ---@type UIChooseFont
   local browser = UIChooseFont(self.ui, self.mode)
   self.ui:addWindow(browser)
 end
 
 function UIFolder:buttonBrowseForSavegames()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIDirectoryBrowser = _G["UIDirectoryBrowser"] ---@type UIDirectoryBrowser
+
   local app = TheApp
   local old_path = app.config.savegames
   local function callback(path)
@@ -215,6 +225,9 @@ function UIFolder:buttonBrowseForSavegames()
 end
 
 function UIFolder:buttonBrowseForTHInstall()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIDirectoryBrowser = _G["UIDirectoryBrowser"] ---@type UIDirectoryBrowser
+
   local function callback(path)
     local app = TheApp
     app.config.theme_hospital_install = path
@@ -226,6 +239,9 @@ function UIFolder:buttonBrowseForTHInstall()
 end
 
 function UIFolder:buttonBrowseForScreenshots()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIDirectoryBrowser = _G["UIDirectoryBrowser"] ---@type UIDirectoryBrowser
+
   local app = TheApp
   local old_path = app.config.screenshots
   local function callback(path)
@@ -241,7 +257,10 @@ function UIFolder:buttonBrowseForScreenshots()
 end
 
 function UIFolder:buttonBrowseForAudio_music()
+  local UIDirectoryBrowser = _G["UIDirectoryBrowser"] ---@type UIDirectoryBrowser
+
   local function callback(path)
+    local TheApp = _G["TheApp"] ---@type App
     local app = TheApp
     app.config.audio_music = path
     app:saveConfig()
@@ -254,6 +273,7 @@ end
 
 function UIFolder:buttonBack()
   self:close()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
   local window = UIOptions(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -261,6 +281,7 @@ end
 function UIFolder:close()
   UIResizable.close(self)
   if self.mode == "menu"  then
+    local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
     self.ui:addWindow(UIMainMenu(self.ui))
   end
 end

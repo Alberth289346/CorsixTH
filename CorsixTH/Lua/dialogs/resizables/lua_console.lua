@@ -22,6 +22,8 @@ SOFTWARE. --]]
 strict_declare_global "_"
 _ = nil
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Interactive Lua Console for ingame debugging.
 class "UILuaConsole" (UIResizable)
 
@@ -99,6 +101,7 @@ function UILuaConsole:buttonExecute()
   print("Loading UserFunction...")
   local func, err, s
 
+  local TheApp = _G["TheApp"] ---@type App
   _ = TheApp.ui and TheApp.ui.debug_cursor_entity
 
   local i = 0

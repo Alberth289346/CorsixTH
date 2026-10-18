@@ -106,6 +106,7 @@ function UIFax:updateChoices()
 end
 
 function UIFax:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -135,6 +136,8 @@ end
 --A choice was made for the fax.
 --!param choice_number (integer) Number of the choice
 function UIFax:choice(choice_number)
+  local SeekRoomAction = _G["SeekRoomAction"] ---@type SeekRoomAction
+
   local choices = self.message.choices
   local choice, additionalInfo
   if choices and choice_number >= 1 and choice_number <= #choices then
@@ -186,6 +189,7 @@ function UIFax:choice(choice_number)
   local vip_ignores_refusal = math.random(1, 2)
   if choice == "accept_emergency" then
     self.ui.app.world:newObject("helicopter", "north")
+    local UIWatch = _G["UIWatch"] ---@type UIWatch
     self.ui:addWindow(UIWatch(self.ui, "emergency"))
   elseif choice == "refuse_emergency" then
     self.ui.app.world:nextEmergency()
@@ -270,6 +274,7 @@ function UIFax:validate()
   if code == "24328" then
     -- Original game cheat code
     self.ui.adviser:say(_A.cheats.th_cheat)
+    local UICheats = _G["UICheats"] ---@type UICheats
     self.ui:addWindow(UICheats(self.ui))
   elseif code == "112" then
     -- simple, unobfuscated cheat for everyone :)
@@ -300,6 +305,7 @@ end
 
 function UIFax:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     self.background = gfx:loadRaw("Fax01V", 640, 480, "QData", "QData", "Fax01V.pal", true)
     local palette = gfx:getPalette("Fax01V.pal")

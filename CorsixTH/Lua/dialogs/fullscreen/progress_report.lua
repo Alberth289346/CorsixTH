@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Progress Report fullscreen window (check level goals, competitors and alerts).
 class "UIProgressReport" (UIFullscreen)
 
@@ -45,6 +47,7 @@ function UIProgressReport:UIProgressReport(ui)
     }
     self.panel_sprites = self.panel_sprites_table.Rep02V -- The default goals icons
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -145,10 +148,12 @@ end
 
 function UIProgressReport:close()
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
 function UIProgressReport:drawMarkers(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local x_min = 455 * s
   local x_max = 551 * s
@@ -157,6 +162,7 @@ function UIProgressReport:drawMarkers(canvas, x, y)
   local happiness = self.ui.hospital:getAveragePatientAttribute("happiness", 0.5)
   local thirst = 1 - self.ui.hospital:getAveragePatientAttribute("thirst", 0.5)
   local warmth = self.ui.hospital:getAveragePatientAttribute("warmth", nil)
+  local UIPatient = _G["UIPatient"] ---@type UIPatient
   warmth = UIPatient.normaliseWarmth(warmth)
 
   self.panel_sprites:draw(canvas, 5, math.floor(x + x_min + width * happiness), y + 193 * s, { scaleFactor = s })
@@ -193,6 +199,7 @@ function UIProgressReport:drawMarkers(canvas, x, y)
 end
 
 function UIProgressReport:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -234,6 +241,7 @@ function UIProgressReport:draw(canvas, x, y)
       self.panel_sprites:draw(canvas, 2 + sprite_offset, x + lx, y + 237 * s - result_y, { scaleFactor = s })
       if crit_table.icon_file then -- Icons not from QData/Rep02V
         local icon_sprites = self.panel_sprites_table[crit_table.icon_file]
+        local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
         icon_sprites:draw(canvas, crit_table.icon, x + lx, y + 240 * s, { scaleFactor = s, flags = DrawFlags.Nearest })
       end
       lx = lx + 30 * s
@@ -255,6 +263,7 @@ function UIProgressReport:afterLoad(old, new)
   end
 
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     local palette = gfx:getPalette("Rep01V.pal")
 

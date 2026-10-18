@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
-local math_floor = math.floor
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
 
 --! Staff management screen
 class "UIStaffManagement" (UIFullscreen)
@@ -35,8 +35,10 @@ function UIStaffManagement:UIStaffManagement(ui)
     self.panel_sprites = gfx:loadSpriteTable("QData", "Staff02V", true, palette)
     self.title_font = gfx:loadFontAndSpriteTable("QData", "Font01V", false, palette, { apply_ui_scale = true })
     self.blue_font = gfx:loadFontAndSpriteTable("QData", "Font02V", false, palette, { apply_ui_scale = true })
+    local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
     self.face_parts = gfx:loadRaw("Face01V", 65, 1350, nil, "Data", "MPalette.dat", false, { flags = DrawFlags.Nearest })
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -257,6 +259,7 @@ function UIStaffManagement:selectStaff(staff)
 end
 
 function UIStaffManagement:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -292,15 +295,15 @@ function UIStaffManagement:draw(canvas, x, y)
     -- Morale, tiredness and skill, used to draw the average at the end too.
     local happiness_bar_width = 0
     if staff:getAttribute("happiness") then
-      happiness_bar_width = math_floor(staff:getAttribute("happiness") * 40 * s + 0.5)
+      happiness_bar_width = math.floor(staff:getAttribute("happiness") * 40 * s + 0.5)
       total_happiness = total_happiness + staff:getAttribute("happiness")
     end
     local fatigue_bar_width = 40.5 * s
     if staff:getAttribute("fatigue") then
       total_fatigue = total_fatigue + staff:getAttribute("fatigue")
-      fatigue_bar_width = math_floor((1 - staff:getAttribute("fatigue")) * 40 * s + 0.5)
+      fatigue_bar_width = math.floor((1 - staff:getAttribute("fatigue")) * 40 * s + 0.5)
     end
-    local skill_bar_width = math_floor(staff.profile.skill * 40 * s + 0.5)
+    local skill_bar_width = math.floor(staff.profile.skill * 40 * s + 0.5)
     total_skill = total_skill + staff.profile.skill
     -- Is this staff member on the visible page? Then draw him/her
     if i > (self.page-1)*10 and i <= self.page*10 then
@@ -341,20 +344,20 @@ function UIStaffManagement:draw(canvas, x, y)
   end
   -- Draw the average morale, tiredness and skill
   if #staff_list ~= 0 then
-    local happiness_bar_width = math_floor((total_happiness/#staff_list) * 40 * s + 0.5)
+    local happiness_bar_width = math.floor((total_happiness/#staff_list) * 40 * s + 0.5)
     if happiness_bar_width ~= 0 then
       for dx = 0, happiness_bar_width - 1 do
         self.panel_sprites:draw(canvas, 16, x + 351 * s + dx, y + 59 * s, { scaleFactor = s })
       end
     end
 
-    local fatigue_bar_width = math_floor((1 - (total_fatigue/#staff_list)) * 40 * s + 0.5)
+    local fatigue_bar_width = math.floor((1 - (total_fatigue/#staff_list)) * 40 * s + 0.5)
     if fatigue_bar_width ~= 0 then
       for dx = 0, fatigue_bar_width - 1 do
         self.panel_sprites:draw(canvas, 15, x + 456 * s + dx, y + 59 * s, { scaleFactor = s })
       end
     end
-    local skill_bar_width = math_floor((total_skill/#staff_list) * 40 + 0.5)
+    local skill_bar_width = math.floor((total_skill/#staff_list) * 40 + 0.5)
     if skill_bar_width ~= 0 then
       for dx = 0, skill_bar_width - 1 do
         self.panel_sprites:draw(canvas, 14, x + 559 * s + dx, y + 59 * s, { scaleFactor = s })
@@ -394,11 +397,11 @@ function UIStaffManagement:draw(canvas, x, y)
     -- 10 % increase in salary or a bonus:
     local max_salary = self.hospital.world.map.level_config.payroll.MaxSalary
     local new_salary = math.min(math.floor(profile.wage * 1.1), max_salary)
-    titles:draw(canvas, "$" .. math_floor(profile.wage*0.1), x + 377 * s, y + 387 * s, 45 * s, 0)
+    titles:draw(canvas, "$" .. math.floor(profile.wage*0.1), x + 377 * s, y + 387 * s, 45 * s, 0)
     titles:draw(canvas, "$" .. new_salary, x + 377 * s, y + 432 * s, 45 * s, 0)
 
     -- Attention to detail
-    local attention_bar_width = math_floor(profile.attention_to_detail * 40 * s + 0.5)
+    local attention_bar_width = math.floor(profile.attention_to_detail * 40 * s + 0.5)
     if attention_bar_width ~= 0 then
       for dx = 0, attention_bar_width - 1 do
         self.panel_sprites:draw(canvas, 13, x + 178 * s + dx, y + 387 * s, { scaleFactor = s })
@@ -411,8 +414,8 @@ function UIStaffManagement:draw(canvas, x, y)
           self.qualified_surgeon.visible = true
         elseif not profile.is_consultant then
           self.progress_surgeon.visible = true
-          self.progress_surgeon:setTooltip(_S.tooltip.staff_list.surgeon_train:format(math_floor(profile.is_surgeon * 100)))
-          local progress = math_floor(profile.is_surgeon * 23 * s + 0.5)
+          self.progress_surgeon:setTooltip(_S.tooltip.staff_list.surgeon_train:format(math.floor(profile.is_surgeon * 100)))
+          local progress = math.floor(profile.is_surgeon * 23 * s + 0.5)
           for dx = 0, progress - 1 do
             self.panel_sprites:draw(canvas, 13, x + 196 * s + dx, y + 447 * s, { scaleFactor = s })
           end
@@ -423,8 +426,8 @@ function UIStaffManagement:draw(canvas, x, y)
           self.qualified_psychiatrist.visible = true
         elseif not profile.is_consultant then
           self.progress_psychiatrist.visible = true
-          self.progress_psychiatrist:setTooltip(_S.tooltip.staff_list.psychiatrist_train:format(math_floor(profile.is_psychiatrist * 100)))
-          local progress = math_floor(profile.is_psychiatrist * 23 * s + 0.5)
+          self.progress_psychiatrist:setTooltip(_S.tooltip.staff_list.psychiatrist_train:format(math.floor(profile.is_psychiatrist * 100)))
+          local progress = math.floor(profile.is_psychiatrist * 23 * s + 0.5)
           for dx = 0, progress - 1 do
             self.panel_sprites:draw(canvas, 13, x + 236 * s + dx, y + 447 * s, { scaleFactor = s })
           end
@@ -435,8 +438,8 @@ function UIStaffManagement:draw(canvas, x, y)
           self.qualified_researcher.visible = true
         elseif not profile.is_consultant then
           self.progress_researcher.visible = true
-          self.progress_researcher:setTooltip(_S.tooltip.staff_list.researcher_train:format(math_floor(profile.is_researcher * 100)))
-          local progress = math_floor(profile.is_researcher * 23 * s + 0.5)
+          self.progress_researcher:setTooltip(_S.tooltip.staff_list.researcher_train:format(math.floor(profile.is_researcher * 100)))
+          local progress = math.floor(profile.is_researcher * 23 * s + 0.5)
           for dx = 0, progress - 1 do
             self.panel_sprites:draw(canvas, 13, x + 276 * s + dx, y + 447 * s, { scaleFactor = s })
           end
@@ -457,13 +460,14 @@ end
 
 function UIStaffManagement:onMouseDown(code, x, y)
   if code == "left" then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local inside_staff_list_area = (x > 50 * s and x < 624 * s) and (y > 82 * s and y < 351 * s)
     local inside_header_area = (x > 321 * s and x < 629 * s) and (y > 22 * s and y < 46 * s)
     if inside_staff_list_area then
       -- Hit staff row
-      if #self.staff_members[self.category] - (self.page - 1)*10 > math_floor((y - 81 * s)/(27 * s)) then
-        self.selected_staff = math_floor((y - 81 * s)/(27 * s)) + 1 + (self.page - 1)*10
+      if #self.staff_members[self.category] - (self.page - 1)*10 > math.floor((y - 81 * s)/(27 * s)) then
+        self.selected_staff = math.floor((y - 81 * s)/(27 * s)) + 1 + (self.page - 1)*10
         TheApp.audio:playSound("selectx.wav")
       end
     elseif inside_header_area then
@@ -495,12 +499,13 @@ function UIStaffManagement:onMouseDown(code, x, y)
 end
 
 function UIStaffManagement:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local current_hover_id
   local inside_staff_list_area
   local header_height = 81 * s
   local row_height = 27 * s
-  local active_hover_id = math_floor((y - header_height)/row_height)
+  local active_hover_id = math.floor((y - header_height)/row_height)
   if self.page*10 > #self.staff_members[self.category] then
     -- Make sure area contains no hollow space
     inside_staff_list_area = (x > 50 * s and x < 624 * s) and
@@ -525,17 +530,20 @@ function UIStaffManagement:onMouseMove(x, y, dx, dy)
     self.hover_id = nil
     self.visual_hover_id = nil
   end
+  local Window = _G["Window"] ---@type Window
   return Window:onMouseMove(x, y, dx, dy)
 end
 
 function UIStaffManagement:onMouseUp(code, x, y)
   if code == "left" then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local inside_view_of_the_staff_area = (x > 497 * s and x < 580 * s) and (y > 373 * s and y < 455 * s)
     if inside_view_of_the_staff_area and self.selected_staff then
       -- Hit in the view of the staff.
       local ui = self.ui
       ui:scrollMapTo(self:getStaffPosition())
+      local UIStaff = _G["UIStaff"] ---@type UIStaff
       ui:addWindow(UIStaff(ui, self.staff_members[self.category][self.selected_staff]))
       self:close()
     end
@@ -626,7 +634,7 @@ end
 --! Updates the position of the paging scroll indicator
 function UIStaffManagement:updateScrollDot()
   local numPages = math.ceil(#self.staff_members[self.category] / 10)
-  local yOffset = math_floor(83 * ((self.page - 1) / (numPages - 1)))
+  local yOffset = math.floor(83 * ((self.page - 1) / (numPages - 1)))
   self.scroll_dot.y = 168 + yOffset
 end
 
@@ -642,9 +650,9 @@ end
 
 function UIStaffManagement:payBonus()
   local staff = self.staff_members[self.category][self.selected_staff]
-  if self.selected_staff and self.hospital.balance > math_floor(staff.profile.wage*0.1) then
+  if self.selected_staff and self.hospital.balance > math.floor(staff.profile.wage*0.1) then
     staff:changeAttribute("happiness", 0.5)
-    self.hospital:spendMoney(math_floor(staff.profile.wage*0.1), _S.transactions.personal_bonus)
+    self.hospital:spendMoney(math.floor(staff.profile.wage*0.1), _S.transactions.personal_bonus)
     self.ui:playSound("cashreg.wav")
     return
   end
@@ -654,7 +662,7 @@ end
 function UIStaffManagement:increaseSalary()
   if self.selected_staff then
     local staff = self.staff_members[self.category][self.selected_staff]
-    if staff:increaseWage(math_floor(staff.profile.wage * 0.1)) then
+    if staff:increaseWage(math.floor(staff.profile.wage * 0.1)) then
       return
     end
   end
@@ -664,10 +672,12 @@ end
 function UIStaffManagement:fire()
   if self.selected_staff then
     self.ui:playSound(self.default_button_sound)
+    local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
     self.ui:addWindow(UIConfirmDialog(self.ui, false, _S.confirmation.sack_staff, --[[persistable:staff_management_confirm_sack]] function()
       local current_category = self.staff_members[self.category]
       current_category[self.selected_staff]:fire()
       -- Close the staff window if open
+      local UIStaff = _G["UIStaff"] ---@type UIStaff
       local staff_window = self.ui:getWindow(UIStaff)
       if staff_window and staff_window.staff == current_category[self.selected_staff] then
         staff_window:close()
@@ -682,6 +692,7 @@ end
 
 function UIStaffManagement:close()
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -692,11 +703,13 @@ function UIStaffManagement:afterLoad(old, new)
     self:close()
   end
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     self.background = gfx:loadRaw("Staff01V", 640, 480, "QData", "QData", "Staff01V.pal", true)
     local palette = gfx:getPalette("Staff01V.pal")
     self.panel_sprites = gfx:loadSpriteTable("QData", "Staff02V", true, palette, { apply_ui_scale = true })
     self.title_font = gfx:loadFontAndSpriteTable("QData", "Font01V", false, palette, { apply_ui_scale = true })
+    local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
     self.face_parts = gfx:loadRaw("Face01V", 65, 1350, nil, "Data", "MPalette.dat", false, { flags = DrawFlags.Nearest })
   end
 

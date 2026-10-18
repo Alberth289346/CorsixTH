@@ -18,8 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
-local ipairs
-    = ipairs
+local Window = _G["Window"] ---@type Window
 
 class "UIJukebox" (Window)
 
@@ -154,6 +153,7 @@ function UIJukebox:loopTrack()
 end
 
 function UIJukebox:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   for i, info in ipairs(TheApp.audio.background_playlist) do
     self.track_buttons[i]:setToggleState(not info.enabled)
   end
@@ -184,7 +184,9 @@ function UIJukebox:afterLoad(old, new)
     self:close()
   end
   Window.afterLoad(self, old, new)
+
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.blue_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font02V", nil, nil, { apply_ui_scale = true })
   end

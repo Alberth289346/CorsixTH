@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
 
 --! A dialog for activating cheats
 class "UICheats" (UIResizable)
@@ -130,6 +131,8 @@ end
 --! Handles the choice of a cheat from the dialog
 --!param num (number) the index in the cheat list
 function UICheats:buttonClicked(num)
+  local UIFax = _G["UIFax"] ---@type UIFax
+
   -- If the menu was opened by fax code, allow player to use it
   if self.ui.hospital.world:isUserActionProhibited() and not self.ui:getWindow(UIFax) then
     --TODO: Prevent selectx.wav playing with this
@@ -143,6 +146,7 @@ function UICheats:buttonClicked(num)
     message = message or _S.information.cheat_not_possible
   end
   if message then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     self.ui:addWindow(UIInformation(self.ui, {message}))
   end
 end

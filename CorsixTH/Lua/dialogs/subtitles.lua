@@ -18,14 +18,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! UI display area for announcer subtitles
 class "Subtitles" (Window)
 
 ---@type Subtitles
 local Subtitles = _G["Subtitles"]
 
+--! First in, first out queue for concurrently displayed subtitles
+class "SubtitleQueue"
+
+---@type SubtitleQueue
+local SubtitleQueue = _G["SubtitleQueue"]
+
 --! Subtitles constructor
 function Subtitles:Subtitles()
+  local TheApp = _G["TheApp"] ---@type App
+
   self:Window()
   self.x = 0
   self.y = 0
@@ -48,6 +58,8 @@ function Subtitles:queueSubtitle(name)
 end
 
 function Subtitles:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
+
   Window.draw(self, canvas, x, y)
   local s = TheApp.gfx:getUIScale()
 
@@ -80,12 +92,6 @@ end
 function Subtitles:afterLoad(old, new)
   self.queue = SubtitleQueue()
 end
-
---! First in, first out queue for concurrently displayed subtitles
-class "SubtitleQueue"
-
----@type SubtitleQueue
-local SubtitleQueue = _G["SubtitleQueue"]
 
 --! SubtitleQueue constructor
 function SubtitleQueue:SubtitleQueue()

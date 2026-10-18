@@ -23,6 +23,8 @@ local TH = require("TH")
 local iso_fs = TH.iso_fs
 local lfsext = TH.lfsExt()
 
+local FileTreeNode = _G["FileTreeNode"] ---@type FileTreeNode
+
 --! A tree node representing a directory in the physical file-system.
 class "DirTreeNode" (FileTreeNode)
 
@@ -77,6 +79,7 @@ end
 function InstallDirTreeNode:isValidFile(name)
   -- Check parent criteria and that it's a directory.
   if FileTreeNode.isValidFile(self, name) then
+    local FileSystem = _G["FileSystem"] ---@type FileSystem
     return DirTreeNode.isValidFile(self, name) or FileSystem:isIso(name)
   end
   return false
@@ -98,6 +101,8 @@ function InstallDirTreeNode:getHighlightColour(canvas)
   if highlight_colour == nil then
     highlight_colour = false
 
+    local TheApp = _G["TheApp"] ---@type App
+    local FileSystem = _G["FileSystem"] ---@type FileSystem
     if self:getLevel() == 0 and not self.has_looked_for_children then
       -- Assume root-level things are not TH directories, unless we've already
       -- got a list of their children.
@@ -113,6 +118,8 @@ function InstallDirTreeNode:getHighlightColour(canvas)
   end
   return highlight_colour or nil
 end
+
+local UIResizable = _G["UIResizable"] ---@type UIResizable
 
 --! Prompter for Theme Hospital install directory
 class "UIDirectoryBrowser" (UIResizable)
@@ -152,6 +159,7 @@ function UIDirectoryBrowser:UIDirectoryBrowser(ui, mode, instruction, treenode_c
   self.exit_button = self:addBevelPanel(260, 400, 100, 18, self.col_bg)
 
   if mode ~= nil then
+    local TheApp = _G["TheApp"] ---@type App
     self.font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self:setDefaultPosition(0.5, 0.25)
     self.on_top = true
@@ -173,6 +181,7 @@ function UIDirectoryBrowser:UIDirectoryBrowser(ui, mode, instruction, treenode_c
     for k, v in pairs(roots) do
       roots[k] = _G[treenode_class](v)
     end
+    local DummyRootNode = _G["DummyRootNode"] ---@type DummyRootNode
     root = DummyRootNode(roots)
   else
     root = _G[treenode_class](roots[1])
@@ -185,6 +194,7 @@ function UIDirectoryBrowser:UIDirectoryBrowser(ui, mode, instruction, treenode_c
     end
   end
 
+  local TreeControl = _G["TreeControl"] ---@type TreeControl
   local control = TreeControl(root, 5, 55, 490, 340, self.col_bg, self.col_scrollbar)
     :setSelectCallback(select_function)
 
@@ -206,12 +216,14 @@ end
 function UIDirectoryBrowser:close()
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIFolder = _G["UIFolder"] ---@type UIFolder
     self.ui:addWindow(UIFolder(self.ui, "menu"))
   end
 end
 
 function UIDirectoryBrowser:draw(canvas, x, y)
   UIResizable.draw(self, canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
   if not self.mode then

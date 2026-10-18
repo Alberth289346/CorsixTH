@@ -18,15 +18,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIMenuList = _G["UIMenuList"] ---@type UIMenuList
+
 class "UIMakeDebugPatient" (UIMenuList)
 
 ---@type UIMakeDebugPatient
 local UIMakeDebugPatient = _G["UIMakeDebugPatient"]
 
 function UIMakeDebugPatient:UIMakeDebugPatient(ui)
-  local items = {}
+  local TheApp = _G["TheApp"] ---@type App
   local hosp = TheApp.world:getLocalPlayerHospital()
+
   -- Debug patient can be made from any disease available to the level
+  local items = {}
   for _, dis in pairs(hosp.disease_casebook) do
     local disease = dis.disease
     if not disease.pseudo then

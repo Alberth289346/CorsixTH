@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIMenuList = _G["UIMenuList"] ---@type UIMenuList
+
 --! Custom Campaign Window
 class "UICustomCampaign" (UIMenuList)
 
@@ -33,6 +35,7 @@ local col_scrollbar = {
 local details_width = 280
 
 function UICustomCampaign:UICustomCampaign(ui)
+  local TheApp = _G["TheApp"] ---@type App
   self.label_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
 
   self.unique_names, self.campaigns, self.duplicates = {}, {}, 0
@@ -70,6 +73,7 @@ end
 --! Fetch uniquely named campaigns from given campaign file
 function UICustomCampaign:_readCampaignFile(folder, file)
   local full_path = folder .. file
+  local TheApp = _G["TheApp"] ---@type App
   local campaign_info, err = TheApp:readCampaignFile(full_path)
   if not campaign_info then
     print(err)
@@ -124,6 +128,7 @@ function UICustomCampaign:buttonClicked(num)
   local item = self.items[num + self.scrollbar.value - 1]
   self.chosen_item = item
   if item.description then
+    local TheApp = _G["TheApp"] ---@type App
     local _, _, rows = self.label_font:sizeOf(item.description, details_width * TheApp.gfx:getUIScale())
     self.details_scrollbar:setRange(1, rows, 13, 1)
   else
@@ -134,12 +139,15 @@ end
 
 function UICustomCampaign:buttonStartCampaign()
   if self.chosen_item then
+    local TheApp = _G["TheApp"] ---@type App
     TheApp:loadCampaign(self.chosen_item.path)
   end
 end
 
 function UICustomCampaign:draw(canvas, x, y)
   UIMenuList.draw(self, canvas, x, y)
+
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 

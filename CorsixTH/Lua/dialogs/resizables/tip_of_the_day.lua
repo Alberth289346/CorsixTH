@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Tip of the Day Window
 class "UITipOfTheDay" (UIResizable)
 
@@ -73,6 +75,7 @@ function UITipOfTheDay:draw(canvas, x, y)
   UIResizable.draw(self, canvas, x, y)
 
   -- Draw tip
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 
@@ -98,5 +101,7 @@ end
 function UITipOfTheDay:onChangeResolution()
   self:close()
   self.ui:addWindow(UITipOfTheDay(self.ui))
+
+  local Window = _G["Window"] ---@type Window
   Window.onChangeResolution(self)
 end

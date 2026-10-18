@@ -20,6 +20,8 @@ SOFTWARE. --]]
 
 local TH = require("TH")
 
+local Window = _G["Window"] ---@type Window
+
 --! Room / door / reception desk queue visualisation dialog.
 class "UIQueue" (Window)
 
@@ -86,6 +88,7 @@ end
 
 function UIQueue:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 
@@ -114,6 +117,7 @@ function UIQueue:draw(canvas, x, y)
 end
 
 local function isInsideQueueBoundingBox(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local x_min = 219 * s
   local x_max = 534 * s
@@ -127,6 +131,7 @@ function UIQueue:onMouseDown(button, x, y)
   if not isInsideQueueBoundingBox(x, y) then
     return Window.onMouseDown(self, button, x, y)
   end
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local x_min = 219 * s
   self.hovered = self:getHoveredPatient(x - x_min)
@@ -142,6 +147,7 @@ function UIQueue:onMouseDown(button, x, y)
     self.just_added = true
     local px = self.x + math.floor(x / s)
     local py = self.y + math.floor(y / s)
+    local UIQueuePopup = _G["UIQueuePopup"] ---@type UIQueuePopup
     self.ui:addWindow(UIQueuePopup(self.ui, px, py, self.hovered.patient))
   end
 end
@@ -151,12 +157,14 @@ function UIQueue:onMouseUp(button, x, y)
     self.just_added = false
   else
     -- Always remove any leftover popup windows
+    local UIQueuePopup = _G["UIQueuePopup"] ---@type UIQueuePopup
     local window = self.ui:getWindow(UIQueuePopup)
     if window then
       window:close()
     end
   end
   if button == "left" then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local queue = self.queue
     local num_patients = queue:reportedSize()
@@ -222,6 +230,7 @@ function UIQueue:onMouseUp(button, x, y)
 end
 
 function UIQueue:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local x_min = 219 * s
   if self.dragged then
@@ -248,6 +257,7 @@ end
 
 function UIQueue:close()
   -- Always remove any leftover popup windows
+  local UIQueuePopup = _G["UIQueuePopup"] ---@type UIQueuePopup
   local window = self.ui:getWindow(UIQueuePopup)
   if window then
     window:close()
@@ -258,6 +268,7 @@ end
 function UIQueue:getHoveredPatient(x)
   local queue = self.queue
   local num_patients = queue:reportedSize()
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local width = 276 * s
   local gap = 10 * s
@@ -297,6 +308,7 @@ function UIQueue:getHoveredPatient(x)
 end
 
 function UIQueue:drawPatients(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local queue = self.queue
   local num_patients = queue:reportedSize()
@@ -341,6 +353,7 @@ function UIQueue:drawPatient(canvas, x, y, patient)
   for layer, id in pairs(patient.layers) do
     anim:setLayer(layer, id)
   end
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s)
   anim:draw(canvas, math.floor(x / s), math.floor(y / s))
@@ -354,6 +367,7 @@ end
 
 function UIQueue:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
   end
   Window.afterLoad(self, old, new)
@@ -397,6 +411,7 @@ function UIQueuePopup:draw(canvas, x, y)
 end
 
 function UIQueuePopup:sendToReception()
+  local SeekReceptionAction = _G["SeekReceptionAction"] ---@type SeekReceptionAction
   self.patient:setNextAction(SeekReceptionAction())
   self:close()
 end
@@ -408,6 +423,7 @@ end
 
 function UIQueuePopup:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
   end
   Window.afterLoad(self, old, new)

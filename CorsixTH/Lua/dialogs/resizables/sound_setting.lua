@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 class "UISoundSettings" (UIResizable)
 
 ---@type UISoundSettings
@@ -82,6 +84,7 @@ function UISoundSettings:UISoundSettings(ui, mode)
   self.app = ui.app
   local built_in = app.gfx:loadMenuFont()
 
+  local Colours = _G["Colours"] ---@type Colours
 
   self.volume_options = { { text = _S.customise_window.option_off, volume = 0 } }
   for i = 10, 100, 10 do
@@ -278,6 +281,8 @@ function UISoundSettings:dropdownVolume(activate, btn)
       select_callback = self.selectMusicVolume
     end
 
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+    local Colours = _G["Colours"] ---@type Colours
     self.volume_dropdown = UIDropdown(self.ui, self, btn, self.volume_options, select_callback, Colours.SettingActive, Colours.Scrollbar)
     self:addWindow(self.volume_dropdown)
   else
@@ -300,6 +305,8 @@ function UISoundSettings:dropdownMidiApi(activate)
     self:closeAllDropdowns()
     self.midi_api_button:setToggleState(true)
 
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+    local Colours = _G["Colours"] ---@type Colours
     self.midi_api_dropdown = UIDropdown(self.ui, self, self.midi_api_button, self.midi_api_options, self.selectMidiApi, Colours.SettingActive, Colours.Scrollbar)
     self:addWindow(self.midi_api_dropdown)
   else
@@ -319,6 +326,8 @@ function UISoundSettings:dropdownMidiPort(activate)
     self:closeAllDropdowns()
     self.midi_port_button:setToggleState(true)
 
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+    local Colours = _G["Colours"] ---@type Colours
     self.midi_port_dropdown = UIDropdown(self.ui, self, self.midi_port_button, self.midi_port_options, self.selectMidiPort, Colours.SettingActive, Colours.Scrollbar)
     self:addWindow(self.midi_port_dropdown)
   else
@@ -421,6 +430,7 @@ end
 --! Button handler for soundfont
 -- Opens a file chooser dialog for selecting a soundfont.
 function UISoundSettings:buttonBrowseForSoundfont()
+  local UIChooseSoundfont = _G["UIChooseSoundfont"] ---@type UIChooseSoundfont
   local browser = UIChooseSoundfont(self.ui, self.mode, self, self.selectSoundfont)
   self.ui:addWindow(browser)
 end
@@ -437,6 +447,7 @@ end
 -- Opens the jukebox window.
 function UISoundSettings:buttonJukebox()
   if self.app.config.audio then
+    local UIJukebox = _G["UIJukebox"] ---@type UIJukebox
     self.ui:addWindow(UIJukebox(self.app))
   end
 end
@@ -445,6 +456,7 @@ end
 -- Opens the UIOptions window again.
 function UISoundSettings:buttonBack()
   self:close()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
   local window = UIOptions(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -453,6 +465,7 @@ end
 function UISoundSettings:close()
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
     self.ui:addWindow(UIMainMenu(self.ui))
   end
 end

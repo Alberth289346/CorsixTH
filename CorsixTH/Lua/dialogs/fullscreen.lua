@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! Base class for 640x480px dialogs (fullscreen in original game resolution).
 class "UIFullscreen" (Window)
 
@@ -81,6 +83,7 @@ end
 function UIFullscreen:draw(canvas, x, y)
   local sprites = self.border_sprites
   if sprites then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local draw = sprites.draw
     local scr_x = self.x * s + x
@@ -105,6 +108,7 @@ end
 
 function UIFullscreen:onMouseDown(button, x, y)
   local repaint = Window.onMouseDown(self, button, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if button == "left" and not repaint and not (x >= 0 and y >= 0 and
       x < self.width * s and y < self.height * s) and self:hitTest(x, y) then
@@ -114,6 +118,7 @@ function UIFullscreen:onMouseDown(button, x, y)
 end
 
 function UIFullscreen:hitTest(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if x >= 0 and y >= 0 and x < self.width * s and y < self.height * s then
     return true

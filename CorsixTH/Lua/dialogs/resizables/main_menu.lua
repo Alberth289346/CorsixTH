@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Class for main menu window.
 class "UIMainMenu" (UIResizable)
 
@@ -40,6 +42,7 @@ local label_ttf_col = { -- slightly translucent
 local menu_item_height = 40
 
 function UIMainMenu:UIMainMenu(ui)
+  local TheApp = _G["TheApp"] ---@type App
 
   -- First define all menu entries with a label, a callback and a tooltip.
   -- That way we can call the UIResizable constructor with a good height argument.
@@ -114,6 +117,8 @@ end
 
 function UIMainMenu:draw(canvas, x, y)
   UIResizable.draw(self, canvas, x, y)
+
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 
@@ -133,20 +138,27 @@ function UIMainMenu:draw(canvas, x, y)
 end
 
 function UIMainMenu:onTick()
+  local TheApp = _G["TheApp"] ---@type App
   TheApp:idle()
 end
 
 function UIMainMenu:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   TheApp:resetIdle()
   UIResizable.onMouseMove(self, x, y, dx, dy)
 end
 
 function UIMainMenu:buttonNewGame()
+  local UINewGame = _G["UINewGame"] ---@type UINewGame
   local window = UINewGame(self.ui)
   self.ui:addWindow(window)
 end
 
 function UIMainMenu:buttonCustomCampaign()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
+  local UICustomCampaign = _G["UICustomCampaign"] ---@type UICustomCampaign
+
   if TheApp.using_demo_files then
     self.ui:addWindow(UIInformation(self.ui, {_S.information.no_custom_game_in_demo}))
   else
@@ -156,6 +168,10 @@ function UIMainMenu:buttonCustomCampaign()
 end
 
 function UIMainMenu:buttonCustomGame()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
+  local UICustomGame = _G["UICustomGame"] ---@type UICustomGame
+
   if TheApp.using_demo_files then
     self.ui:addWindow(UIInformation(self.ui, {_S.information.no_custom_game_in_demo}))
   else
@@ -165,6 +181,9 @@ function UIMainMenu:buttonCustomGame()
 end
 
 function UIMainMenu:buttonContinueGame()
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
+  local FileTreeNode = _G["FileTreeNode"] ---@type FileTreeNode
+
   local most_recent_saved_game = FileTreeNode(self.ui.app.savegame_dir):getMostRecentlyModifiedChildFile(".%.sav$")
   if most_recent_saved_game then
     local path = most_recent_saved_game.path
@@ -183,11 +202,15 @@ function UIMainMenu:buttonContinueGame()
 end
 
 function UIMainMenu:buttonLoadGame()
+  local UILoadGame = _G["UILoadGame"] ---@type UILoadGame
+
   local window = UILoadGame(self.ui, "menu")
   self.ui:addWindow(window)
 end
 
 function UIMainMenu:buttonOptions()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
+
   local window = UIOptions(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -197,6 +220,8 @@ function UIMainMenu:buttonMapEdit()
 end
 
 function UIMainMenu:buttonExit()
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
+
   self.ui:addWindow(UIConfirmDialog(self.ui, false,
   _S.tooltip.main_menu.quit,
   --[[persistable:quit_confirm_dialog]]function()

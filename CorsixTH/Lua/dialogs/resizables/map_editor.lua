@@ -19,6 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 class "UIMapEditor" (UIResizable)
 
 ---@type UIMapEditor
@@ -470,6 +472,7 @@ function UIMapEditor:UIMapEditor(ui)
 
   -- {{{ Creation of buttons.
   -- A sprite table containing a "cell outline" sprite
+  local TheApp = _G["TheApp"] ---@type App
   self.cell_outline = TheApp.gfx:loadSpriteTable("Bitmap", "aux_ui", true)
 
   self:addBevelPanel(0, 0, EDITOR_WINDOW_XSIZE, EDITOR_WINDOW_YSIZE, col_bg) -- Background of the window.
@@ -573,10 +576,12 @@ function UIMapEditor:UIMapEditor(ui)
 end
 
 function UIMapEditor:openLoad()
+  local UILoadMap = _G["UILoadMap"] ---@type UILoadMap
   self.ui:addWindow(UILoadMap(self.ui, "map"))
 end
 
 function UIMapEditor:openSave()
+  local UISaveMap = _G["UISaveMap"] ---@type UISaveMap
   self.ui:addWindow(UISaveMap(self.ui))
 end
 
@@ -590,6 +595,7 @@ end
 
 function UIMapEditor:openJukebox()
   if self.ui.app.config.audio then
+    local UIJukebox = _G["UIJukebox"] ---@type UIJukebox
     self.ui:addWindow(UIJukebox(self.ui.app))
   end
 end
@@ -725,6 +731,7 @@ function UIMapEditor:buildSpriteButtons(buttons)
       bpanel.editor_button = button
 
       bpanel.custom_draw = --[[persistable:map_editor_draw_block_sprite]] function(panel, canvas, x, y)
+        local TheApp = _G["TheApp"] ---@type App
         local s = TheApp.gfx:getUIScale()
         x = x + panel.x * s + panel.editor_button.xorigin * s
         y = y + panel.y * s + panel.editor_button.yorigin * s
@@ -1000,6 +1007,8 @@ end
 --!param my (int) Mouse y screen coordinate.
 --!return (int, int) Tile x,y coordinates, limited to the map.
 function UIMapEditor:mouseToWorld(mx, my)
+  local TheApp = _G["TheApp"] ---@type App
+
   local ui = self.ui
   local s = TheApp.gfx:getUIScale()
 

@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIMenuList = _G["UIMenuList"] ---@type UIMenuList
+
 --! Custom Game Window
 class "UICustomGame" (UIMenuList)
 
@@ -38,6 +40,7 @@ local details_width = 280
 local findLevelsInDir = function(path, items)
   for file in lfs.dir(path) do
     if file:match("%.level$") then
+      local TheApp = _G["TheApp"] ---@type App
       local level_info, err = TheApp:readLevelFile(path .. file)
       if err then print(file, err)
       elseif level_info.name and level_info.map_file then
@@ -55,6 +58,7 @@ local findLevelsInDir = function(path, items)
 end
 
 function UICustomGame:UICustomGame(ui)
+  local TheApp = _G["TheApp"] ---@type App
   self.label_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
 
   -- Supply the required list of items to UIMenuList
@@ -110,6 +114,7 @@ function UICustomGame:buttonClicked(num)
   self.chosen_level_name = item.name
   self.chosen_level_description = item.intro
   if self.chosen_level_description then
+    local TheApp = _G["TheApp"] ---@type App
     local _, y, rows = self.label_font:sizeOf(self.chosen_level_description, details_width * TheApp.gfx:getUIScale())
     local row_height = y / rows / TheApp.gfx:getUIScale()
     self.max_rows_shown = math.floor(self.num_rows * 17 / row_height)
@@ -120,6 +125,7 @@ function UICustomGame:buttonClicked(num)
   self.description_offset = 0
 
   if item.deprecated_variable_used then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     self.ui:addWindow(UIInformation(self.ui, {_S.warnings.levelfile_variable_is_deprecated:format(item.name)}))
   end
 end
@@ -131,6 +137,7 @@ function UICustomGame:buttonLoadLevel()
     local app = self.ui.app
     local _, errors = app:readMapDataFile(item.map_file)
     if errors then
+      local UIInformation = _G["UIInformation"] ---@type UIInformation
       self.ui:addWindow(UIInformation(self.ui, {errors}))
       return
     end
@@ -145,6 +152,8 @@ end
 
 function UICustomGame:draw(canvas, x, y)
   UIMenuList.draw(self, canvas, x, y)
+
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 

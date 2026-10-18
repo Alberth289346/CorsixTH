@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Load Game Window
 class "UILoadGame" (UIFileBrowser)
 
@@ -25,6 +27,7 @@ class "UILoadGame" (UIFileBrowser)
 local UILoadGame = _G["UILoadGame"]
 
 function UILoadGame:UILoadGame(ui, mode)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
   local treenode = FilteredFileTreeNode(ui.app.savegame_dir, ".sav")
   treenode.label = "Saves"
   self:UIFileBrowser(ui, mode, _S.load_game_window.caption:format(".sav"), 295,
@@ -49,14 +52,19 @@ end
 --! Output the error when trying to load a game
 --!param err The error given
 function UILoadGame:loadError(err)
+  local TheApp = _G["TheApp"] ---@type App
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
+
   print(err)
   TheApp:loadMainMenu()
   TheApp.ui:addWindow(UIInformation(TheApp.ui, {err}))
 end
 
 function UILoadGame:close()
+  local UIResizable = _G["UIResizable"] ---@type UIResizable
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
     self.ui:addWindow(UIMainMenu(self.ui))
   end
 end

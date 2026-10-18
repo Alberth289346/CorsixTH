@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Custom key bindings
 class "UIHotkeyAssign" (UIResizable)
 
@@ -481,6 +483,7 @@ function UIHotkeyAssign:UIHotkeyAssign(ui, mode)
   local built_in = self.app.gfx:loadMenuFont()
 
   self.key_windows = {}
+  local UIHotkeyAssignKeyPane = _G["UIHotkeyAssignKeyPane"] ---@type UIHotkeyAssignKeyPane
   for _, key_opt_set in ipairs(self.key_options) do
     local win = UIHotkeyAssignKeyPane(220, 0, ui, key_opt_set, self.app.hotkeys)
     self:addWindow(win)
@@ -522,6 +525,7 @@ function UIHotkeyAssign:buttonAccept()
   hotkeys_backedUp = false
 
   self:close()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
   local window = UIOptions(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -542,6 +546,7 @@ function UIHotkeyAssign:buttonCancel()
   hotkeys_backedUp = false
 
   self:close()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
   local window = UIOptions(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -549,6 +554,7 @@ end
 function UIHotkeyAssign:close()
   UIResizable.close(self)
   if self.mode == "menu"  then
+    local UIOptions = _G["UIOptions"] ---@type UIOptions
     self.ui:addWindow(UIOptions(self.ui, "menu"))
   end
 end
@@ -563,6 +569,8 @@ function UIHotkeyAssign:showKeyPane(pane)
     v.button:setToggleState(k == pane)
   end
 end
+
+local Window = _G["Window"] ---@type Window
 
 --! Child window for setting key bindings
 class "UIHotkeyAssignKeyPane" (Window)

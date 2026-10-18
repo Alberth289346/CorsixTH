@@ -21,6 +21,8 @@ SOFTWARE. --]]
 local TH = require("TH")
 local lfsext = TH.lfsExt()
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Window where the user can choose a font file.
 class "UIChooseFont" (UIFileBrowser)
 
@@ -28,6 +30,9 @@ class "UIChooseFont" (UIFileBrowser)
 local UIChooseFont = _G["UIChooseFont"]
 
 function UIChooseFont:UIChooseFont(ui, mode)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
+  local DummyRootNode = _G["DummyRootNode"] ---@type DummyRootNode
+
   -- Create the root item (or items, on Windows).
   local root
   local roots = lfsext.volumes()
@@ -44,10 +49,12 @@ end
 
 --! Function called by clicking button of existing save #num
 function UIChooseFont:choiceMade(name)
-  local app = TheApp
-  app.config.unicode_font = name
-  app:saveConfig()
-  app.gfx:loadFontFile()
+  local TheApp = _G["TheApp"] ---@type App
+
+  TheApp.config.unicode_font = name
+  TheApp:saveConfig()
+  TheApp.gfx:loadFontFile()
+  local UIOptions = _G["UIOptions"] ---@type UIOptions
   if class.is(self.parent, UIOptions) then
     self.parent:checkForAvailableLanguages()
   end
@@ -55,8 +62,10 @@ function UIChooseFont:choiceMade(name)
 end
 
 function UIChooseFont:close()
+  local UIResizable = _G["UIResizable"] ---@type UIResizable
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIFolder = _G["UIFolder"] ---@type UIFolder
     self.ui:addWindow(UIFolder(self.ui, self.mode))
   end
 end

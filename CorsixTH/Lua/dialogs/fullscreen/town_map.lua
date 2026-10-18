@@ -20,6 +20,8 @@ SOFTWARE. --]]
 
 local TH = require("TH")
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Town map fullscreen window (purchase land, set radiator levels, map overview).
 class "UITownMap" (UIFullscreen)
 
@@ -42,6 +44,7 @@ function UITownMap:UITownMap(ui)
     self.money_font = gfx:loadFontAndSpriteTable("QData", "Font05V", nil, nil, { apply_ui_scale = true })
     self.panel_sprites = gfx:loadSpriteTable("QData", "Town02V", true, palette)
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -103,11 +106,13 @@ end
 
 function UITownMap:close()
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
 local flag_cache = {}
 function UITownMap:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local tx = math.floor((x - 227 * s) / (3 * s))
   local ty = math.floor((y - 25 * s) / (3 * s))
@@ -122,6 +127,7 @@ end
 
 function UITownMap:onMouseUp(button, x, y)
   local redraw = false
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if button == "left" then
     local tx = math.floor((x - 227 * s) / (3 * s))
@@ -158,6 +164,7 @@ function UITownMap:onMouseUp(button, x, y)
 end
 
 function UITownMap:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -350,12 +357,16 @@ function UITownMap:increaseHeat()
 end
 
 function UITownMap:bankManager()
+  local UIBankManager = _G["UIBankManager"] ---@type UIBankManager
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   local dlg = UIBankManager(self.ui)
   self.ui:addWindow(dlg)
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
 function UITownMap:bankStats()
+  local UIBankManager = _G["UIBankManager"] ---@type UIBankManager
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   local dlg = UIBankManager(self.ui)
   dlg:showStatistics()
   self.ui:addWindow(dlg)
@@ -364,6 +375,7 @@ end
 
 function UITownMap:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     local palette = gfx:getPalette("Town01V.pal")
     self.background = gfx:loadRaw("Town01V", 640, 480, "QData", "QData", "Town01V.pal", true)

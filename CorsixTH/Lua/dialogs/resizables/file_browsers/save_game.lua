@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Save Game Window
 class "UISaveGame" (UIFileBrowser)
 
@@ -43,6 +45,8 @@ local col_shadow = {
 }
 
 function UISaveGame:UISaveGame(ui)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
+
   local treenode = FilteredFileTreeNode(ui.app.savegame_dir, ".sav")
   treenode.label = "Saves"
   self:UIFileBrowser(ui, "game", _S.save_game_window.caption:format(".sav"), 265,
@@ -76,6 +80,7 @@ function UISaveGame:confirmName()
   local filename = self.new_savegame_textbox.text
   local app = self.ui.app
   if filename == "" then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     self.ui:addWindow(UIInformation(self.ui, { _S.save_game_window.missing_filename }))
     self:abortName()
     return
@@ -91,6 +96,7 @@ end
 --! Try to save the game with given filename; if already exists, create confirmation window first.
 function UISaveGame:trySave(filename)
   if lfs.attributes(filename, "size") ~= nil then
+    local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
     self.ui:addWindow(UIConfirmDialog(self.ui, false, _S.confirmation.overwrite_save, --[[persistable:save_game_confirmation]] function() self:doSave(filename) end))
   else
     self:doSave(filename)
@@ -108,6 +114,7 @@ function UISaveGame:doSave(filename)
   if not status then
     err = _S.errors.save_prefix .. err
     print(err)
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {err}))
   end
 end

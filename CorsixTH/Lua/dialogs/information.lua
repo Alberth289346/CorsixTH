@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! Dialog that informs the player of for example what the goals for the level are.
 class "UIInformation" (Window)
 
@@ -77,6 +79,7 @@ end
 
 function UIInformation:onChangeLanguage()
   local total_req_height = 0
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   for _, text in ipairs(self.text) do
     local _, req_height = self.black_font:sizeOf(text, self.text_width * s)
@@ -116,6 +119,7 @@ function UIInformation:onChangeLanguage()
 end
 
 function UIInformation:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local dx, dy = x + self.x * s, y + self.y * s
   local background = self.black_background and canvas:mapRGB(0, 0, 0) or canvas:mapRGB(255, 255, 255)
@@ -129,6 +133,7 @@ function UIInformation:draw(canvas, x, y)
 end
 
 function UIInformation:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   self.active_hover = self:hoverTest(
       self.active_hover,
@@ -139,6 +144,7 @@ function UIInformation:onMouseMove(x, y, dx, dy)
 end
 
 function UIInformation:hitTest(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if x >= 0 and y >= 0 and x < self.width * s and y < self.height * s then
     return true

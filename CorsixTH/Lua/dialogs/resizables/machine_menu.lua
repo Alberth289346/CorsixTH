@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Interactive Machine List
 class "UIMachineMenu" (UIResizable)
 
@@ -189,6 +191,7 @@ end
 function UIMachineMenu:scrollToEntity(entity)
   local x, y = self.ui.app.map:WorldToScreen(entity.tile_x, entity.tile_y)
   self.ui:scrollMapTo(x, y)
+  local UIMachine = _G["UIMachine"] ---@type UIMachine
   self.ui:addWindow(UIMachine(self.ui, entity, entity:getRoom()))
 end
 
@@ -196,6 +199,8 @@ function UIMachineMenu:machineButtonClicked(index)
   local machine_index = index + self.scrollbar.value - 1
   local machine = self.machine_list[machine_index]
   if machine and machine.object then
+    local Room = _G["Room"] ---@type Room
+    local Entity = _G["Entity"] ---@type Entity
     if class.is(machine.object, Room) then
       self:scrollToRoom(machine.object)
     elseif class.is(machine.object, Entity) then
@@ -211,9 +216,10 @@ function UIMachineMenu:warningButtonClicked(index)
   local room = machine.object:getRoom()
 
   if machine and room.is_active then
-    local UIMachine = UIMachine(ui, machine.object, room)
-    UIMachine:replaceMachine()
-    ui:addWindow(UIMachine)
+    local UIMachine = _G["UIMachine"] ---@type UIMachine
+    local ui_machine = UIMachine(ui, machine.object, room)
+    ui_machine:replaceMachine()
+    ui:addWindow(ui_machine)
   end
 end
 
@@ -224,6 +230,7 @@ function UIMachineMenu:assignedHandymanButtonClicked(index)
   local room = machine.object:getRoom()
 
   if machine and machine.assigned_to and room.is_active then
+    local UIStaff = _G["UIStaff"] ---@type UIStaff
     self.ui:addWindow(UIStaff(ui, machine.assigned_to))
   end
 end
@@ -333,6 +340,7 @@ function UIMachineMenu:draw(canvas, x, y)
   local panel_sprites = self.ui.app.gfx:loadSpriteTable("QData", "Req03V", true)
   local bitmap_sprites = self.ui.app.gfx:loadSpriteTable("Bitmap", "aux_ui", true)
   local scroll_pos = self.scrollbar.value
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s, self.y * s
   bitmap_sprites:draw(canvas, 25, x + 374 * s, y + (window_margin + 2) * s, { scaleFactor = s })
@@ -398,15 +406,18 @@ function UIMachineMenu:onTick()
 end
 
 function UIMachineMenu:close()
+  local Window = _G["Window"] ---@type Window
   Window.close(self)
 end
 
 function UIMachineMenu:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
   end
   if old < 242 then
     self:close()
   end
+  local Window = _G["Window"] ---@type Window
   Window.afterLoad(self, old, new)
 end

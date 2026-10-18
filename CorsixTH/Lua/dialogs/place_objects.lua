@@ -19,13 +19,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 local TH = require("TH")
-local ipairs, math_floor
-    = ipairs, math.floor
 
 -- Visually, it looks better to have the object being placed not attached to a
 -- tile (so that it is always on top of walls, etc.), but for debugging it can
 -- be useful to attach it to a tile.
 local ATTACH_BLUEPRINT_TO_TILE = false
+
+local Window = _G["Window"] ---@type Window
 
 --! The dialog shown when placing objects.
 class "UIPlaceObjects" (Window)
@@ -117,6 +117,7 @@ function UIPlaceObjects:resize(num_slots)
         window.place_objects = true
         window:setActiveIndex(i)
         -- Stop picking up items when user presses object in list
+        local UIEditRoom = _G["UIEditRoom"] ---@type UIEditRoom
         local edit_room_window = window.ui:getWindow(UIEditRoom)
         if edit_room_window and edit_room_window.in_pickup_mode then
           edit_room_window:stopPickupItems()
@@ -357,6 +358,7 @@ end
 
 --! Helper function to stop UIEditRoom going back to doors phase
 function UIPlaceObjects:sell()
+  local UIEditRoom = _G["UIEditRoom"] ---@type UIEditRoom
   if not self.ui:getWindow(UIEditRoom) then
     self:close(false)
   end
@@ -449,6 +451,7 @@ function UIPlaceObjects:setOrientation(orient)
   if type(px) == "table" then
     px, py = unpack(px)
   end
+  local Map = _G["Map"] ---@type Map
   px, py = Map:WorldToScreen(px + 1, py + 1)
   px = object.orientations[orient].animation_offset[1] + px
   py = object.orientations[orient].animation_offset[2] + py
@@ -509,6 +512,7 @@ function UIPlaceObjects:onMouseUp(button, x, y)
     repaint = true
   elseif button == "left" then
     if #self.objects > 0 then
+      local TheApp = _G["TheApp"] ---@type App
       local s = TheApp.gfx:getUIScale()
       if 0 <= x and x < self.width * s and 0 <= y and y < self.height * s then -- luacheck: ignore 542
         -- Click within window - do nothing
@@ -568,6 +572,7 @@ function UIPlaceObjects:placeObject(dont_close_if_empty, dont_remove)
       -- Machines may have some state like smoke and etc. Update it.
       real_obj:placed(room)
     end
+    local Machine = _G["Machine"] ---@type Machine
     if class.is(real_obj, Machine) then
       real_obj:setHandymanRepairPosition(self.object_orientation)
     end
@@ -616,6 +621,7 @@ function UIPlaceObjects:draw(canvas, x, y)
 
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = x + self.x * s, y + self.y * s
   self.white_font:draw(canvas, self.title_text, x + 17 * s, y + 21 * s, 153 * s, 0)
@@ -646,6 +652,7 @@ function UIPlaceObjects:draw(canvas, x, y)
 end
 
 function UIPlaceObjects:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local current_hover_id
   local header_height = 159 * s
@@ -654,7 +661,7 @@ function UIPlaceObjects:onMouseMove(x, y, dx, dy)
   if inside_objects_area then
     -- Check if player hovers over a button, not between.
     if (header_height + y) % bar_height < 21 * s then
-      current_hover_id = math_floor((y - header_height)/bar_height) + 1
+      current_hover_id = math.floor((y - header_height)/bar_height) + 1
       if self.active_hover_index ~= current_hover_id then
         if self.hover_sound then
           self.ui:stopSound(self.hover_sound)
@@ -734,6 +741,8 @@ end
 -- whether the space is not occupied by other objects.
 function UIPlaceObjects:_placementAvailableHereAndOtherObjectsDoNotInterfere(
     x, y, object, real_obj, object_footprint, room, map)
+
+  local Object = _G["Object"] ---@type Object
   local flags = {}
   local passable_flag
   local room_id = room
@@ -915,6 +924,7 @@ function UIPlaceObjects:_isNonSideObjectPlacementValid(x, y, object, object_orie
     -- all-permissive placing approach.
     -- This could lead to crashes, so we'll record this in the log so that during investigation
     -- we'll be able to know that safe placement was disabled.
+    local TheApp = _G["TheApp"] ---@type App
     TheApp.world:gameLog("Warning: Blocking off areas is allowed at " .. x .. ", " .. y .. ".")
     return true
   end
@@ -946,6 +956,7 @@ function UIPlaceObjects:_isSideObjectPlacementValid(x, y, room_id, passable_flag
   else
     to_check_x = to_check_x + (passable_flag == "travelEast" and 1 or -1)
   end
+  local Object = _G["Object"] ---@type Object
   local opposite_passable_flag = Object.getComplementaryPassableFlag(passable_flag)
 
   local function hasNoConnectingPath(x1, y1, x2, y2)
@@ -1012,6 +1023,7 @@ function UIPlaceObjects:_isSideObjectPlacementValid(x, y, room_id, passable_flag
     -- all-permissive placing approach.
     -- This could lead to crashes, so we'll record this in the log so that during investigation
     -- we'll be able to know that safe placement was disabled.
+    local TheApp = _G["TheApp"] ---@type App
     TheApp.world:gameLog("Warning: Blocking off areas is allowed at " .. x .. ", " .. y .. ".")
     return true
   end
@@ -1074,7 +1086,7 @@ function UIPlaceObjects:calculateBestPlacementPosition(x, y)
     end
     -- TODO: East, South
   end
-  bestx, besty = math_floor(bestx), math_floor(besty)
+  bestx, besty = math.floor(bestx), math.floor(besty)
   if bestx < 1 or besty < 1 or
       bestx > self.map.width or besty > self.map.height then
     bestx, besty = nil, nil
@@ -1121,6 +1133,7 @@ function UIPlaceObjects:afterLoad(old, new)
 
   if old < 236 then
     local selected_label_color = { red = 40, green = 40, blue = 250 }
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.blue_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font02V", nil, nil, {ttf_color = selected_label_color, apply_ui_scale = true })
   end

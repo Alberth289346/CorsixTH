@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Class for the difficulty choice window.
 class "UINewGame" (UIResizable)
 
@@ -25,6 +27,7 @@ class "UINewGame" (UIResizable)
 local UINewGame = _G["UINewGame"]
 
 -- Colour definitions
+local Colours = _G["Colours"] ---@type Colours
 local col = {
   bg             = Colours.PanelDefault,
   button         = Colours.PanelDefault,
@@ -46,6 +49,7 @@ function UINewGame:UINewGame(ui)
   self.on_top = true
   self:setDefaultPosition(0.5, 0.25)
 
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp.using_demo_files then
     -- We're using the demo version of TH. Load directly and activate the tutorial.
     -- Those who use the demo files probably want that anyway.
@@ -128,6 +132,7 @@ end
 
 function UINewGame:dropdownDifficulty(activate, button)
   if activate and #self.available_difficulties > 1 then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
     self.difficulty_dropdown = UIDropdown(self.ui, self, button,
         self.available_difficulties, self.selectDifficulty,
         col.setting_active, col.scrollbar)
@@ -156,6 +161,7 @@ function UINewGame:startGame(difficulty)
     self.ui.app.moviePlayer:playAdvanceMovie(1)
 
     -- Initiate campaign progression. The UI above may now have changed.
+    local TheApp = _G["TheApp"] ---@type App
     if not TheApp.using_demo_files then
       TheApp.world.campaign_info = "TH.campaign"
     end
@@ -173,5 +179,7 @@ end
 
 function UINewGame:close()
   UIResizable.close(self)
+
+  local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
   self.ui:addWindow(UIMainMenu(self.ui))
 end

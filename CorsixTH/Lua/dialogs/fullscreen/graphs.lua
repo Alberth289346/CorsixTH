@@ -19,6 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Charts fullscreen window
 class "UIGraphs" (UIFullscreen)
 
@@ -49,6 +51,7 @@ function UIGraphs:UIGraphs(ui)
     self.white_font = gfx:loadFontAndSpriteTable("QData", "Font01V", false, palette, { apply_ui_scale = true })
     self.black_font = gfx:loadFontAndSpriteTable("QData", "Font00V", false, palette, { apply_ui_scale = true })
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -106,6 +109,7 @@ end
 function UIGraphs:initRuntimeConfig()
   -- config is a *runtime* configuration list; re-instantiations of the dialog
   -- share the same values, but it's not saved across saves or sessions
+  local TheApp = _G["TheApp"] ---@type App
   local config = TheApp.runtime_config.graphs_dialog
   if config == nil then
     config = {}
@@ -208,6 +212,7 @@ end
 --! Compute new actual position of the labels.
 --!param graph (UIGraphs) Graph window object
 local function updateTextPositions(graph)
+  local TheApp = _G["TheApp"] ---@type App
   local config = TheApp.runtime_config.graphs_dialog
 
   -- Reset vertical position of the text back to its ideal position.
@@ -279,6 +284,7 @@ local function updateTextPositions(graph)
 end
 
 function UIGraphs:updateLines()
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   self.values = self:getHospitalStatistics()
 
@@ -372,6 +378,7 @@ function UIGraphs:updateLines()
 end
 
 function UIGraphs:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local config = TheApp.runtime_config.graphs_dialog
   if not config then
     config = self:initRuntimeConfig()
@@ -467,6 +474,7 @@ function UIGraphs:toggleGraphScale()
 end
 
 function UIGraphs:toggleGraph(name)
+  local TheApp = _G["TheApp"] ---@type App
   TheApp.runtime_config.graphs_dialog[name] = not TheApp.runtime_config.graphs_dialog[name]
   self.ui:playSound("selectx.wav")
   updateTextPositions(self)
@@ -474,6 +482,7 @@ end
 
 function UIGraphs:close()
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -487,6 +496,7 @@ end
 
 function UIGraphs:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
 
     self.background = gfx:loadRaw("Graph01V", 640, 480, "QData", "QData", "Graph01V.pal", true)

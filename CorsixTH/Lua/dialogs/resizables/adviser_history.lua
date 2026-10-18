@@ -18,13 +18,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Adviser message history
 class "UIAdviserHistory" (UIResizable)
 
 ---@type UIAdviserHistory
 local UIAdviserHistory = _G["UIAdviserHistory"]
 
-
+local Colours = _G["Colours"] ---@type Colours
 local col_bg = Colours.AdviserPanelBackground
 local col_highlight = Colours.AdviserPanelHighlight
 local col_shadow = Colours.AdviserPanelShadow
@@ -194,5 +196,6 @@ function UIAdviserHistory:afterLoad(old, new)
   if old < 249 then
     self:close()
   end
+  local Window = _G["Window"] ---@type Window
   Window.afterLoad(self, old, new)
 end

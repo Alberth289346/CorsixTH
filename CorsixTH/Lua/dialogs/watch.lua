@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! Timer / clock / watch / countdown dialog for emergencies / level start
 --! The timer lasts approximately 100 days, split into 13 segments
 class "UIWatch" (Window)
@@ -31,6 +33,9 @@ local TIMER_SEGMENTS = 13
 
 --!param count_type (string) One of: "open_countdown" or "emergency" or "epidemic"
 function UIWatch:UIWatch(ui, count_type)
+  local TheApp = _G["TheApp"] ---@type App
+  local Date = _G["Date"] ---@type Date
+
   self:Window()
 
   local app = ui.app
@@ -127,6 +132,7 @@ function UIWatch:onCountdownEnd()
 end
 
 function UIWatch:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   self.active_hover = self:hoverTest(self.active_hover, x, y, 4 * s, 31 * s, 0, 29 * s)
   return Window:onMouseMove(x, y, dx, dy)
@@ -137,6 +143,7 @@ function UIWatch:onWorldTick()
     self.tick_timer = self.tick_rate
     self.open_timer = self.open_timer - 1
     if self.open_timer == 11 then
+      local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
       self:addPanel(2, 2, 47, nil, nil, true, DrawFlags.Nearest)
     elseif self.open_timer == 0 then
       self.panels[#self.panels].sprite_index = 0
@@ -164,6 +171,8 @@ end
 --[[! During an emergency - Cycles through the patient dialogs of all the emergency patients
     ! During an epidemic - Cycles to the first patient who is infected but not vaccinated]]
 function UIWatch:cycleTimerEventPatient()
+  local UIPatient = _G["UIPatient"] ---@type UIPatient
+
   self.ui:playSound("camclick.wav")
   local hospital = self.ui.hospital
 
@@ -194,6 +203,8 @@ end
   UIWatch:cycleTimerEventPatient) scrolls the screen to centre on the selected patient
   If a patient dialog is open that does not belong to the timer event, does nothing]]
 function UIWatch:scrollToTimerEventPatient()
+  local UIPatient = _G["UIPatient"] ---@type UIPatient
+
   self.ui:playSound("camclick.wav")
   local patient = self.lastCycledPatient
   if patient then
@@ -214,6 +225,7 @@ function UIWatch:afterLoad(old, new)
   if old < 237 then
     local pnl = self.panels[#self.panels]
     if pnl.sprite_index >= 2 and pnl.sprite_index < 13 then
+      local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
       pnl.draw_flags = DrawFlags.Nearest
     end
   end

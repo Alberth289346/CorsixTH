@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Save Map Window
 class "UISaveMap" (UIFileBrowser)
 
@@ -43,6 +45,8 @@ local col_shadow = {
 }
 
 function UISaveMap:UISaveMap(ui)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
+
   local treenode = FilteredFileTreeNode(ui.app.user_level_dir, ".map")
   treenode.label = "Maps"
   self:UIFileBrowser(ui, "map", _S.save_map_window.caption:format(".map"), 265,
@@ -59,6 +63,7 @@ function UISaveMap:UISaveMap(ui)
 
   local message = ui.app.world:validateMap()
   if message then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {message}))
   end
 end
@@ -81,6 +86,7 @@ function UISaveMap:confirmName()
   local filename = self.new_map_textbox.text
   local app = self.ui.app
   if filename == "" then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     self.ui:addWindow(UIInformation(self.ui, { _S.save_map_window.missing_filename }))
     self:abortName()
     return
@@ -96,6 +102,7 @@ end
 --! Try to save the game with given filename; if already exists, create confirmation window first.
 function UISaveMap:trySave(filename)
   if lfs.attributes(filename, "size") ~= nil then
+    local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
     self.ui:addWindow(UIConfirmDialog(self.ui, false, _S.confirmation.overwrite_save, --[[persistable:save_map_confirmation]] function() self:doSave(filename) end))
   else
     self:doSave(filename)
@@ -113,6 +120,7 @@ function UISaveMap:doSave(filename)
   if not status then
     err = _S.errors.save_prefix .. err
     print(err)
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {err}))
   end
 end

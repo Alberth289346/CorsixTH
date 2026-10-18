@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 class "UIMachine" (Window)
 
 ---@type UIMachine
@@ -67,6 +69,7 @@ end
 function UIMachine:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
   local mach = self.machine
@@ -124,6 +127,7 @@ function UIMachine:replaceMachine()
     prompt = (_S.confirmation.replace_machine_extra_info):format(new_strength, current_strength) .. "//" .. prompt
   end
 
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
   self.ui:addWindow(UIConfirmDialog(self.ui, true, prompt,
     --[[persistable:replace_machine_confirm_dialog]]function() machine:replaceMachine(cost)
     end
@@ -133,6 +137,7 @@ end
 function UIMachine:onMouseDown(code, x, y)
   -- cycle through all machines when you right click on the machine title
   if code == "right" then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     local is_hit_namebox = x > self.tooltip_regions[1].x * s and x < self.tooltip_regions[1].r * s
                        and y > self.tooltip_regions[1].y * s and y < self.tooltip_regions[1].b * s
@@ -141,6 +146,8 @@ function UIMachine:onMouseDown(code, x, y)
       local ui = self.ui
       local first_machine, next_machine = nil, self.machine
       local next_room
+
+      local Machine = _G["Machine"] ---@type Machine
       for _, entity in ipairs(ui.app.world.entities) do
         -- is a machine and not a slave (e.g. operating_table_b)
         if class.is(entity, Machine) and not entity.master then
@@ -179,6 +186,7 @@ end
 
 function UIMachine:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
   end
   Window:afterLoad(old, new)

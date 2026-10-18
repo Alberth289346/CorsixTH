@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIResizable = _G["UIResizable"] ---@type UIResizable
+
 --! Options window used in the main menu and ingame.
 class "UIOptions" (UIResizable)
 
@@ -29,6 +31,7 @@ local BTN_WIDTH = 135
 local BTN_HEIGHT = 20
 
 -- Colour definitions
+local Colours = _G["Colours"] ---@type Colours
 local col = {
   bg             = Colours.PanelDefault,
   button         = Colours.PanelDefault,
@@ -91,6 +94,7 @@ local available_window_sizes = function()
   }
 
   local enable_list, disable_list = {}, {}
+  local TheApp = _G["TheApp"] ---@type App
   local max_window_width, max_window_height = TheApp.video:getMaxWindowSize()
 
   -- It is possible that getMaxWindowSize could fail to detect the actual
@@ -155,6 +159,7 @@ local available_autosave_frequency = function()
 end
 
 local current_autosave_frequency = function()
+  local TheApp = _G["TheApp"] ---@type App
   local value = TheApp.config.autosave_frequency
   local options = available_autosave_frequency()
   for _, option in pairs(options) do
@@ -251,6 +256,7 @@ function UIOptions:UIOptions(ui, mode)
   self.window_size_button:enable(not app.modes.fullscreen)
 
   -- UI Scale
+  local TheApp = _G["TheApp"] ---@type App
   local scale_label = TheApp.config.ui_scale == 0 and
       _S.options_window.scale_auto or TheApp.config.ui_scale * 100 .. "%"
   self.scale_ui_panel, self.scale_ui_button = createOptionsElement(
@@ -403,6 +409,8 @@ end
 
 function UIOptions:dropdownLanguage(activate)
   if activate then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+
     self:dropdownWindowSize(false)
     self:dropdownUIScale(false)
     self:dropdownCursorScale(false)
@@ -428,6 +436,8 @@ end
 
 function UIOptions:dropdownWindowSize(activate)
   if activate then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+
     self.available_window_sizes = available_window_sizes()
     self:dropdownLanguage(false)
     self:dropdownUIScale(false)
@@ -445,8 +455,9 @@ function UIOptions:dropdownWindowSize(activate)
 end
 
 function UIOptions:selectWindowSize(number)
-  local res = self.available_window_sizes[number]
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
 
+  local res = self.available_window_sizes[number]
   local callback = --[[persistable:options_resolution_callback]] function(width, height)
     self.app.modes.maximized = false
     if not self.ui:changeWindow(width, height) then
@@ -456,6 +467,7 @@ function UIOptions:selectWindowSize(number)
   end
 
   if res.custom then
+    local UIWindowSize = _G["UIWindowSize"] ---@type UIWindowSize
     self.window_size_panel:setLabel(self.ui.app.config.width .. "x" .. self.ui.app.config.height)
     self.ui:addWindow(UIWindowSize(self.ui, callback))
   else
@@ -465,6 +477,8 @@ end
 
 function UIOptions:dropdownUIScale(activate)
   if activate then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+
     self.available_ui_scales = available_ui_scales()
     self:dropdownLanguage(false)
     self:dropdownWindowSize(false)
@@ -483,6 +497,8 @@ end
 
 function UIOptions:dropdownCursorScale(activate)
   if activate then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+
     self.available_cursor_scales = available_cursor_scales()
     self:dropdownLanguage(false)
     self:dropdownWindowSize(false)
@@ -509,6 +525,8 @@ function UIOptions:updateUIScaleAvailabilityState()
 end
 
 function UIOptions:selectUIScale(number)
+  local TheApp = _G["TheApp"] ---@type App
+
   local res = self.available_ui_scales[number]
   TheApp.config.ui_scale = res.scale
   TheApp:saveConfig()
@@ -518,6 +536,8 @@ function UIOptions:selectUIScale(number)
 end
 
 function UIOptions:selectCursorScale(number)
+  local TheApp = _G["TheApp"] ---@type App
+
   local res = self.available_cursor_scales[number]
   TheApp.config.cursor_scale = res.scale
   TheApp:saveConfig()
@@ -526,6 +546,8 @@ end
 
 function UIOptions:dropdownAutosaveFrequency(activate)
   if activate then
+    local UIDropdown = _G["UIDropdown"] ---@type UIDropdown
+
     self:dropdownLanguage(false)
     self:dropdownWindowSize(false)
     self:dropdownUIScale(false)
@@ -544,6 +566,8 @@ end
 function UIOptions:selectAutosaveFrequency(number)
   local option = available_autosave_frequency()[number]
   self.autosave_frequency_panel:setLabel(option.text)
+
+  local TheApp = _G["TheApp"] ---@type App
   TheApp.config.autosave_frequency = option.value
   TheApp:saveConfig()
 end
@@ -564,9 +588,10 @@ end
 
 function UIOptions:buttonFullscreen()
   if not self.ui:toggleVideoMode("fullscreen") then
-      local err = {_S.errors.unavailable_screen_size}
-      self.ui:addWindow(UIInformation(self.ui, err))
-      self.fullscreen_button:toggle()
+    local err = {_S.errors.unavailable_screen_size}
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
+    self.ui:addWindow(UIInformation(self.ui, err))
+    self.fullscreen_button:toggle()
   end
   self.fullscreen_panel:setLabel(self.ui.app.modes.fullscreen and _S.options_window.option_on or _S.options_window.option_off)
   self.window_size_button:enable(not self.ui.app.modes.fullscreen)
@@ -575,6 +600,7 @@ end
 function UIOptions:buttonOriginalAspectRatio()
   if not self.ui:toggleVideoMode("aspect_ratio_4_3") then
     local err = {_S.errors.unavailable_screen_size}
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     self.ui:addWindow(UIInformation(self.ui, err))
     self.aspect_button:toggle()
   end
@@ -590,21 +616,25 @@ function UIOptions:buttonMouseCapture()
 end
 
 function UIOptions:buttonCustomise()
+  local UICustomise = _G["UICustomise"] ---@type UICustomise
   local window = UICustomise(self.ui, "menu")
   self.ui:addWindow(window)
 end
 
 function UIOptions:buttonFolder()
+  local UIFolder = _G["UIFolder"] ---@type UIFolder
   local window = UIFolder(self.ui, "menu")
   self.ui:addWindow(window)
 end
 
 function UIOptions:buttonHotkey()
+  local UIHotkeyAssign = _G["UIHotkeyAssign"] ---@type UIHotkeyAssign
   local window = UIHotkeyAssign(self.ui, "menu")
   self.ui:addWindow(window)
 end
 
 function UIOptions:buttonSound()
+  local UISoundSettings = _G["UISoundSettings"] ---@type UISoundSettings
   local window = UISoundSettings(self.ui, "menu")
   self.ui:addWindow(window)
 end
@@ -615,6 +645,7 @@ function UIOptions:buttonScrollSpeed()
     self.scrollspeed_button : setToggleState(false)
   end
 
+  local UIScrollSpeed = _G["UIScrollSpeed"]
   self.ui:addWindow(UIScrollSpeed(self.ui, callback))
 end
 
@@ -628,6 +659,7 @@ function UIOptions:buttonShiftScrollSpeed()
     self.shift_scrollspeed_button : setToggleState(false)
   end
 
+  local UIShiftScrollSpeed = _G["UIShiftScrollSpeed"]
   self.ui:addWindow(UIShiftScrollSpeed(self.ui, callback))
 end
 
@@ -641,7 +673,8 @@ function UIOptions:buttonZoomSpeed()
     self.zoomspeed_button : setToggleState(false)
   end
 
-  self.ui:addWindow( UIZoomSpeed(self.ui, callback) )
+  local UIZoomSpeed = _G["UIZoomSpeed"] ---@type UIZoomSpeed
+  self.ui:addWindow(UIZoomSpeed(self.ui, callback))
 end
 
 function UIOptions:onChangeWindowSize()
@@ -653,6 +686,8 @@ end
 -- or adjusting window boundaries)
 function UIOptions:_processWindowResizeEvent()
   self:updateUIScaleAvailabilityState()
+
+  local TheApp = _G["TheApp"] ---@type App
   local window_w, window_h = TheApp.video:getWindowSize()
   self.window_size_panel:setLabel(window_w .. "x" .. window_h)
 end
@@ -660,6 +695,7 @@ end
 function UIOptions:close()
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
     self.ui:addWindow(UIMainMenu(self.ui))
   end
 end
@@ -711,6 +747,10 @@ function UIWindowSize:cancel()
 end
 
 function UIWindowSize:ok()
+  local App = _G["App"] ---@type App
+  local UIInformation = _G["UIInformation"] ---@type UIInformation
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
+
   local width, height = tonumber(self.width_textbox.text) or 0, tonumber(self.height_textbox.text) or 0
   local min_w = App.MIN_WINDOW_WIDTH
   local min_h = App.MIN_WINDOW_HEIGHT

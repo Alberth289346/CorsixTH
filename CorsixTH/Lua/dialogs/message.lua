@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! Small fax notification window which sits on the bottom bar.
 class "UIMessage" (Window)
 
@@ -105,6 +107,10 @@ end
 
 --! Displays the fax/strike message to the player when opened from the bottom_panel.
 function UIMessage:openMessage()
+  local TheApp = _G["TheApp"] ---@type App
+  local UIStaffRise = _G["UIStaffRise"] ---@type UIStaffRise
+  local UIFax = _G["UIFax"] ---@type UIFax
+
   if TheApp.world:isUserActionProhibited() then
     self.ui:playSound("wrong2.wav")
     self:adjustToggle()
@@ -132,6 +138,7 @@ end
 function UIMessage:removeMessage(choice_number)
   if choice_number then
     if not self.fax then
+      local UIFax = _G["UIFax"] ---@type UIFax
       self.fax = UIFax(self.ui, self) -- NB: just create, don't add to ui
     end
     self.fax:choice(choice_number)

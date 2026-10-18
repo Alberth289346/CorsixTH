@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Entity = _G["Entity"] ---@type Entity
+
 --! An `Entity` which occupies a single tile and is capable of moving around the map.
 class "Humanoid" (Entity)
 
@@ -110,6 +112,7 @@ end
 
 --! Filter animations for patients and set the give marker positions.
 local function assignPatientMarkers(anims, name, ...)
+  local TheApp = _G["TheApp"] ---@type App
   local anim_mgr = TheApp.animation_manager
 
   for hum_type, anim in pairs(anims) do
@@ -122,6 +125,7 @@ end
 
 --! Filter animations for staff and set the give marker positions.
 local function assignStaffMarkers(anims, name, ...)
+  local TheApp = _G["TheApp"] ---@type App
   local anim_mgr = TheApp.animation_manager
 
   for hum_type, anim in pairs(anims) do
@@ -411,6 +415,7 @@ function Humanoid:afterLoad(old, new)
 
   for _, action in pairs(self.action_queue) do
     -- Sometimes actions not actual instances of HumanoidAction
+    local HumanoidAction = _G["HumanoidAction"] ---@type HumanoidAction
     HumanoidAction.afterLoad(action, old, new)
   end
 
@@ -421,6 +426,7 @@ end
 --!param ui (GameUI) The UI which the user in question is using.
 --!param button (string) One of: "left", "middle", "right".
 function Humanoid:onClick(ui, button)
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp.config.debug then
     self:dump()
   end
@@ -465,6 +471,8 @@ end
 
 --! Despawn the humanoid.
 function Humanoid:despawn()
+  local SpawnAction = _G["SpawnAction"] ---@type SpawnAction
+
   local spawn_point = self.world.spawn_points[math.random(1, #self.world.spawn_points)]
   self:setNextAction(SpawnAction("despawn", spawn_point):setMustHappen(true))
 end
@@ -503,6 +511,7 @@ end
 
 function Humanoid:setCallCompleted()
   if self.on_call then
+    local CallsDispatcher = _G["CallsDispatcher"] ---@type CallsDispatcher
     CallsDispatcher.onCheckpointCompleted(self.on_call)
   end
 end
@@ -597,6 +606,7 @@ function Humanoid:startAction()
   end
 
   -- Call the action start handler
+  local TheApp = _G["TheApp"] ---@type App
   TheApp.humanoid_actions[action.name](action, self)
 
   -- If action has been marked as to be interrupted
@@ -713,6 +723,7 @@ end
 
 -- Check if the humanoid is knocking on a door
 function Humanoid:isKnockingDoor()
+  local KnockDoorAction = _G["KnockDoorAction"] ---@type KnockDoorAction
   return class.is(self:getCurrentAction(), KnockDoorAction)
 end
 
@@ -746,6 +757,19 @@ end
 
 --! Handle an empty action queue in some way instead of crashing.
 function Humanoid:_handleEmptyActionQueue()
+  local TheApp = _G["TheApp"] ---@type App
+
+  local Patient = _G["Patient"] ---@type Patient
+  local GrimReaper = _G["GrimReaper"] ---@type GrimReaper
+  local Staff = _G["Staff"] ---@type Staff
+
+  local UIStaff = _G["UIStaff"] ---@type UIStaff
+  local UIPatient = _G["UIPatient"] ---@type UIPatient
+
+  local MeanderAction = _G["MeanderAction"] ---@type MeanderAction
+  local IdleAction = _G["IdleAction"] ---@type IdleAction
+  local SeekReceptionAction = _G["SeekReceptionAction"] ---@type SeekReceptionAction
+
   -- if this is a patient that is going home, an empty
   -- action queue is not a problem
   if class.is(self, Patient) and self.going_home then
@@ -792,6 +816,7 @@ function Humanoid:_handleEmptyActionQueue()
     end
 
     -- Ask user to choose kick off humanoid or do nothing
+    local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
     ui:addWindow(UIConfirmDialog(ui, true, _S.errors.dialog_empty_queue,
       --[[persistable:humanoid_leave_hospital]] function()
         self.world:gameLog("The humanoid was told to leave the hospital...")
@@ -828,12 +853,15 @@ function Humanoid:setType(humanoid_class)
   self.check_watch_anim = check_watch_animations[humanoid_class]
   self.pee_anim = pee_animations[humanoid_class]
   self.humanoid_class = humanoid_class
+
   if #self.action_queue == 0 then
+    local IdleAction = _G["IdleAction"] ---@type IdleAction
     self:setNextAction(IdleAction())
   end
 
   self.th:setPartialFlag(self.permanent_flags or 0, false)
   if humanoid_class == "Invisible Patient" then
+    local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
     -- Invisible patients do not have very many pixels to hit, box works better
     self.permanent_flags = DrawFlags.BoundBoxHitTest
   else
@@ -856,6 +884,8 @@ end
 --!param must_happen (boolean, nil) If true, then the walk action will not be
 -- interrupted.
 function Humanoid:walkTo(tile_x, tile_y, must_happen)
+  local WalkAction = _G["WalkAction"] ---@type WalkAction
+
   self:setNextAction(WalkAction(tile_x, tile_y)
       :setMustHappen(not not must_happen))
 end
@@ -864,6 +894,8 @@ end
 -- It does not require any input parameters since it expects that the area
 -- to be left is already marked with the `avoidTile` tile flag.
 function Humanoid:leaveArea()
+  local MeanderAction = _G["MeanderAction"] ---@type MeanderAction
+
   -- TODO: Currently, this function simply forces the humanoid to move.
   -- However, it doesn't take into account the specific area to be exited or
   -- the direction in which it needs to exit.
@@ -921,6 +953,10 @@ function Humanoid:updateSpeed()
 end
 
 function Humanoid:handleRemovedObject(object)
+  local MeanderAction = _G["MeanderAction"] ---@type MeanderAction
+  local IdleAction = _G["IdleAction"] ---@type IdleAction
+  local Receptionist = _G["Receptionist"] ---@type Receptionist
+
   local replacement_action
   if class.is(self, Receptionist) then
     replacement_action = MeanderAction()
@@ -957,6 +993,8 @@ end
 --!param amount (number) This amount is added to the existing value for the attribute,
 --  and is then capped to be between 0 and 1.
 function Humanoid:changeAttribute(attribute, amount)
+  local Receptionist = _G["Receptionist"] ---@type Receptionist
+
   -- Handle some happiness special cases
   if attribute == "happiness" and self.humanoid_class then
     local max_salary = self.world.map.level_config.payroll.MaxSalary
@@ -1191,6 +1229,8 @@ end
 --! Unexpects humanoid from a room, if validly entering this room
 --!param dest_room (Room) The room the humanoid maybe expected at
 function Humanoid:unexpectFromRoom(dest_room)
+  local Staff = _G["Staff"] ---@type Staff
+
   -- Unexpect the patient from a possible destination room.
   if dest_room and dest_room.door.queue then
     -- 1st condition checks normal room routing

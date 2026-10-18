@@ -20,10 +20,13 @@ SOFTWARE. --]]
 
 -- Test for hit within the view circle
 local --[[persistable:staff_dialog_is_in_view_circle]] function is_in_view_circle(x, y, is_handyman)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local circle_center_y = is_handyman and 276 * s or 248 * s
   return (x - 55 * s)^2 + (y - circle_center_y)^2 < (39 * s)^2
 end
+
+local Window = _G["Window"] ---@type Window
 
 --! Individual staff information dialog
 class "UIStaff" (Window)
@@ -59,6 +62,10 @@ function UIStaff:getParcelText()
 end
 
 function UIStaff:UIStaff(ui, staff)
+  local Doctor = _G["Doctor"] ---@type Doctor
+  local Handyman = _G["Handyman"] ---@type Handyman
+  local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
+
   self:Window()
 
   local app = ui.app
@@ -163,6 +170,10 @@ function UIStaff:getStaffPosition(dx, dy)
 end
 
 function UIStaff:draw(canvas, x_, y_)
+  local TheApp = _G["TheApp"] ---@type App
+  local Handyman = _G["Handyman"] ---@type Handyman
+  local Doctor = _G["Doctor"] ---@type Doctor
+
   local s = TheApp.gfx:getUIScale()
   local x, y = self.x * s + x_, self.y * s + y_
 
@@ -253,11 +264,16 @@ function UIStaff:draw(canvas, x_, y_)
 end
 
 function UIStaff:onMouseDown(button, x, y)
+  local Handyman = _G["Handyman"] ---@type Handyman
+
   self.do_scroll = button == "left" and is_in_view_circle(x, y, class.is(self.staff, Handyman))
   return Window.onMouseDown(self, button, x, y)
 end
 
 function UIStaff:onMouseUp(button, x, y)
+  local TheApp = _G["TheApp"] ---@type App
+  local Handyman = _G["Handyman"] ---@type Handyman
+
   local ui = self.ui
   if button == "left" then
     self.do_scroll = false
@@ -303,6 +319,7 @@ function UIStaff:onMouseUp(button, x, y)
 end
 
 function UIStaff:onMouseMove(x, y, dx, dy)
+  local Handyman = _G["Handyman"] ---@type Handyman
   self.do_scroll = self.do_scroll and is_in_view_circle(x, y, class.is(self.staff, Handyman))
   return Window.onMouseMove(self, x, y, dx, dy)
 end
@@ -323,6 +340,7 @@ function UIStaff:pickupStaff()
 end
 
 function UIStaff:fireStaff()
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
   self.ui:addWindow(UIConfirmDialog(self.ui, false, _S.confirmation.sack_staff, --[[persistable:staff_dialog_confirm_sack]] function()
     self.staff:fire()
   end))
@@ -388,6 +406,7 @@ function UIStaff:doMoreRepairing()
 end
 
 function UIStaff:openStaffManagement()
+  local UIStaffManagement = _G["UIStaffManagement"] ---@type UIStaffManagement
   local dlg = UIStaffManagement(self.ui)
   -- Make sure that the dialog managed to create itself properly.
   -- For example, if using the demo files closed will be true because the dialog could not be loaded.
@@ -399,6 +418,7 @@ function UIStaff:openStaffManagement()
 end
 
 function UIStaff:hitTest(x, y)
+  local Handyman = _G["Handyman"] ---@type Handyman
   return Window.hitTest(self, x, y) or is_in_view_circle(x, y, class.is(self.staff, Handyman))
 end
 
@@ -408,6 +428,9 @@ function UIStaff:afterLoad(old, new)
   end
   Window.afterLoad(self, old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
+    local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
+
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.face_parts = TheApp.gfx:loadRaw("Face01V", 65, 1350, nil, "Data", "MPalette.dat", false, { flags = DrawFlags.Nearest })
   end

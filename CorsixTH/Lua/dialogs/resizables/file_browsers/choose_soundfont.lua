@@ -23,6 +23,8 @@ local lfsext = TH.lfsExt()
 
 local file_extensions = {".sf2", ".sf3"}
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Window where the user can choose a soundfont file.
 class "UIChooseSoundfont" (UIFileBrowser)
 
@@ -30,6 +32,9 @@ class "UIChooseSoundfont" (UIFileBrowser)
 local UIChooseSoundfont = _G["UIChooseSoundfont"]
 
 function UIChooseSoundfont:UIChooseSoundfont(ui, mode, soundOptionsUI, choiceCallback)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
+  local DummyRootNode = _G["DummyRootNode"] ---@type DummyRootNode
+
   self.soundOptionsUI = soundOptionsUI
   self.choiceCallback = choiceCallback
 
@@ -57,8 +62,10 @@ end
 
 --! Close the dialog and return to the previous dialog
 function UIChooseSoundfont:close()
+  local UIResizable = _G["UIResizable"] ---@type UIResizable
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UISoundSettings = _G["UISoundSettings"] ---@type UISoundSettings
     self.ui:addWindow(UISoundSettings(self.ui, "menu"))
   end
 end

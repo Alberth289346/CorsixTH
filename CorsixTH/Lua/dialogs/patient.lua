@@ -22,9 +22,12 @@ local TH = require("TH")
 
 -- Test for hit within the view circle
 local --[[persistable:patient_window_is_in_view_circle]] function is_in_view_circle(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   return (x - 55 * s)^2 + (y - 254 * s)^2 < (39 * s)^2
 end
+
+local Window = _G["Window"] ---@type Window
 
 --! Individual patient information dialog
 class "UIPatient" (Window)
@@ -125,6 +128,7 @@ end
 --!param ypos Vertical offset.
 --!param value Fraction to draw.
 function UIPatient:drawBar(canvas, sprite, ybase, xpos, ypos, value)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local width = math.floor(value * 40 + 0.5)
   for dx = 0, width - 1 do
@@ -133,6 +137,7 @@ function UIPatient:drawBar(canvas, sprite, ybase, xpos, ypos, value)
 end
 
 function UIPatient:draw(canvas, x_, y_)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local x, y = self.x * s + x_, self.y * s + y_
   local map = self.ui.app.map
@@ -182,6 +187,7 @@ end
 --!param x (int) X position of the top of the list.
 --!param y (int) Y position of the top of the list.
 function UIPatient:drawTreatmentHistory(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   for _, room in ipairs(self.patient.treatment_history) do
     y = self.font:drawWrapped(canvas, room:upper(), x, y, 95 * s)
@@ -193,6 +199,7 @@ end
 --!param x (int) X position of the top-left of the graph.
 --!param y (int) Y position of the top-left of the graph.
 function UIPatient:drawHealthHistory(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
 
   -- Sizes and positions of the graph in the window.
@@ -312,6 +319,7 @@ end
 function UIPatient:viewQueue()
   for _, action in ipairs(self.patient.action_queue) do
     if action.name == "queue" then
+      local UIQueue = _G["UIQueue"] ---@type UIQueue
       self.ui:addWindow(UIQueue(self.ui, action.queue))
       self.ui:playSound("selectx.wav")
       return
@@ -331,6 +339,7 @@ function UIPatient:goHome()
 end
 
 function UIPatient:viewDiseases()
+  local UICasebook = _G["UICasebook"] ---@type UICasebook
   local dlg = UICasebook(self.ui, self.patient.diagnosed and self.patient.disease.id or nil)
   self.ui:addWindow(dlg)
 end
@@ -346,6 +355,7 @@ function UIPatient:guessDisease()
   end
   patient:setDiagnosed()
   if patient:agreesToPay(patient.disease.id) then
+    local SeekRoomAction = _G["SeekRoomAction"] ---@type SeekRoomAction
     patient:setNextAction(SeekRoomAction(patient.disease.treatment_rooms[1]):enableTreatmentRoom(), 1)
   else
     patient:goHome("over_priced")
@@ -361,6 +371,7 @@ function UIPatient:afterLoad(old, new)
   self:registerKeyHandlers()
 
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font74V", nil, nil, { apply_ui_scale = true })
   end
 end

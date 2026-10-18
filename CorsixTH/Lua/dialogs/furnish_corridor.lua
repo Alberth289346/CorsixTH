@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 local TH = require("TH")
-local math_floor
-    = math.floor
+
+local Window = _G["Window"] ---@type Window
 
 --! Dialog for purchasing `Object`s (for the corridor or for rooms).
 class "UIFurnishCorridor" (Window)
@@ -199,6 +199,7 @@ function UIFurnishCorridor:confirm()
     if #to_purchase == 0 then
       self:close()
     else
+      local UIPlaceObjects = _G["UIPlaceObjects"] ---@type UIPlaceObjects
       self.ui:addWindow(UIPlaceObjects(self.ui, to_purchase))
     end
   end
@@ -215,6 +216,7 @@ end
 function UIFurnishCorridor:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = x + self.x * s, y + self.y * s
   self.white_font:draw(canvas, self.title_text, x + 163 * s, y + 18 * s)
@@ -237,10 +239,11 @@ end
 function UIFurnishCorridor:onMouseMove(x, y, dx, dy)
   local repaint = Window.onMouseMove(self, x, y, dx, dy)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local hover_idx = 0
   if 158 * s <= x and x < 346 * s and 34 * s <= y and y < 224 * s then
-    hover_idx = math_floor((y - 15 * s) / (19 * s))
+    hover_idx = math.floor((y - 15 * s) / (19 * s))
   end
 
   if hover_idx ~= self.list_hover_index then
@@ -269,6 +272,7 @@ function UIFurnishCorridor:afterLoad(old, new)
 
   if old < 236 then
     local selected_label_color = { red = 40, green = 40, blue = 250 }
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.blue_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font02V", nil, nil, {ttf_color = selected_label_color, apply_ui_scale = true })
   end

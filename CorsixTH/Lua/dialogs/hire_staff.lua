@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 class "UIHireStaff" (Window)
 
 ---@type UIHireStaff
@@ -34,6 +36,7 @@ function UIHireStaff:UIHireStaff(ui)
   self:setDefaultPosition(100, 100)
   self.panel_sprites = ui.app.gfx:loadSpriteTable("QData", "Req11V", true)
   self.white_font = ui.app.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
+  local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
   self.face_parts = ui.app.gfx:loadRaw("Face01V", 65, 1350, nil, "Data", "MPalette.dat", false, { flags = DrawFlags.Nearest })
 
   -- Left hand side tab backgrounds
@@ -142,6 +145,7 @@ function UIHireStaff:hire()
   end
   self.ui:playSound("YesX.wav")
   table.remove(self.world.available_staff[self.category], self.current_index)
+  local UIPlaceStaff = _G["UIPlaceStaff"] ---@type UIPlaceStaff
   self.ui:addWindow(UIPlaceStaff(self.ui, profile, self.mouse_up_x, self.mouse_up_y))
 end
 
@@ -158,6 +162,7 @@ end
 function UIHireStaff:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
 
@@ -282,6 +287,8 @@ function UIHireStaff:afterLoad(old, new)
   self:registerKeyHandlers()
 
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
+    local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.face_parts = TheApp.gfx:loadRaw("Face01V", 65, 1350, nil, "Data", "MPalette.dat", false, { flags = DrawFlags.Nearest })
   end

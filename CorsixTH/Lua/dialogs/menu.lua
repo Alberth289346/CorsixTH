@@ -18,9 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
-local ipairs, math_floor, unpack, select, assert
-    = ipairs, math.floor, unpack, select, assert
 local TH = require("TH")
+
+local Window = _G["Window"] ---@type Window
 
 --! The ingame menu bar which sits (nominally hidden) at the top of the screen.
 class "UIMenuBar" (Window)
@@ -103,6 +103,7 @@ function UIMenuBar:onTick()
 end
 
 function UIMenuBar:onChangeResolution()
+  local TheApp = _G["TheApp"] ---@type App
   self.width = TheApp.video:getRenderSize()
 end
 
@@ -144,6 +145,7 @@ function UIMenuBar:addMenu(title, menu)
   if self.menus[1] then
     menu_item.x = self.menus[#self.menus].x + self.menus[#self.menus].width
   end
+  local TheApp = _G["TheApp"] ---@type App
   menu_item.width = math.ceil(self.white_font:sizeOf(title) / TheApp.gfx:getUIScale() + 32)
   self.menus[#self.menus + 1] = menu_item
 end
@@ -152,6 +154,7 @@ function UIMenuBar:draw(canvas)
   if not self.visible then
     return
   end
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local panel_sprites = self.panel_sprites
   local panel_sprites_draw = panel_sprites.draw
@@ -194,6 +197,7 @@ function UIMenuBar:draw(canvas)
 end
 
 function UIMenuBar:drawMenu(menu, canvas)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local panel_sprites = self.panel_sprites
   local panel_sprites_draw = panel_sprites.draw
@@ -232,6 +236,7 @@ function UIMenuBar:drawMenu(menu, canvas)
 end
 
 function UIMenuBar:hitTestBar(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if y < 16 * s then
     for _, menu in ipairs(self.menus) do
@@ -249,6 +254,7 @@ function UIMenuBar:hitTestBar(x, y)
 end
 
 function UIMenuBar:onMouseMove(x, y, dx, dy)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local padding = 6
   local visible = y < self.height * s + padding * s
@@ -388,6 +394,7 @@ function UIMenuBar:onMouseUp(button, x, y)
     return
   end
   local repaint = false
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   while self.active_menu do
     local index = self.active_menu:hitTest(x, y, 0)
@@ -446,6 +453,8 @@ function UIMenuBar:calculateMenuSize(menu)
   if menu.has_size ~= self then
     local w = 20
     local h = 6
+
+    local TheApp = _G["TheApp"] ---@type App
     for _, item in ipairs(menu.items) do
       local item_w = math.ceil(self.white_font:sizeOf(item.title) / TheApp.gfx:getUIScale() + 10)
       if item_w > w then
@@ -500,11 +509,12 @@ function UIMenu:hitTest(x, y, padding)
   -- number -> hit that item
   -- true   -> hit menu, but not an item
   -- false  -> no hit
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if self.x * s - padding * s <= x and x < self.x * s + self.width * s + padding * s and
       self.y * s - padding * s <= y and y < self.y * s + self.height * s + padding * s then
     if self.x * s <= x and x < self.x * s + self.width * s then
-      local index = math_floor((y - self.y * s + 12 * s) / (14 * s))
+      local index = math.floor((y - self.y * s + 12 * s) / (14 * s))
       if 1 <= index and index <= #self.items then
         return index
       end
@@ -567,6 +577,7 @@ end
 --!param game (boolean) True if this menu is for the game, where announcements and
 -- game sounds controls are added.
 local function audio_options(menu, game)
+  local TheApp = _G["TheApp"] ---@type App
   local app = TheApp
 
   local function vol(level, setting)
@@ -643,6 +654,7 @@ local function audio_options(menu, game)
       :appendMenu(_S.menu_options.announcements_vol, appendVolume("announcement"))
   end
   if app.audio.has_bg_music then
+    local UIJukebox = _G["UIJukebox"] ---@type UIJukebox
     menu:appendMenu(_S.menu_options.music_vol, appendVolume("music"))
       :appendItem(_S.menu_options.jukebox:format(hotkey_value_label("ingame_jukebox", hotkeys)),
           function() app.ui:addWindow(UIJukebox(app)) end)
@@ -652,6 +664,7 @@ end
 -- Add display options to the menu.
 --!param menu (object) The menu that the options are added to.
 local function display_options(menu)
+  local TheApp = _G["TheApp"] ---@type App
   local app = TheApp
 
   -- Lock windows
@@ -685,6 +698,8 @@ local function display_options(menu)
 end
 
 local function overlay(...)
+  local TheApp = _G["TheApp"] ---@type App
+
   local args = {n = select('#', ...), ...}
   return function(item, m)
     if args.n > 0 then
@@ -701,6 +716,8 @@ function UIMenuBar:makeMapeditorMenu(app)
   local menu = UIMenu()
   local hotkeys = app.hotkeys
 
+  local UILoadMap = _G["UILoadMap"] ---@type UILoadMap
+  local UISaveMap = _G["UISaveMap"] ---@type UISaveMap
   menu:appendItem(_S.menu_file.load:format(hotkey_value_label("ingame_loadMenu", hotkeys)), function() self.ui:addWindow(UILoadMap(self.ui, "map")) end)
     :appendItem(_S.menu_file.save:format(hotkey_value_label("ingame_saveMenu", hotkeys)), function() self.ui:addWindow(UISaveMap(self.ui)) end)
     :appendItem(_S.menu_file.restart:format(hotkey_value_label("ingame_restartLevel", hotkeys)), function() self.ui:restartMapEditor() end)
@@ -735,6 +752,8 @@ function UIMenuBar:makeGameMenu(app)
   local menu = UIMenu()
   local hotkeys = app.hotkeys
 
+  local UILoadGame = _G["UILoadGame"] ---@type UILoadGame
+  local UISaveGame = _G["UISaveGame"] ---@type UISaveGame
   menu:appendItem(_S.menu_file.load:format(hotkey_value_label("ingame_loadMenu", hotkeys)), function() self.ui:addWindow(UILoadGame(self.ui, "game")) end)
     :appendItem(_S.menu_file.save:format(hotkey_value_label("ingame_saveMenu", hotkeys)), function() self.ui:addWindow(UISaveGame(self.ui)) end)
     :appendItem(_S.menu_file.restart:format(hotkey_value_label("ingame_restartLevel", hotkeys)), function() app:restart() end)
@@ -804,6 +823,8 @@ function UIMenuBar:makeGameMenu(app)
 
   self:addMenu(_S.menu.options, options)
 
+  local UIMachineMenu = _G["UIMachineMenu"] ---@type UIMachineMenu
+  local UIAdviserHistory = _G["UIAdviserHistory"] ---@type UIAdviserHistory
   self:addMenu(_S.menu.charts, UIMenu()
     :appendItem(_S.menu_charts.bank_manager:format(hotkey_value_label("ingame_panel_bankManager", hotkeys)), function() self.ui.bottom_panel:dialogBankManager(true) end)
     :appendItem(_S.menu_charts.statement:format(hotkey_value_label("ingame_panel_bankStats", hotkeys)), function() self.ui.bottom_panel:dialogBankStats(true) end)
@@ -841,6 +862,11 @@ function UIMenuBar:makeGameMenu(app)
     end)
   end
   if self.ui.app.config.debug then
+    local UIMakeDebugPatient = _G["UIMakeDebugPatient"] ---@type UIMakeDebugPatient
+    local UICheats = _G["UICheats"] ---@type UICheats
+    local UILuaConsole = _G["UILuaConsole"] ---@type UILuaConsole
+    local UICallsDispatcher = _G["UICallsDispatcher"] ---@type UICallsDispatcher
+
     self:addMenu(_S.menu.debug, UIMenu() -- Debug
       :appendMenu(_S.menu_debug.jump_to_level, levels_menu)
       :appendMenu(_S.menu_debug.allow_blocking_off_areas, UIMenu()

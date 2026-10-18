@@ -20,6 +20,8 @@ SOFTWARE. --]]
 
 local lfs = require("lfs")
 
+local FileTreeNode = _G["FileTreeNode"] ---@type FileTreeNode
+
 --! A tree node representing a file (or directory) in the physical file-system
 --  that meets a given file extension criterion.
 class "FilteredFileTreeNode" (FileTreeNode)
@@ -65,6 +67,8 @@ function FilteredFileTreeNode:getLabel()
   return label
 end
 
+local TreeControl = _G["TreeControl"] ---@type TreeControl
+
 --! A sortable tree control that accommodates a certain file type and also possibly shows
 --  their last modification dates.
 class "FilteredTreeControl" (TreeControl)
@@ -78,6 +82,7 @@ function FilteredTreeControl:FilteredTreeControl(root, x, y, width, height, col_
   self.num_rows = (self.tree_rect.h - self.y_offset) / self.row_height
 
   -- Magic numbers used to find a static position across different screen resolutions.
+  local TheApp = _G["TheApp"] ---@type App
   local scr_w, scr_h = TheApp.video:getRenderSize()
   local button1x = math.floor(scr_w / 2 - 90)
   local button2x = button1x + 210
@@ -137,10 +142,13 @@ function FilteredTreeControl:drawExtraOnRow(canvas, node, x, y)
   if not node:hasChildren() and self.show_dates then
     local last_mod = node:getLastModification()
     local daytime = _S.date_format.daymonth:format(os.date("%d", last_mod), tonumber(os.date("%m", last_mod)))
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     self.font:draw(canvas, daytime .. " " .. os.date("%Y %X", last_mod), x + self.tree_rect.w * s - 140 * s, y)
   end
 end
+
+local UIResizable = _G["UIResizable"] ---@type UIResizable
 
 --! A file browser with a scrollbar. Used by load_game and save_game.
 class "UIFileBrowser" (UIResizable)

@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFileBrowser = _G["UIFileBrowser"] ---@type UIFileBrowser
+
 --! Load Map Window
 class "UILoadMap" (UIFileBrowser)
 
@@ -25,6 +27,8 @@ class "UILoadMap" (UIFileBrowser)
 local UILoadMap = _G["UILoadMap"]
 
 function UILoadMap:UILoadMap(ui, mode)
+  local FilteredFileTreeNode = _G["FilteredFileTreeNode"] ---@type FilteredFileTreeNode
+
   local path = ui.app.user_level_dir
   local treenode = FilteredFileTreeNode(path, ".map")
   treenode.label = "Maps"
@@ -43,8 +47,10 @@ function UILoadMap:choiceMade(name)
 end
 
 function UILoadMap:close()
+  local UIResizable = _G["UIResizable"] ---@type UIResizable
   UIResizable.close(self)
   if self.mode == "menu" then
+    local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
     self.ui:addWindow(UIMainMenu(self.ui))
   end
 end

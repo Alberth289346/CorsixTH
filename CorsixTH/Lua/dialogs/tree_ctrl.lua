@@ -479,6 +479,8 @@ function DummyRootNode:getIndexOfChild(child)
   return self.children[child]
 end
 
+local Window = _G["Window"] ---@type Window
+
 --! A control (to be placed on a window) which allows the user to navigate a
 -- tree of items and select one item from it.
 class "TreeControl" (Window)
@@ -508,6 +510,7 @@ function TreeControl:TreeControl(root, x, y, width, height, col_bg, col_fg, y_of
   self.y_offset = y_offset or 0
 
   -- Load the graphical resources
+  local TheApp = _G["TheApp"] ---@type App
   local gfx = TheApp.gfx
   if not has_font then
     self.font = gfx:loadBuiltinFont()
@@ -548,6 +551,7 @@ end
 
 
 function TreeControl:hitTestTree(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local rect = self.tree_rect
   x = x - rect.x * s
@@ -590,6 +594,7 @@ end
 function TreeControl:onMouseDown(button, x, y)
   local redraw = Window.onMouseDown(self, button, x, y)
   if button ~= 4 and button ~= 5 then
+    local TheApp = _G["TheApp"] ---@type App
     local s = TheApp.gfx:getUIScale()
     -- NB: 4 and 5 are scrollwheel
     self.mouse_down_in_self = false
@@ -679,6 +684,8 @@ function TreeControl:drawExtraOnRow(canvas, node, x, y)
 end
 
 function TreeControl:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
+
   Window.draw(self, canvas, x, y)
   local s = TheApp.gfx:getUIScale()
   x = x + self.x * s + self.tree_rect.x * s
