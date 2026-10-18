@@ -93,10 +93,13 @@ corsixth.require("class")
 
 -- Load the main App class
 corsixth.require("app")
+local App = _G["App"] ---@type App
 
 -- Create an instance of the App class and transfer control to it
 strict_declare_global "TheApp"
-TheApp = App()
+TheApp = App() -- luacheck: ignore 111
+
+local TheApp = _G["TheApp"] ---@type App
 TheApp:setCommandLine(
   "--bitmap-dir=" ..base_dir.. "Bitmap",
   "--config-file=" .. corsixth.require("config_finder").config_filename,

@@ -24,6 +24,8 @@ require("utility")
 require("entity")
 require("objects/litter")
 
+local Litter = _G["Litter"] ---@type Litter
+
 describe("litter.lua: ", function()
   local tile_x, tile_y = 5, 7
 

@@ -341,6 +341,7 @@ function Audio:playSound(name, where, is_announcement, played_callback, played_c
       self.played_sound_callbacks[tostring(played_callback_id)] = played_callback
     end
     if where then
+      local Map = _G["Map"] ---@type Map
       x, y = Map:WorldToScreen(where.tile_x, where.tile_y)
       local dx, dy = where.th:getPosition()
       local ui = self.app.ui
@@ -438,6 +439,7 @@ for this game's different speeds, indexed as follows:
 !return (table) A table of randomly ordered integers for the generated silence lengths.
 --]]
 local function getSilenceLengths(min_silence_lengths, max_silence_lengths, num_silences)
+  local TheApp = _G["TheApp"] ---@type App
   local min_silence = min_silence_lengths[TheApp.world.tick_rate]
   local max_silence = max_silence_lengths[TheApp.world.tick_rate]
 
@@ -476,6 +478,7 @@ function Audio:playEntitySounds(names, entity, min_silence_lengths, max_silence_
 end
 
 local function canSoundsBePlayed()
+  local TheApp = _G["TheApp"] ---@type App
   return TheApp.config.play_sounds and TheApp.world and not TheApp.world:isPaused()
 end
 
@@ -499,6 +502,7 @@ function Audio:entitySoundsHandler(sounds, entity, silences, silences_pointer)
     end
 
     if canSoundsBePlayed() then
+      local Map = _G["Map"] ---@type Map
       local x, y = Map:WorldToScreen(entity.tile_x, entity.tile_y)
       local dx, dy = entity.th:getPosition()
       x = x + dx - self.app.ui.screen_offset_x
@@ -525,12 +529,14 @@ function Audio:entitySoundsHandler(sounds, entity, silences, silences_pointer)
 end
 
 function Audio:onEndPause()
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp.config.play_sounds then
     self:tellInterestedEntitiesTheyCanNowPlaySounds()
   end
 end
 
 function Audio:onSoundPlayed(played_callbacks_id)
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp.world ~= nil then
     if self.played_sound_callbacks[tostring(played_callbacks_id)] then
       self.played_sound_callbacks[tostring(played_callbacks_id)]()
@@ -735,7 +741,10 @@ function Audio:playBackgroundTrack(index)
           info.enabled = false
           self:updatePlaylistPreferences()
           local name, msg = (info.filename_music or info.filename)
+
+          local TheApp = _G["TheApp"] ---@type App
           if not self.warned and TheApp.ui then -- Warn once per session
+            local UIInformation = _G["UIInformation"] ---@type UIInformation
             TheApp.ui:addWindow(UIInformation(TheApp.ui, {_S.errors.music}))
             self.warned = true
           end
@@ -826,6 +835,9 @@ end
 
 -- search for jukebox and notify it to update its play button
 function Audio:notifyJukebox()
+  local TheApp = _G["TheApp"] ---@type App
+
+  local UIJukebox = _G["UIJukebox"] ---@type UIJukebox
   local jukebox = TheApp.ui and TheApp.ui:getWindow(UIJukebox)
   if jukebox then
     jukebox:updatePlayButton()
@@ -847,6 +859,8 @@ function Audio:releaseChannel(channel)
 end
 
 function Audio:destroy()
+  local TheApp = _G["TheApp"] ---@type App
+
   self.has_bg_music = false
   self.not_loaded = not TheApp.config.audio
   self.speech_file_name = nil

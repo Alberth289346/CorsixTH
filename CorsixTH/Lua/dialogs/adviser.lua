@@ -20,11 +20,13 @@ SOFTWARE. --]]
 
 local TH = require("TH")
 
+local Window = _G["Window"] ---@type Window
+
 --! The (ideally) helpful advisor who pops up from the bottom dialog during a game.
 class "UIAdviser" (Window)
 
----@type UIAdviser
-local UIAdviser = _G["UIAdviser"]
+local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
+local UIAdviser = _G["UIAdviser"] ---@type UIAdviser
 
 function UIAdviser:UIAdviser(ui)
   self:Window()
@@ -235,6 +237,7 @@ end
 function UIAdviser:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = x + self.x * s, y + self.y * s
 
@@ -260,6 +263,7 @@ function UIAdviser:onMouseDown(button, x, y)
   if self.phase == 0 or self.phase == 4 then
     return Window.onMouseDown(self, button, x, y)
   end
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
 
   -- Normal operation outside the adviser bounds
@@ -338,6 +342,7 @@ function UIAdviser:afterLoad(old, new)
     self.enabled = true
   end
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.black_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font50V", nil, nil, { apply_ui_scale = true })
   end
   if old < 246 then

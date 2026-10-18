@@ -125,11 +125,12 @@ end
 
 function CallsDispatcher:callForWatering(plant)
   local call = {
-    verification = --[[persistable:call_dispatcher_watering_verification]]function()
-      return false end,
+    verification = --[[persistable:call_dispatcher_watering_verification]] function()
+        return false end,
     priority = --[[persistable:call_dispatcher_watering_priority]] function()
-      return 1 end,
-    execute = --[[persistable:call_dispatcher_watering_execute]] function(staff) return CallsDispatcher.sendStaffToWatering(plant, staff) end,
+        return 1 end,
+    execute = --[[persistable:call_dispatcher_watering_execute]] function(staff)
+        return CallsDispatcher.sendStaffToWatering(plant, staff) end,
     object = plant,
     key = "watering",
     description = _S.calls_dispatcher.watering:format(plant.tile_x, plant.tile_y),
@@ -183,6 +184,7 @@ end
   @return true if suitable for vaccination false otherwise (boolean) ]]
 function CallsDispatcher.verifyStaffForVaccination(patient, staff)
   -- If staff is not a nurse, or nurse is busy, or patient is busy, cannot vaccinate.
+  local Nurse = _G["Nurse"] ---@type Nurse
   if not class.is(staff, Nurse) or not staff:isIdle() or
       staff:getRoom() or patient:getRoom() then
     return false
@@ -211,10 +213,11 @@ end
   have priority to vaccinate
   @return score (Integer) lowest score has higher priority to vaccinate ]]
 function CallsDispatcher.getPriorityForVaccination(patient, nurse)
+  local Nurse = _G["Nurse"] ---@type Nurse
   assert(class.is(nurse, Nurse))
   --Lower the priority "score" the more urgent it is
   --The closest nurse to the patient has the highest priority for vaccination
-  --Any nurse who cannot reach the paitient suffers a priority penalty
+  --Any nurse who cannot reach the patient suffers a priority penalty
   local score = 0
   local nil_penalty = 10000
   local x, y = patient.tile_x, patient.tile_y
@@ -236,6 +239,7 @@ end
   for vaccination @param nurse (Staff, humanoid_class Nurse) the nurse to perform
   the vaccination actions ]]
 function CallsDispatcher.sendNurseToVaccinate(patient, nurse)
+  local Nurse = _G["Nurse"] ---@type Nurse
   assert(class.is(nurse, Nurse))
 
   local epidemic = nurse.hospital.epidemic
@@ -245,6 +249,7 @@ function CallsDispatcher.sendNurseToVaccinate(patient, nurse)
     -- The epidemic may have ended before the call can be executed
     -- so just finish the call immediately
     CallsDispatcher.queueCallCheckpointAction(nurse)
+    local AnswerCallAction = _G["AnswerCallAction"] ---@type AnswerCallAction
     nurse:queueAction(AnswerCallAction())
     nurse:finishAction()
     patient.reserved_for = nil
@@ -293,8 +298,10 @@ function CallsDispatcher:findSuitableStaff(call)
   --       (think of emergency? or surgeons still in GP office?)
   local min_score = 2^30
   local min_staff = nil
+  local Staff = _G["Staff"] ---@type Staff
   for _, e in ipairs(self.world.entities) do
     if class.is(e, Staff) then
+      local Handyman = _G["Handyman"] ---@type Handyman
       if not class.is(e, Handyman) then
         local score = call.verification(e) and call.priority(e) or nil
         if score ~= nil and score < min_score then
@@ -325,6 +332,7 @@ function CallsDispatcher:answerCall(staff)
   assert(not staff.on_call, "Staff member looking for work while already answering a call.")
   assert(staff.hospital, "Staff should still be a member of the hospital to answer a call.")
 
+  local Handyman = _G["Handyman"] ---@type Handyman
   if class.is(staff, Handyman) then
    staff:searchForHandymanTask()
    return true
@@ -389,7 +397,8 @@ function CallsDispatcher.dumpCall(call, message)
   if call_obj.x then
     position = call_obj.x .. ',' .. call_obj.y
   end
-  if(class.is(call_obj,Humanoid)) then
+  local Humanoid = _G["Humanoid"] ---@type Humanoid
+  if(class.is(call_obj, Humanoid)) then
     print(call.key .. '@' .. position .. message)
   else
     print((call_obj.room_info and call_obj.room_info.id or call_obj.object_type.id) ..
@@ -404,6 +413,7 @@ end
 -- If not, the default would be reinsert the call into the queue
 function CallsDispatcher.queueCallCheckpointAction(humanoid, interrupt_handler)
   interrupt_handler = interrupt_handler or CallsDispatcher.actionInterruptHandler
+  local CallCheckPointAction = _G["CallCheckPointAction"] ---@type CallCheckPointAction
   return humanoid:queueAction(CallCheckPointAction(humanoid.on_call, interrupt_handler))
 end
 
@@ -475,6 +485,7 @@ function CallsDispatcher.unassignCall(call, answer_next_call)
   call.assigned = nil
   assigned.on_call = nil
   if answer_next_call then
+    local AnswerCallAction = _G["AnswerCallAction"] ---@type AnswerCallAction
     assigned:setNextAction(AnswerCallAction())
   end
 end
@@ -512,7 +523,7 @@ function CallsDispatcher.getPriorityForRoom(room, attribute, staff)
     end
   end
 
-  -- Prefer the tirer staff (such that less chance to have "resting synchronization issue")
+  -- Prefer the more tired staff (such that less chance to have "resting synchronization issue")
   score = score - staff:getAttribute("fatigue") * 40 -- 40 is just a weighting scale
 
   -- Prefer a wandering staff member over a staff member in a room
@@ -522,7 +533,7 @@ function CallsDispatcher.getPriorityForRoom(room, attribute, staff)
 
   -- TODO: Assign doctor with higher ability
 
-  -- Room requires specilitist trumps over normal rooms
+  -- Room requires specialist trumps over normal rooms
   if attribute == "Researcher" or attribute == "Psychiatrist" or attribute == "Surgeon" then
     score = score - 100000
   end

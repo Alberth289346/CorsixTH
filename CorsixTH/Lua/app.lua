@@ -183,6 +183,7 @@ function App:init()
   -- Prereq 2: Load and initialise the graphics subsystem
   corsixth.require("persistance")
   corsixth.require("graphics")
+  local Graphics = _G["Graphics"] ---@type Graphics
   local gfx_set = good_install_folder and (self.using_demo_files and "demo" or "full") or "base"
   self.gfx = Graphics(self, gfx_set, charset)
 
@@ -284,12 +285,14 @@ function App:init()
   end
   -- Load audio
   corsixth.require("audio")
+  local Audio = _G["Audio"] ---@type Audio
   self.audio = Audio(self)
   self:initMusicDir()
   self.audio:init()
 
   -- Load movie player
   corsixth.require("movie_player")
+  local MoviePlayer = _G["MoviePlayer"] ---@type MoviePlayer
   self.moviePlayer = MoviePlayer(self, self.audio, self.video)
   if good_install_folder then
     self.moviePlayer:init()
@@ -298,6 +301,7 @@ function App:init()
   -- Load strings before UI and before additional Lua
   corsixth.require("strings")
   corsixth.require("string_extensions")
+  local Strings = _G["Strings"] ---@type Strings
   self.strings = Strings(self)
   self.strings:init()
   local language_load_success, language_error = self:initLanguage()
@@ -321,6 +325,8 @@ function App:init()
   -- Load additional Lua before world
   if good_install_folder then
     self.anims = self.gfx:loadAnimations("Data", "V")
+
+    local AnimationManager = _G["AnimationManager"] ---@type AnimationManager
     self.animation_manager = AnimationManager(self.anims)
     self.walls = self:loadLuaFolder("walls")
     corsixth.require("entity")
@@ -338,6 +344,7 @@ function App:init()
         v.slave_type = self.objects[v.slave_id]
         v.slave_type.master_type = v
       end
+      local Object = _G["Object"] ---@type Object
       Object.processTypeDefinition(v)
     end
 
@@ -355,7 +362,9 @@ function App:init()
   end
 
   -- Load UI
+  local TheApp = _G["TheApp"] ---@type App
   corsixth.require("ui")
+  local UI = _G["UI"] ---@type UI
   if good_install_folder then
     corsixth.require("game_ui")
     self.ui = UI(self, true)
@@ -368,6 +377,7 @@ function App:init()
       TheApp:reset()
     end
 
+    local UIDirectoryBrowser = _G["UIDirectoryBrowser"] ---@type UIDirectoryBrowser
     self.ui:addWindow(UIDirectoryBrowser(self.ui, nil, _S.install.th_directory, "InstallDirTreeNode", callback))
     return true
   end
@@ -375,6 +385,8 @@ function App:init()
 
   -- Load main menu (which creates UI)
   local function callback_after_movie()
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
+
     self:loadMainMenu()
     self.audio:playRandomBackgroundTrack()
 
@@ -393,6 +405,7 @@ function App:init()
       if num >= "1" and num <= "12" and lfs.attributes(self.savegame_dir .. file, "size") then
         self.command_line.load = file
       else
+        local FileTreeNode = _G["FileTreeNode"] ---@type FileTreeNode
         self.command_line.load = "Autosaves" .. pathsep ..
             FileTreeNode(self.savegame_dir .. "Autosaves"):getMostRecentlyModifiedChildFile(".%.sav$").label
       end
@@ -721,6 +734,11 @@ function App:loadMainMenu(message)
   self.world = nil
   self.map = nil
 
+  local UI = _G["UI"] ---@type UI
+  local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
+  local UITipOfTheDay = _G["UITipOfTheDay"] ---@type UITipOfTheDay
+  local UIInformation = _G["UIInformation"] ---@type UIInformatio
+
   self.ui = UI(self, false)
   self.ui:setMenuBackground()
   self.ui:addWindow(UIMainMenu(self.ui))
@@ -756,6 +774,8 @@ end
 --! to be able to progress through that campaign.
 --!param campaign_file (string) Full path of a CorsixTH Campaign definition Lua file.
 function App:loadCampaign(campaign_file)
+  local UIInformation = _G["UIInformation"] ---@type UIInformatio
+
   local campaign_info, level_info, errors, _
 
   campaign_info, errors = self:readCampaignFile(campaign_file)
@@ -894,6 +914,8 @@ function App:loadLevel(level, difficulty, level_name, level_file, level_intro, m
     err = error_prefix and error_prefix .. err or "Error while loading level: " .. err
     print(err)
     self:loadMainMenu() -- We need to unload all level elements that succeeded
+
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
     self.ui:addWindow(UIInformation(self.ui, { err }))
   end
   return status
@@ -916,9 +938,11 @@ function App:_loadLevel(level, difficulty, level_name, level_file, level_intro, 
   end
 
   -- Check that we can load the data before unloading current map
+  local Map = _G["Map"] ---@type Map
   local new_map = Map(self)
   local map_objects, errors = new_map:load(level, difficulty, level_name, level_file, level_intro, map_editor)
   if not map_objects then
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
     self.ui:addWindow(UIInformation(self.ui, { errors }))
     return
   end
@@ -945,6 +969,7 @@ function App:_loadLevel(level, difficulty, level_name, level_file, level_intro, 
   end
 
   -- Load world
+  local World = _G["World"] ---@type World
   self.world = World(self, determineFreeBuildMode())
   self.world:createMapObjects(map_objects)
 
@@ -952,6 +977,7 @@ function App:_loadLevel(level, difficulty, level_name, level_file, level_intro, 
   self.audio:playSoundEffects(self.config.play_sounds)
 
   -- Load UI
+  local GameUI = _G["GameUI"] ---@type GameUI
   self.ui = GameUI(self, self.world:getLocalPlayerHospital(), map_editor)
   self.world:setUI(self.ui) -- Function call allows world to set up its keyHandlers
 
@@ -1195,6 +1221,7 @@ function App:writeToFileOrTmp(file, mode)
   if err then
     local tmp_file = os.tmpname()
     f = io.open(tmp_file, mode or "w")
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
     if self.ui then self.ui:addWindow(UIInformation(self.ui,
         { _S.errors.save_to_tmp:format(file, tmp_file, err) }))
     else
@@ -1244,11 +1271,17 @@ function App:errorHandler(last_dispatch_type, st)
     local handler = self.eventHandlers[last_dispatch_type]
     local entity = self.world.current_tick_entity
     self.world.current_tick_entity = nil
+
+    local Patient = _G["Patient"] ---@type Patient
+    local Staff = _G["Staff"] ---@type Staff
+    local UIPatient = _G["UIPatient"] ---@type UIPatient
+    local UIStaff = _G["UIStaff"] ---@type UIStaff
     if class.is(entity, Patient) then
       self.ui:addWindow(UIPatient(self.ui, entity))
     elseif class.is(entity, Staff) then
       self.ui:addWindow(UIStaff(self.ui, entity))
     end
+    local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
     self.ui:addWindow(UIConfirmDialog(self.ui, true,
             "Sorry, but an error has occurred. There can be many reasons - see the " ..
                     "log window for details. Would you like to attempt a recovery?",
@@ -1298,6 +1331,10 @@ end
 function App:idle()
   if not self.config.play_demo then return end
   -- Check if we are in a proper 'idle' state and solely on the main menu
+
+  local UIMainMenu = _G["UIMainMenu"] ---@type UIMainMenu
+  local UIUpdate = _G["UIUpdate"] ---@type UIUpdate
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
   if not self.ui:getWindowActiveStatus() or not self.ui:getWindow(UIMainMenu) or
       self.ui:getWindow(UIUpdate) or self.ui:getWindow(UIConfirmDialog) then
     self:resetIdle()
@@ -1452,6 +1489,7 @@ function App:isThemeHospitalPath(path)
 end
 
 function App:checkInstallFolder()
+  local FileSystem = _G["FileSystem"] ---@type FileSystem
   self.fs = FileSystem()
   local status, _
   if self.config.theme_hospital_install then
@@ -1863,12 +1901,14 @@ end
 
 
 function App:save(filename)
+  local SaveGameFile = _G["SaveGameFile"] ---@type SaveGameFile
   return SaveGameFile(filename)
 end
 
 -- Omit the usual file extension so this file cannot be seen from the normal load and save screen and cannot be overwritten
 function App:quickSave()
   local filename = "quicksave.qs"
+  local SaveGameFile = _G["SaveGameFile"] ---@type SaveGameFile
   return SaveGameFile(self.savegame_dir .. filename)
 end
 
@@ -1877,6 +1917,7 @@ function App:load(filepath)
   if self.world then
     self:worldExited()
   end
+  local LoadGameFile = _G["LoadGameFile"] ---@type LoadGameFile
   return LoadGameFile(filepath)
 end
 
@@ -1886,6 +1927,7 @@ function App:quickLoad()
     self:load(self.savegame_dir .. filename)
   else
     self:quickSave()
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
     self.ui:addWindow(UIInformation(self.ui, { _S.errors.load_quick_save }))
   end
 end
@@ -1911,6 +1953,7 @@ function App:checkCompatibility(save_version, gfx_set)
     err = _S.errors.compatibility_error.new_in_old
   end
 
+  local UILoadGame = _G["UILoadGame"] ---@type UILoadGame
   UILoadGame:loadError(err)
   return false
 end
@@ -1960,6 +2003,7 @@ end
 --!param message (string) Optional message to the player
 function App:restart(message)
   assert(self.map, "Trying to restart while no map is loaded.")
+  local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
   self.ui:addWindow(UIConfirmDialog(self.ui, true, message or _S.confirmation.restart_level,
     --[[persistable:app_confirm_restart]] function()
     self:worldExited()
@@ -1978,6 +2022,7 @@ function App:restart(message)
     if level and file then
       self:loadLevel(level, difficulty, name, file, intro, nil, _S.errors.load_level_prefix, campaign_info)
     else
+      local UIInformation = _G["UIInformation"] ---@type UIInformatio
       self.ui:addWindow(UIInformation(self.ui, { _S.errors.cannot_restart_missing_files
           :format(self.map.level_number, self.map.map_file) }))
     end
@@ -2040,11 +2085,13 @@ function App:afterLoad()
     old_version = old .. " (" .. get_old_release_version .. ")"
     local msg_newer = "Warning: loaded savegame version %s in older version %s."
     self.world:gameLog(msg_newer:format(old_version, new_version))
+    local UIInformation = _G["UIInformation"] ---@type UIInformatio
     self.ui:addWindow(UIInformation(self.ui, { _S.warnings.newersave }))
   end
   self.world.release_version = self:getReleaseString(new)
   self.world.savegame_version = new
 
+  local Object = _G["Object"] ---@type Object
   if old < 87 then
     local new_object = corsixth.require("objects.gates_to_hell")
     Object.processTypeDefinition(new_object)
@@ -2157,6 +2204,7 @@ function App:checkForUpdates()
 
   print("New version found: " .. new_version)
   -- Display the update window
+  local UIUpdate = _G["UIUpdate"] ---@type UIUpdate
   self.ui:addWindow(UIUpdate(self.ui, current_version, new_version, changelog, download_url))
 end
 

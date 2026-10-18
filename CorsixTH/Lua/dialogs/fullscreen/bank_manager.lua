@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Bank manager (for loans / insurance companies) and bank statement fullscreen windows.
 class "UIBankManager" (UIFullscreen)
 
@@ -39,6 +41,7 @@ function UIBankManager:UIBankManager(ui)
     palette = gfx:getPalette("Stat01V.pal")
     self.stat_font = gfx:loadFontAndSpriteTable("QData", "Font37V", false, palette, { apply_ui_scale = true })
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -120,6 +123,7 @@ function UIBankManager:afterLoad(old, new)
     self.browslift = self:addPanel(9, 296, 165)
   end
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     self.background = gfx:loadRaw("Bank01V", 640, 480, "QData", "QData", "Bank01V.pal", true)
     self.stat_background = gfx:loadRaw("Stat01V", 640, 480, "QData", "QData", "Stat01V.pal", true)
@@ -226,6 +230,7 @@ end
 
 function UIBankManager:draw(canvas, x, y)
   local hospital = self.ui.hospital
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
 
   -- Either draw the statistics page or the normal bank page
@@ -315,6 +320,7 @@ end
 
 function UIBankManager:onMouseMove(x, y, dx, dy)
   local ui = self.ui
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
 
   if x > 0 and x < 640 * s and y > 0 and y < 480 * s then
@@ -332,6 +338,7 @@ function UIBankManager:close()
   local ui = self.ui
   ui:setCursor(ui.default_cursor) -- Return to default cursor
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -461,6 +468,7 @@ function UIBankManager:decreaseLoan()
 end
 
 function UIBankManager:openTownMap()
+  local UITownMap = _G["UITownMap"] ---@type UITownMap
   local dlg = UITownMap(self.ui)
   self.ui:addWindow(dlg)
 end

@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local Window = _G["Window"] ---@type Window
+
 --! Dialog for "Are you sure you want to quit?" and similar yes/no questions.
 --! This dialog is also used for errors and requires some special handling
 class "UIConfirmDialog" (Window)
@@ -57,6 +59,7 @@ function UIConfirmDialog:UIConfirmDialog(ui, must_pause, text, callback_ok, call
   self.must_pause = must_pause
 
   -- Check how "high" the dialog must be
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local _, text_height = self.white_font:sizeOf(text, text_width * s)
   text_height = text_height / s -- Scale independent pixels
@@ -119,6 +122,7 @@ end
 function UIConfirmDialog:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = x + self.x * s, y + self.y * s
   self.white_font:drawWrapped(canvas, self.text, x + 17 * s, y + 17 * s, text_width * s)
@@ -129,6 +133,7 @@ function UIConfirmDialog:afterLoad(old, new)
   self:registerKeyHandlers()
 
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
   end
 end

@@ -20,7 +20,8 @@ SOFTWARE. --]]
 
 corsixth.require("announcer")
 
-local AnnouncementPriority = _G["AnnouncementPriority"]
+local AnnouncementPriority = _G["AnnouncementPriority"] ---@type AnnouncementPriority
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
 
 class "UIFax" (UIFullscreen)
 
@@ -53,6 +54,7 @@ function UIFax:UIFax(ui, icon)
       local --[[persistable:fax_choice_button]] function callback()
         self:choice(i)
       end
+      local DrawFlags = _G["DrawFlags"] ---@type DrawFlags
       self.choice_buttons[i] = self:addPanel(17, 492, y, nil, nil, true, DrawFlags.Nearest)
         :makeButton(0, 0, 43, 43, 18, callback)
         :setDisabledSprite(19)

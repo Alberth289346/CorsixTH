@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Annual Report fullscreen window shown at the start of each year.
 class "UIAnnualReport" (UIFullscreen)
 
@@ -66,6 +68,7 @@ function UIAnnualReport:UIAnnualReport(ui, world)
 
     self.panel_sprites = gfx:loadSpriteTable("QData", "Award03V", true, palette)
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -133,33 +136,34 @@ function UIAnnualReport:UIAnnualReport(ui, world)
 
   -- Get and sort values used on the statistics screen.
   -- The six categories. The extra tables are used to be able to sort the values.
-    self.money_sort = {}
-    self.visitors_sort = {}
-    self.salary_sort = {}
-    self.deaths_sort = {}
-    self.cures_sort = {}
-    self.value_sort = {}
+  self.money_sort = {}
+  self.visitors_sort = {}
+  self.salary_sort = {}
+  self.deaths_sort = {}
+  self.cures_sort = {}
+  self.value_sort = {}
 
-    -- TODO: Right now there are no real competitors, they all have initial values.
-    for i, hospital in ipairs(world.hospitals) do
-      self.money_sort[i] = {value = math.floor(hospital.balance - hospital.loan), hosp_index = i}
-      self.visitors_sort[i] = {value = hospital.num_visitors, hosp_index = i}
-      self.deaths_sort[i] = {value = hospital.num_deaths, hosp_index = i}
-      self.cures_sort[i] = {value = hospital.num_cured, hosp_index = i}
-      self.value_sort[i] = {value = math.floor(hospital.value), hosp_index = i}
-      self.salary_sort[i] = {value = math.floor(hospital.player_salary), hosp_index = i}
-    end
+  -- TODO: Right now there are no real competitors, they all have initial values.
+  for i, hospital in ipairs(world.hospitals) do
+    self.money_sort[i] = {value = math.floor(hospital.balance - hospital.loan), hosp_index = i}
+    self.visitors_sort[i] = {value = hospital.num_visitors, hosp_index = i}
+    self.deaths_sort[i] = {value = hospital.num_deaths, hosp_index = i}
+    self.cures_sort[i] = {value = hospital.num_cured, hosp_index = i}
+    self.value_sort[i] = {value = math.floor(hospital.value), hosp_index = i}
+    self.salary_sort[i] = {value = math.floor(hospital.player_salary), hosp_index = i}
+  end
 
-    -- sort putting local player hospital first when values the same
-    local desc_order = function(a,b) return a.value > b.value or (a.value == b.value and a.hosp_index < b.hosp_index) end
-    local asc_order = function(a,b) return a.value < b.value or (a.value == b.value and a.hosp_index < b.hosp_index) end
-    table.sort(self.money_sort, desc_order)
-    table.sort(self.visitors_sort, desc_order)
-    table.sort(self.deaths_sort, asc_order)
-    table.sort(self.cures_sort, desc_order)
-    table.sort(self.value_sort, desc_order)
-    table.sort(self.salary_sort, desc_order)
+  -- sort putting local player hospital first when values the same
+  local desc_order = function(a,b) return a.value > b.value or (a.value == b.value and a.hosp_index < b.hosp_index) end
+  local asc_order = function(a,b) return a.value < b.value or (a.value == b.value and a.hosp_index < b.hosp_index) end
+  table.sort(self.money_sort, desc_order)
+  table.sort(self.visitors_sort, desc_order)
+  table.sort(self.deaths_sort, asc_order)
+  table.sort(self.cures_sort, desc_order)
+  table.sort(self.value_sort, desc_order)
+  table.sort(self.salary_sort, desc_order)
 
+  local TheApp = _G["TheApp"] ---@type App
   TheApp.video:setBlueFilterActive(false)
 end
 
@@ -467,10 +471,12 @@ end
 
 --! Overridden close function. The game should be unpaused again when closing the dialog.
 function UIAnnualReport:close()
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp.world:getLocalPlayerHospital().game_won then
     TheApp.video:setBlueFilterActive(false)
   end
   self:updateAwards()
+  local Window = _G["Window"] ---@type Window
   Window.close(self)
   self.ui.app.world:checkIfGameWon()
 end
@@ -510,6 +516,7 @@ function UIAnnualReport:changePage(page_no)
 end
 
 function UIAnnualReport:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -575,6 +582,7 @@ function UIAnnualReport:draw(canvas, x, y)
 end
 
 function UIAnnualReport:drawStatisticsScreen(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
 
   local font = self.stat_font
   local world = self.ui.app.world
@@ -660,6 +668,7 @@ end
 
 function UIAnnualReport:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
 
     local palette = gfx:getPalette("Award02V.pal")

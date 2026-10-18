@@ -973,6 +973,7 @@ local function apply_hotkeys_defaults(res)
 end
 
 local function open_for_write(path)
+  local TheApp = _G["TheApp"] ---@type App
   if TheApp then
     return TheApp:writeToFileOrTmp(path)
   else

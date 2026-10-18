@@ -18,6 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
+local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
+
 --! Drug Casebook fullscreen window (view disease statistics and set prices).
 class "UICasebook" (UIFullscreen)
 
@@ -35,6 +37,7 @@ function UICasebook:UICasebook(ui, disease_selection)
     self.selected_title_font = gfx:loadFontAndSpriteTable("QData", "Font26V", false, palette, { apply_ui_scale = true })
     self.drug_font = gfx:loadFontAndSpriteTable("QData", "Font24V", false, palette, { apply_ui_scale = true })
   end) then
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     ui:addWindow(UIInformation(ui, {_S.errors.dialog_missing_graphics}))
     self:close()
     return
@@ -105,6 +108,7 @@ end
 
 function UICasebook:close()
   UIFullscreen.close(self)
+  local UIBottomPanel = _G["UIBottomPanel"] ---@type UIBottomPanel
   self.ui:getWindow(UIBottomPanel):updateButtonStates()
 end
 
@@ -170,6 +174,7 @@ function UICasebook:updateIcons()
       local build = false
       local staff = false
       -- Room requirements
+      local TheApp = _G["TheApp"] ---@type App
       for _, room_id in ipairs(req.rooms) do
         -- Not researched yet?
         if not hosp:isRoomDiscovered(room_id) then
@@ -184,6 +189,7 @@ function UICasebook:updateIcons()
 
       -- Staff requirements
       for sclass, amount in pairs(req.staff) do
+        local StaffProfile = _G["StaffProfile"] ---@type StaffProfile
         staff = (staff and (staff .. ", ") or " (") .. StaffProfile.translateStaffClass(sclass) .. ": " .. amount
       end
       staff = staff and (_S.tooltip.casebook.cure_requirement.hire_staff .. staff .. "). ") or ""
@@ -204,6 +210,7 @@ function UICasebook:updateIcons()
 end
 
 function UICasebook:draw(canvas, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   canvas:scale(s, "bitmap")
   self.background:draw(canvas, self.x * s + x, self.y * s + y)
@@ -347,6 +354,7 @@ function UICasebook:concentrateResearch()
 end
 
 function UICasebook:onMouseDown(button, x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   -- Normal window operations if outside the disease list
   if x < 395 * s or x > 540 * s or y < 77 * s or y > 394 * s then
@@ -402,6 +410,7 @@ end
 
 function UICasebook:afterLoad(old, new)
   if old < 236 then
+    local TheApp = _G["TheApp"] ---@type App
     local gfx = TheApp.gfx
     self.background = gfx:loadRaw("DrugN01V", 640, 480, "QData", "QData", "DrugN01V.pal", true)
     local palette = gfx:getPalette("DrugN01V.pal")

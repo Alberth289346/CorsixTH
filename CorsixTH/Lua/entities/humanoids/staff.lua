@@ -25,8 +25,7 @@ local AnnouncementPriority = _G["AnnouncementPriority"]
 --! A Doctor, Nurse, Receptionist, Handyman, or Surgeon
 class "Staff" (Humanoid)
 
----@type Staff
-local Staff = _G["Staff"]
+local Staff = _G["Staff"] ---@type Staff
 
 --!param ... Arguments to base class constructor.
 function Staff:Staff(...)
@@ -383,6 +382,7 @@ function Staff:checkIfNeedRest()
     self:changeAttribute("happiness", -0.0002)
   end
   -- If above the policy threshold, go to the staff room.
+  local StaffRoom = _G["StaffRoom"] ---@type StaffRoom
   if self:getAttribute("fatigue") >= self.hospital.policies["goto_staffroom"] and
       not class.is(self:getRoom(), StaffRoom) then
     -- The staff will get unhappy if there is no staffroom to rest in.

@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. --]]
 
 corsixth.require("dialogs.place_objects")
+local UIPlaceObjects = _G["UIPlaceObjects"] ---@type UIPlaceObjects
 
 class "UIEditRoom" (UIPlaceObjects)
 
@@ -38,6 +39,8 @@ function UIEditRoom:UIEditRoom(ui, room_type)
   -- Set on door and window blueprints too
   self.anims:setAnimationGhostPalette(126, app.gfx:loadGhost("QData", "Ghost1.dat", 6), blue_red_swap)
   self.anims:setAnimationGhostPalette(130, app.gfx:loadGhost("QData", "Ghost1.dat", 6), blue_red_swap)
+
+  local TheApp = _G["TheApp"] ---@type App
   self.cell_outline = TheApp.gfx:loadSpriteTable("Bitmap", "aux_ui", true)
   if not room_type.room_info then
     self.blueprint_rect = {
@@ -174,7 +177,9 @@ function UIEditRoom:cancel()
       local confirm_button_state = self.confirm_button.enabled
       self.confirm_button:enable(false)
       self.confirm_dialog_open = true
+
       -- Ask if the user really wish to sell this room
+      local UIConfirmDialog = _G["UIConfirmDialog"] ---@type UIConfirmDialog
       self.ui:addWindow(UIConfirmDialog(self.ui, false,
         _S.confirmation.delete_room,
         --[[persistable:delete_room_confirm_dialog]]function()
@@ -239,6 +244,7 @@ function UIEditRoom:confirm(force)
     self.world:markRoomAsBuilt(self.room)
     self.closed_cleanly = true
     -- If information dialogs are disabled, go ahead.
+    local UIInformation = _G["UIInformation"] ---@type UIInformation
     if self.ui:getWindow(UIInformation) then
       self.ui:tutorialStep(3, 15, 16)
     else
@@ -275,6 +281,8 @@ function UIEditRoom:_humanoidsInArea()
   local x2 = rect.x + rect.w
   local y1 = rect.y - 1
   local y2 = rect.y + rect.h
+
+  local Humanoid = _G["Humanoid"] ---@type Humanoid
   for _, entity in ipairs(world.entities) do
     if class.is(entity, Humanoid) and
         entity:isObscuringArea(x1, x2, y1, y2) then
@@ -285,6 +293,7 @@ function UIEditRoom:_humanoidsInArea()
 end
 
 function UIEditRoom:onTick()
+  local UIFurnishCorridor = _G["UIFurnishCorridor"] ---@type UIFurnishCorridor
   UIFurnishCorridor.onTick(self)
   self:_checkIsWaitingHumanoidsToLeaveArea()
 end
@@ -520,6 +529,8 @@ function UIEditRoom:_finishRoomFoundation()
 end
 
 function UIEditRoom:purchaseItems()
+  local TheApp = _G["TheApp"] ---@type App
+
   self.visible = false
   self.place_objects = false
   self:stopPickupItems()
@@ -556,6 +567,7 @@ function UIEditRoom:purchaseItems()
     end
   end
 
+  local UIFurnishCorridor = _G["UIFurnishCorridor"] ---@type UIFurnishCorridor
   self.ui:addWindow(UIFurnishCorridor(self.ui, object_list, self))
 end
 
@@ -638,6 +650,9 @@ function UIEditRoom:_remove_wall_line(x, y, step_x, step_y, n_steps, layer, neig
 end
 
 function UIEditRoom:removeRoom(save_objects, room, world)
+  local TheApp = _G["TheApp"] ---@type App
+  local SwingDoor = _G["SwingDoor"] ---@type SwingDoor
+
   -- Remove any placed objects (add them to list again) when save_objects is true
   for x = room.x, room.x + room.width - 1 do
     for y = room.y, room.y + room.height - 1 do
@@ -965,6 +980,7 @@ function UIEditRoom:_checkCanBuildRoomHere()
     -- all-permissive placing approach
     -- This could lead to crashes, so we'll record this in the log so that during investigation
     -- we'll be able to know that safe placement was disabled.
+    local TheApp = _G["TheApp"] ---@type App
     TheApp.world:gameLog("Warning: Blocking off areas is allowed with room at " .. self.blueprint_rect.x .. ", " .. self.blueprint_rect.y .. ".")
     build_allowed = true
   end
@@ -1003,6 +1019,8 @@ function UIEditRoom:_enterObjectsPhase()
   if self.objects_backup then
     self:addObjects(self.objects_backup, true)
   else
+    local TheApp = _G["TheApp"] ---@type App
+
     local room_objects = self.room.room_info.objects_needed
     if TheApp.config.enable_avg_contents then
       room_objects = self:computeAverageContents()
@@ -1092,6 +1110,7 @@ local window_floor_blueprint_markers = {
 }
 
 function UIEditRoom:onLeftButtonDown(x, y)
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   if self.phase == "walls" then
     if 0 <= x and x < self.width * s and 0 <= y and y < self.height * s then -- luacheck: ignore 542
@@ -1122,6 +1141,7 @@ function UIEditRoom:tryRemoveWindowFromWall(x, y)
     return
   end
 
+  local TheApp = _G["TheApp"] ---@type App
   local map = TheApp.map.th
   local cell_flag = map:getCell(cell_x, cell_y, 4)
   if cell_flag == window_floor_blueprint_markers[wall_dir] then -- right click on a wall with a window
@@ -1231,6 +1251,7 @@ end
 --!  2 (door section closer to top of screen) - smaller x or y
 --!  8 (door section closer to bottom of screen) - larger x or y
 local function checkDoorWalls(x, y, wall, has_swingdoor)
+  local TheApp = _G["TheApp"] ---@type App
   local th = TheApp.map.th
 
   local dx, dy, wall_num
@@ -1267,6 +1288,7 @@ end
 --!param world - reference to world object instance
 --!return (boolean) whether the tile is considered to be valid.
 local function validDoorTile(xpos, ypos, player_id, world)
+  local TheApp = _G["TheApp"] ---@type App
   local th = TheApp.map.th
   local tile_flags = th:getCellFlags(xpos, ypos)
   -- check own it
@@ -1308,6 +1330,7 @@ end
 
 function UIEditRoom:setDoorBlueprint(orig_x, orig_y, orig_wall)
   local x, y, x_mod, y_mod, wall = doorWallOffsetCalculations(orig_x, orig_y, orig_wall)
+  local TheApp = _G["TheApp"] ---@type App
   local map = TheApp.map.th
 
   if self.blueprint_door.anim then

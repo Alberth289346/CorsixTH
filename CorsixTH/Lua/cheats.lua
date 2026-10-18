@@ -364,6 +364,8 @@ function Cheats:toggleCheat(name)
   local ui = self.hospital.world.ui
   local cheat_list = toggle_cheats
   local cheat = cheat_list[name]
+
+  local UICheats = _G["UICheats"] ---@type UICheats
   local cheatWindow = ui:getWindow(UICheats)
   local speech
   if not self:isCheatActive(name) then

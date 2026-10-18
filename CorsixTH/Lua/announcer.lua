@@ -31,6 +31,7 @@ local AnnouncementPriority = {
 strict_declare_global "AnnouncementPriority"
 _G["AnnouncementPriority"] = AnnouncementPriority
 
+local Date = _G["Date"] ---@type Date
 local default_announcement_priority = AnnouncementPriority.Normal
 local hoursPerDay = Date.hoursPerDay()
 
@@ -44,8 +45,11 @@ local default_announcement_decay_hours = {
 --! An announcement queue based on priority
 class "AnnouncementQueue"
 
----@type AnnouncementQueue
-local AnnouncementQueue = _G["AnnouncementQueue"]
+--! An announcement.
+class "AnnouncementEntry"
+
+local AnnouncementQueue = _G["AnnouncementQueue"] ---@type AnnouncementQueue
+local AnnouncementEntry = _G["AnnouncementEntry"] ---@type AnnouncementEntry
 
 --! Creates an announcement queue: a collection of announcements with queue semantics.
 function AnnouncementQueue:AnnouncementQueue()
@@ -102,12 +106,6 @@ function AnnouncementQueue:checkForDuplicates(sound, date)
   return false
 end
 
-
---! An announcement.
-class "AnnouncementEntry"
-
----@type AnnouncementEntry
-local AnnouncementEntry = _G["AnnouncementEntry"]
 
 --! Creates an announcement
 function AnnouncementEntry:AnnouncementEntry()

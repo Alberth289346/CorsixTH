@@ -20,13 +20,16 @@ SOFTWARE. --]]
 
 local TH = require("TH")
 
+local Window = _G["Window"] ---@type Window
+
 class "UIBuildRoom" (Window)
 
----@type UIBuildRoom
-local UIBuildRoom = _G["UIBuildRoom"]
+local UIBuildRoom = _G["UIBuildRoom"] ---@type UIBuildRoom
 
 function UIBuildRoom:UIBuildRoom(ui)
   self:Window()
+
+  local TheApp = _G["TheApp"] ---@type App
 
   local app = ui.app
   self.ui = ui
@@ -129,6 +132,7 @@ local cat_label_y = {21, 53, 84, 116}
 function UIBuildRoom:draw(canvas, x, y)
   Window.draw(self, canvas, x, y)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   x, y = self.x * s + x, self.y * s + y
   self.white_font:draw(canvas, self.list_title, x + 163 * s, y + 18 * s)
@@ -182,10 +186,12 @@ function UIBuildRoom:buildRoom(index)
       hosp.research.research_progress[self.list[index]].build_cost
   if world.free_build_mode or hosp.balance >= cost then
     -- Close any full screen window currently open.
+    local UIFullscreen = _G["UIFullscreen"] ---@type UIFullscreen
     local fullscreen = self.ui:getWindow(UIFullscreen)
     if fullscreen then
       fullscreen:close()
     end
+    local UIEditRoom = _G["UIEditRoom"] ---@type UIEditRoom
     local edit_dlg = UIEditRoom(self.ui, self.list[index])
     self.ui:addWindow(edit_dlg)
   else
@@ -198,6 +204,7 @@ end
 function UIBuildRoom:onMouseMove(x, y, dx, dy)
   local repaint = Window.onMouseMove(self, x, y, dx, dy)
 
+  local TheApp = _G["TheApp"] ---@type App
   local s = TheApp.gfx:getUIScale()
   local hover_idx = 0
   if 156 * s <= x and x < 287 * s and 31 * s <= y and y < 226 * s then
@@ -244,6 +251,7 @@ function UIBuildRoom:afterLoad(old, new)
 
   if old < 236 then
     local selected_label_color = { red = 40, green = 40, blue = 250 }
+    local TheApp = _G["TheApp"] ---@type App
     self.white_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font01V", nil, nil, { apply_ui_scale = true })
     self.blue_font = TheApp.gfx:loadFontAndSpriteTable("QData", "Font02V", nil, nil, {ttf_color = selected_label_color, apply_ui_scale = true })
   end
